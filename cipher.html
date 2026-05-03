@@ -369,14 +369,7 @@ document.addEventListener('keydown',function(e){
   if((e.ctrlKey||e.metaKey)&&e.key==='Enter')run();
 });
 
-// ── MẬT KHẨU SHA-256 ──────────────────────────────────────────────
-// Mật khẩu lưu dạng mã băm — dù xem code cũng không đọc ngược ra được.
-//
-// CÁCH ĐỔI MẬT KHẨU:
-//   1. Vào https://emn178.github.io/online-tools/sha256.html
-//   2. Gõ mật khẩu mới → copy chuỗi hash bên dưới
-//   3. Thay chuỗi trong biến _H bên dưới → Commit lên GitHub
-//
+// *** ──────────────────────────────────────────────────────────────────
 var _H='35febc4e50600079a84194580cd147f84d94ecfdd7d7664ea12326facf56814f';
 
 async function checkPw(){
