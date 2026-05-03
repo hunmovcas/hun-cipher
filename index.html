@@ -6,149 +6,537 @@
 <title>Bộ Giải Mã</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f5f0e8;--ink:#1a1a2e;--card:#fffdf7;--border:#d4c9b0;
-  --accent:#c0392b;--accent2:#2c3e7a;--muted:#8a7f6e;
-}
-body{
-  background:var(--bg);
-  background-image:radial-gradient(circle at 20% 20%,rgba(192,57,43,.04) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(44,62,122,.04) 0%,transparent 50%);
-  color:var(--ink);font-family:'Nunito',sans-serif;min-height:100vh;
-}
-body::before{
-  content:'';position:fixed;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E");
-  background-size:30px 30px;pointer-events:none;z-index:0;
-}
-.wrap{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:48px 20px 80px}
-
-/* Header */
-.stamp{display:inline-block;border:2.5px solid var(--accent);color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;padding:4px 14px;text-transform:uppercase;margin-bottom:20px;position:relative}
-.stamp::before,.stamp::after{content:'';position:absolute;top:50%;width:8px;height:8px;border-radius:50%;background:var(--accent);transform:translateY(-50%)}
-.stamp::before{left:-14px}.stamp::after{right:-14px}
-header{text-align:center;margin-bottom:52px;padding-top:12px}
-h1{font-size:clamp(2.4rem,6vw,4rem);font-weight:900;color:var(--ink);line-height:1.05;margin-bottom:10px;letter-spacing:-1px}
-h1 em{font-style:normal;color:var(--accent)}
-.tagline{font-size:.95rem;color:var(--muted);font-weight:600;letter-spacing:.8px}
-
-/* ── BA BỘ ĐẾM – góc trên phải ── */
-#counters{
-  position:fixed;top:12px;right:14px;z-index:10000;
-  display:flex;align-items:center;gap:8px;
-  pointer-events:none;user-select:none;
-}
-.cnt{
-  display:flex;align-items:center;gap:4px;
-  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.3px;
-}
-#cnt-outer{ color:rgba(138,127,110,.55); }
-#cnt-outer svg{ opacity:.4; }
-#cnt-outer .cnum{ opacity:.7; }
-
-#cnt-inner{ color:rgba(44,62,122,.5); display:none; }
-#cnt-inner svg{ opacity:.4; }
-#cnt-inner .cnum{ opacity:.75; }
-
-#cnt-admin{ color:rgba(180,83,9,.5); display:none; }
-#cnt-admin svg{ opacity:.4; }
-#cnt-admin .cnum{ opacity:.75; }
-
-.cnt-div{ width:1px;height:12px;background:rgba(138,127,110,.3);display:none; }
-
-/* ── UNDO / REDO – góc trên trái ── */
-#nav-btns{
-  position:fixed;top:12px;left:14px;z-index:10000;
-  display:none;align-items:center;gap:6px;
-}
-.nav-btn{
-  background:none;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  width:28px;height:28px;border-radius:4px;
-  color:rgba(138,127,110,.5);
-  transition:color .2s,background .2s;
-}
-.nav-btn:hover:not(:disabled){ color:var(--ink);background:rgba(138,127,110,.1); }
-.nav-btn:disabled{ opacity:.25;cursor:default; }
-.nav-btn svg{ width:14px;height:14px; }
-
-/* Tabs */
-.tabs{display:flex;border:2px solid var(--ink);overflow:hidden;margin-bottom:28px;box-shadow:4px 4px 0 var(--ink)}
-.tab{flex:1;padding:13px 10px;border:none;background:var(--card);color:var(--muted);font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;border-right:2px solid var(--ink);transition:all .2s;letter-spacing:.3px}
-.tab:last-child{border-right:none}
-.tab.active{background:var(--ink);color:var(--card)}
-.tab:hover:not(.active){background:var(--bg)}
-
-/* Card */
-.card{background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:28px;margin-bottom:24px}
-label{display:block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-textarea{width:100%;background:var(--bg);border:2px solid var(--border);color:var(--ink);font-family:'Nunito',sans-serif;font-size:1.05rem;line-height:1.7;padding:16px;resize:vertical;outline:none;transition:border-color .2s;min-height:130px;border-radius:0}
-textarea:focus{border-color:var(--ink)}
-textarea::placeholder{color:var(--muted);font-style:italic}
-.output-box{width:100%;min-height:130px;background:var(--bg);border:2px solid var(--border);padding:16px;font-family:'Nunito',sans-serif;font-size:1.05rem;line-height:1.7;color:var(--ink);white-space:pre-wrap;word-break:break-all}
-.output-box.empty::after{content:'Kết quả sẽ hiện ở đây…';color:var(--muted);font-style:italic}
-
-/* Actions */
-.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-top:18px}
-.btn{padding:11px 24px;border:2px solid var(--ink);font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:800;cursor:pointer;transition:all .15s;letter-spacing:.2px}
-.btn-main{background:var(--accent);color:#fff;box-shadow:3px 3px 0 var(--ink)}
-.btn-main:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
-.btn-main:active{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
-.btn-ghost{background:transparent;color:var(--muted);border-color:var(--border)}
-.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
-.btn-copy{background:var(--accent2);color:#fff;border-color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
-.btn-copy:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
-
-.arrow-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 20px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:1px}
-.arrow-row::before,.arrow-row::after{content:'';flex:1;height:1px;background:var(--border)}
-
-.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--card);padding:12px 28px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.9rem;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--accent);z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
-.toast.show{transform:translateX(-50%) translateY(0)}
-
-footer{text-align:center;margin-top:48px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px}
-footer span{color:var(--accent)}
-
-/* Password screen */
-#pw-screen{
-  position:fixed;inset:0;z-index:9999;
-  background:var(--bg);
-  background-image:radial-gradient(circle at 20% 20%,rgba(192,57,43,.04) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(44,62,122,.04) 0%,transparent 50%);
-  display:flex;align-items:center;justify-content:center;
-  transition:opacity .4s;
-}
-#pw-screen::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E");background-size:30px 30px;pointer-events:none}
-.pw-box{position:relative;background:var(--card);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:44px 40px 36px;width:100%;max-width:380px;text-align:center}
-.pw-icon{font-size:2rem;margin-bottom:12px}
-.pw-box h2{font-size:1.5rem;font-weight:900;color:var(--ink);margin-bottom:6px}
-.pw-sub{font-size:.85rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:28px;letter-spacing:.3px}
-.pw-wrap{position:relative;margin-bottom:16px}
-#pw-input{width:100%;background:var(--bg);border:2px solid var(--border);color:var(--ink);font-family:'Space Mono',monospace;font-size:1.4rem;letter-spacing:6px;padding:14px 48px 14px 16px;outline:none;text-align:center;border-radius:0;transition:border-color .2s}
-#pw-input:focus{border-color:var(--ink)}
-#pw-input::-ms-reveal,#pw-input::-ms-clear{display:none}
-#pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:4px}
-#pw-eye:hover{color:var(--ink)}
-.pw-err{color:var(--accent);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;min-height:18px;margin-bottom:14px;opacity:0;transition:opacity .2s}
-.pw-err.show{opacity:1}
-.btn-pw{width:100%;font-size:1rem;padding:14px}
-
-/* Admin badge nhỏ trong pw-box */
-#admin-badge{
-  display:none;margin-top:14px;
-  font-family:'Space Mono',monospace;font-size:10px;
-  color:rgba(180,83,9,.6);letter-spacing:1px;
+/* ============================================================
+   RESET & BIẾN CSS TOÀN CỤC
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media(max-width:500px){
-  .card{padding:18px}h1{font-size:2rem}
-  .actions{flex-direction:column;align-items:stretch}.btn{text-align:center}
-  .pw-box{padding:32px 20px 28px}#pw-input{font-size:1.2rem;letter-spacing:4px}
-  #counters{top:8px;right:10px}#nav-btns{top:8px;left:10px}
+:root {
+  --bg:       #f5f0e8;
+  --ink:      #1a1a2e;
+  --card:     #fffdf7;
+  --border:   #d4c9b0;
+  --accent:   #c0392b;   /* đỏ chủ đạo */
+  --accent2:  #2c3e7a;   /* xanh đậm */
+  --muted:    #8a7f6e;
+}
+
+/* ============================================================
+   BODY & NỀN
+   ============================================================ */
+body {
+  background: var(--bg);
+  /* Hiệu ứng nền chấm bi trang trí */
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(192,57,43,.04)  0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(44,62,122,.04)  0%, transparent 50%);
+  color: var(--ink);
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+}
+
+/* Lớp chấm bi phủ toàn màn hình */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 30px 30px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================
+   KHUNG NỘI DUNG CHÍNH
+   ============================================================ */
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.stamp {
+  display: inline-block;
+  border: 2.5px solid var(--accent);
+  color: var(--accent);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  padding: 4px 14px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+/* Hai chấm tròn hai bên stamp */
+.stamp::before,
+.stamp::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateY(-50%);
+}
+.stamp::before { left: -14px; }
+.stamp::after  { right: -14px; }
+
+header {
+  text-align: center;
+  margin-bottom: 52px;
+  padding-top: 12px;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 900;
+  color: var(--ink);
+  line-height: 1.05;
+  margin-bottom: 10px;
+  letter-spacing: -1px;
+}
+
+h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.tagline {
+  font-size: .95rem;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: .8px;
+}
+
+/* ============================================================
+   BA BỘ ĐẾM – GÓC TRÊN PHẢI
+   Bộ đếm NGOÀI : số lần tải trang (luôn hiển thị)
+   Bộ đếm TRONG : số lần đăng nhập thường (hiện sau khi vào)
+   Bộ đếm ADMIN  : số lần đăng nhập admin  (chỉ hiện với admin)
+   ============================================================ */
+#counters {
+  position: fixed;
+  top: 12px;
+  right: 14px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.cnt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .3px;
+}
+
+/* Bộ đếm NGOÀI – màu nhạt, luôn hiển thị */
+#cnt-outer          { color: rgba(138,127,110,.55); }
+#cnt-outer svg      { opacity: .4; }
+#cnt-outer .cnum    { opacity: .7; }
+
+/* Bộ đếm TRONG – hiện sau khi đăng nhập thành công */
+#cnt-inner          { color: rgba(44,62,122,.5); display: none; }
+#cnt-inner svg      { opacity: .4; }
+#cnt-inner .cnum    { opacity: .75; }
+
+/* Bộ đếm ADMIN – chỉ hiện khi đăng nhập bằng mật khẩu admin */
+#cnt-admin          { color: rgba(180,83,9,.5); display: none; }
+#cnt-admin svg      { opacity: .4; }
+#cnt-admin .cnum    { opacity: .75; }
+
+/* Thanh ngăn giữa các bộ đếm */
+.cnt-div {
+  width: 1px;
+  height: 12px;
+  background: rgba(138,127,110,.3);
+  display: none;
+}
+
+/* ============================================================
+   NÚT UNDO / REDO – GÓC TRÊN TRÁI
+   Cho phép quay lại màn hình mật khẩu hoặc vào lại trang dịch
+   ============================================================ */
+#nav-btns {
+  position: fixed;
+  top: 12px;
+  left: 14px;
+  z-index: 10000;
+  display: none;       /* Ẩn cho đến khi đăng nhập lần đầu */
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: rgba(138,127,110,.5);
+  transition: color .2s, background .2s;
+}
+
+.nav-btn:hover:not(:disabled) {
+  color: var(--ink);
+  background: rgba(138,127,110,.1);
+}
+
+.nav-btn:disabled {
+  opacity: .25;
+  cursor: default;
+}
+
+.nav-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ============================================================
+   TABS CHỌN CHẾ ĐỘ
+   ============================================================ */
+.tabs {
+  display: flex;
+  border: 2px solid var(--ink);
+  overflow: hidden;
+  margin-bottom: 28px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.tab {
+  flex: 1;
+  padding: 13px 10px;
+  border: none;
+  background: var(--card);
+  color: var(--muted);
+  font-family: 'Nunito', sans-serif;
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-right: 2px solid var(--ink);
+  transition: all .2s;
+  letter-spacing: .3px;
+}
+
+.tab:last-child { border-right: none; }
+.tab.active     { background: var(--ink); color: var(--card); }
+.tab:hover:not(.active) { background: var(--bg); }
+
+/* ============================================================
+   CARD – KHUNG CHỨA NỘI DUNG
+   ============================================================ */
+.card {
+  background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  color: var(--ink);
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  padding: 16px;
+  resize: vertical;
+  outline: none;
+  transition: border-color .2s;
+  min-height: 130px;
+  border-radius: 0;
+}
+
+textarea:focus         { border-color: var(--ink); }
+textarea::placeholder  { color: var(--muted); font-style: italic; }
+
+/* Hộp hiển thị kết quả */
+.output-box {
+  width: 100%;
+  min-height: 130px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  padding: 16px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Trạng thái rỗng – hiển thị chữ placeholder */
+.output-box.empty::after {
+  content: 'Kết quả sẽ hiện ở đây…';
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ============================================================
+   ACTIONS – HÀNG NÚT BẤM
+   ============================================================ */
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.btn {
+  padding: 11px 24px;
+  border: 2px solid var(--ink);
+  font-family: 'Nunito', sans-serif;
+  font-size: .95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: .2px;
+}
+
+/* Nút chính – đỏ */
+.btn-main { background: var(--accent); color: #fff; box-shadow: 3px 3px 0 var(--ink); }
+.btn-main:hover   { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+.btn-main:active  { transform: translate( 1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
+
+/* Nút phụ – trong suốt */
+.btn-ghost { background: transparent; color: var(--muted); border-color: var(--border); }
+.btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+/* Nút sao chép – xanh đậm */
+.btn-copy { background: var(--accent2); color: #fff; border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+.btn-copy:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+
+/* Mũi tên phân cách input / output */
+.arrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px 0 20px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.arrow-row::before, .arrow-row::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ============================================================
+   TOAST THÔNG BÁO
+   ============================================================ */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);  /* Ẩn bên dưới màn hình */
+  background: var(--ink);
+  color: var(--card);
+  padding: 12px 28px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: .9rem;
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--accent);
+  z-index: 999;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  text-align: center;
+  margin-top: 48px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+footer span { color: var(--accent); }
+
+/* ============================================================
+   MÀN HÌNH NHẬP MẬT KHẨU
+   ============================================================ */
+#pw-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(192,57,43,.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(44,62,122,.04)  0%, transparent 50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .4s;
+}
+
+/* Lớp chấm bi cho màn hình mật khẩu */
+#pw-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 30px 30px;
+  pointer-events: none;
+}
+
+.pw-box {
+  position: relative;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--ink);
+  padding: 44px 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.pw-icon { font-size: 2rem; margin-bottom: 12px; }
+
+.pw-box h2 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.pw-sub {
+  font-size: .85rem;
+  color: var(--muted);
+  font-family: 'Space Mono', monospace;
+  margin-bottom: 28px;
+  letter-spacing: .3px;
+}
+
+/* Nhóm input + nút mắt */
+.pw-wrap { position: relative; margin-bottom: 16px; }
+
+#pw-input {
+  width: 100%;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  color: var(--ink);
+  font-family: 'Space Mono', monospace;
+  font-size: 1.4rem;
+  letter-spacing: 6px;
+  padding: 14px 48px 14px 16px;
+  outline: none;
+  text-align: center;
+  border-radius: 0;
+  transition: border-color .2s;
+}
+
+#pw-input:focus { border-color: var(--ink); }
+
+/* Ẩn icon reveal mặc định của trình duyệt */
+#pw-input::-ms-reveal,
+#pw-input::-ms-clear { display: none; }
+
+/* Nút hiện/ẩn mật khẩu */
+#pw-eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 1rem;
+  padding: 4px;
+}
+#pw-eye:hover { color: var(--ink); }
+
+/* Thông báo sai mật khẩu */
+.pw-err {
+  color: var(--accent);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  min-height: 18px;
+  margin-bottom: 14px;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.pw-err.show { opacity: 1; }
+
+.btn-pw { width: 100%; font-size: 1rem; padding: 14px; }
+
+/* Huy hiệu admin – chỉ hiện nếu admin đăng nhập */
+#admin-badge {
+  display: none;
+  margin-top: 14px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: rgba(180,83,9,.6);
+  letter-spacing: 1px;
+}
+
+/* ============================================================
+   RESPONSIVE – MÀN HÌNH NHỎ
+   ============================================================ */
+@media (max-width: 500px) {
+  .card          { padding: 18px; }
+  h1             { font-size: 2rem; }
+  .actions       { flex-direction: column; align-items: stretch; }
+  .btn           { text-align: center; }
+  .pw-box        { padding: 32px 20px 28px; }
+  #pw-input      { font-size: 1.2rem; letter-spacing: 4px; }
+  #counters      { top: 8px; right: 10px; }
+  #nav-btns      { top: 8px; left: 10px; }
 }
 </style>
 </head>
 <body>
 
-<!-- NÚT UNDO / REDO (góc trái – hiện sau khi đăng nhập) -->
+<!-- ============================================================
+     NÚT UNDO / REDO (góc trái – hiện sau khi đăng nhập)
+     Undo : quay về màn hình mật khẩu
+     Redo : vào lại trang dịch thuật
+     ============================================================ -->
 <div id="nav-btns">
   <button class="nav-btn" id="btn-undo" onclick="navUndo()" disabled title="Quay lại trang nhập mật khẩu">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -164,74 +552,107 @@ footer span{color:var(--accent)}
   </button>
 </div>
 
-<!-- BA BỘ ĐẾM -->
+<!-- ============================================================
+     BA BỘ ĐẾM (góc phải)
+     ============================================================ -->
 <div id="counters">
+
+  <!-- Bộ đếm NGOÀI: lượt mở trang -->
   <div class="cnt" id="cnt-outer" title="Lượt mở trang">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
     </svg>
     <span class="cnum" id="num-outer">·</span>
   </div>
+
   <div class="cnt-div" id="div-inner"></div>
+
+  <!-- Bộ đếm TRONG: lần nhập đúng mật khẩu thường -->
   <div class="cnt" id="cnt-inner" title="Lần nhập đúng mật khẩu">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+      <rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
     </svg>
     <span class="cnum" id="num-inner">·</span>
   </div>
+
   <div class="cnt-div" id="div-admin"></div>
+
+  <!-- Bộ đếm ADMIN: lần đăng nhập bằng mật khẩu admin -->
   <div class="cnt" id="cnt-admin" title="Lần đăng nhập admin">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
     </svg>
     <span class="cnum" id="num-admin">·</span>
   </div>
+
 </div>
 
-<!-- MÀN HÌNH MẬT KHẨU -->
+<!-- ============================================================
+     MÀN HÌNH NHẬP MẬT KHẨU
+     ============================================================ -->
 <div id="pw-screen">
   <div class="pw-box">
     <div class="pw-icon">🔑</div>
     <h2>Nhập Mật Khẩu</h2>
     <p class="pw-sub">Trang web được bảo vệ riêng tư</p>
+
     <div class="pw-wrap">
-      <input type="password" id="pw-input" maxlength="30" placeholder="••••••" autocomplete="off">
+      <input type="password" id="pw-input" maxlength="30"
+             placeholder="••••••" autocomplete="off">
       <button id="pw-eye" onclick="toggleEye()" title="Hiện/ẩn">👁</button>
     </div>
+
     <div class="pw-err" id="pw-err">Mật khẩu không đúng</div>
     <button class="btn btn-main btn-pw" onclick="checkPw()">Xác nhận →</button>
+
+    <!-- Chỉ hiện khi nhập mật khẩu admin -->
     <div id="admin-badge">★ ADMIN MODE</div>
   </div>
 </div>
 
-<!-- NỘI DUNG CHÍNH -->
+<!-- ============================================================
+     NỘI DUNG CHÍNH
+     ============================================================ -->
 <div class="wrap">
+
   <header>
     <div><span class="stamp">Mật Mã Riêng Tư</span></div>
     <h1>Bộ <em>Giải Mã</em><br>Ngôn Ngữ Bí Mật</h1>
     <p class="tagline">♡ Chỉ dành cho người được chia sẻ ♡</p>
   </header>
 
+  <!-- Tab chọn chế độ -->
   <div class="tabs">
     <button class="tab active" id="tab-d" onclick="setMode('d')">🔓 Giải mã → Văn bản</button>
-    <button class="tab" id="tab-e" onclick="setMode('e')">🔐 Văn bản → Mã hóa</button>
+    <button class="tab"        id="tab-e" onclick="setMode('e')">🔐 Văn bản → Mã hóa</button>
   </div>
 
+  <!-- Ô nhập liệu -->
   <div class="card">
     <label id="lbl-in">Nhập chuỗi mã</label>
-    <textarea id="inp" placeholder="Nhập nội dung cần dịch…" oninput="syncLive()"></textarea>
+    <textarea id="inp"
+              placeholder="Nhập nội dung cần dịch…"
+              oninput="syncLive()"></textarea>
   </div>
 
   <div class="arrow-row">▼ kết quả ▼</div>
 
+  <!-- Ô hiển thị kết quả -->
   <div class="card">
     <label id="lbl-out">Văn bản đã giải</label>
     <div class="output-box empty" id="out"></div>
   </div>
 
+  <!-- Hàng nút bấm -->
   <div class="actions">
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-main" onclick="run()">⚡ Dịch</button>
+      <button class="btn btn-main"  onclick="run()">⚡ Dịch</button>
       <button class="btn btn-ghost" onclick="clr()">✕ Xóa</button>
     </div>
     <button class="btn btn-copy" onclick="cp()">⎘ Sao chép</button>
@@ -240,255 +661,481 @@ footer span{color:var(--accent)}
   <footer>
     <p>Trang web riêng tư · <span>Không chia sẻ</span> nội dung với người lạ</p>
   </footer>
+
 </div>
 
+<!-- Toast thông báo -->
 <div class="toast" id="toast"></div>
 
+
 <script>
-/* ===== CIPHER ENGINE ===== */
-(function(){
-var A={},B={};
-[['21','a'],['22','b'],['23','c'],['31','d'],['32','e'],['33','f'],
-['41','g'],['42','h'],['43','i'],['51','j'],['52','k'],['53','l'],
-['61','m'],['62','n'],['63','o'],['71','p'],['72','q'],['73','r'],['74','s'],
-['81','t'],['82','u'],['83','v'],['91','w'],['92','x'],['93','y'],['94','z'],
-['11','ă'],['12','â'],['13','ê'],['14','ô'],['15','ơ'],['16','ư']
-].forEach(function(p){A[p[0]]=p[1];B[p[1]]=p[0];});
-var T={'00':'','01':'\u0300','02':'\u0301','03':'\u0309','04':'\u0303','05':'\u0323'};
-var TC={'\u0300':'01','\u0301':'02','\u0309':'03','\u0303':'04','\u0323':'05'};
-var TV={
-'à':['a','\u0300'],'á':['a','\u0301'],'ả':['a','\u0309'],'ã':['a','\u0303'],'ạ':['a','\u0323'],
-'è':['e','\u0300'],'é':['e','\u0301'],'ẻ':['e','\u0309'],'ẽ':['e','\u0303'],'ẹ':['e','\u0323'],
-'ì':['i','\u0300'],'í':['i','\u0301'],'ỉ':['i','\u0309'],'ĩ':['i','\u0303'],'ị':['i','\u0323'],
-'ò':['o','\u0300'],'ó':['o','\u0301'],'ỏ':['o','\u0309'],'õ':['o','\u0303'],'ọ':['o','\u0323'],
-'ù':['u','\u0300'],'ú':['u','\u0301'],'ủ':['u','\u0309'],'ũ':['u','\u0303'],'ụ':['u','\u0323'],
-'ỳ':['y','\u0300'],'ý':['y','\u0301'],'ỷ':['y','\u0309'],'ỹ':['y','\u0303'],'ỵ':['y','\u0323'],
-'ằ':['ă','\u0300'],'ắ':['ă','\u0301'],'ẳ':['ă','\u0309'],'ẵ':['ă','\u0303'],'ặ':['ă','\u0323'],
-'ầ':['â','\u0300'],'ấ':['â','\u0301'],'ẩ':['â','\u0309'],'ẫ':['â','\u0303'],'ậ':['â','\u0323'],
-'ề':['ê','\u0300'],'ế':['ê','\u0301'],'ể':['ê','\u0309'],'ễ':['ê','\u0303'],'ệ':['ê','\u0323'],
-'ồ':['ô','\u0300'],'ố':['ô','\u0301'],'ổ':['ô','\u0309'],'ỗ':['ô','\u0303'],'ộ':['ô','\u0323'],
-'ờ':['ơ','\u0300'],'ớ':['ơ','\u0301'],'ở':['ơ','\u0309'],'ỡ':['ơ','\u0303'],'ợ':['ơ','\u0323'],
-'ừ':['ư','\u0300'],'ứ':['ư','\u0301'],'ử':['ư','\u0309'],'ữ':['ư','\u0303'],'ự':['ư','\u0323']
-};
-var CP={};Object.keys(TV).forEach(function(k){var v=TV[k];CP[v[0]+v[1]]=k;});
-function dw(w){
-  var r='',i=0;
-  while(i<w.length){
-    var tk=w.slice(i,i+2);
-    if(tk.length<2){r+=w[i];i++;continue;}
-    if(A[tk]){var base=A[tk],nx=w.slice(i+2,i+4);
-      if(nx.length===2&&T[nx]!==undefined){var c=T[nx],cb=base+c;r+=(CP[cb]||cb);i+=4;}
-      else{r+=base;i+=2;}
-    }else{r+=w[i];i++;}
-  }return r;
-}
-function ew(w){
-  var r='';
-  for(var j=0;j<w.length;j++){
-    var ch=w[j].toLowerCase();
-    if(TV[ch]){var p=TV[ch];r+=(B[p[0]]||p[0])+(TC[p[1]]||'00');}
-    else if(B[ch]){r+=B[ch];}else{r+=w[j];}
-  }return r;
-}
-window._tr=function(s,m){
-  return s.split(' ').map(function(w){
-    if(!w)return w;
-    var x=w.match(/^(.*?)([.,?!;:\u2026\u201c\u201d"'()\[\]]+)?$/);
-    var body=x[1]||'',punc=x[2]||'';
-    return(m==='d'?dw(body):ew(body))+punc;
-  }).join(' ');
-};
+/* ============================================================
+   CIPHER ENGINE – BỘ MÃ HÓA / GIẢI MÃ
+   Sơ đồ mã:
+     - Mỗi ký tự cơ bản được ánh xạ thành một cặp chữ số 2 ký tự (vd: 'a' ↔ '21')
+     - Dấu thanh tiếng Việt được mã hóa thêm 2 chữ số phía sau (vd: dấu huyền ↔ '01')
+     - Ký tự có thanh đầy đủ = mã_ký_tự + mã_thanh (4 chữ số tổng)
+   ============================================================ */
+(function () {
+
+  /* Bảng ánh xạ: mã số ↔ ký tự cơ bản (không dấu thanh) */
+  var charToCode = {};   // 'a' → '21'
+  var codeToChar = {};   // '21' → 'a'
+
+  [
+    ['21','a'],['22','b'],['23','c'],
+    ['31','d'],['32','e'],['33','f'],
+    ['41','g'],['42','h'],['43','i'],
+    ['51','j'],['52','k'],['53','l'],
+    ['61','m'],['62','n'],['63','o'],
+    ['71','p'],['72','q'],['73','r'],['74','s'],
+    ['81','t'],['82','u'],['83','v'],
+    ['91','w'],['92','x'],['93','y'],['94','z'],
+    /* Ký tự đặc biệt tiếng Việt */
+    ['11','ă'],['12','â'],['13','ê'],['14','ô'],['15','ơ'],['16','ư']
+  ].forEach(function (pair) {
+    codeToChar[pair[0]] = pair[1];
+    charToCode[pair[1]] = pair[0];
+  });
+
+  /* Bảng mã thanh: mã số ↔ combining diacritic Unicode */
+  var toneCodeToMark = {
+    '00': '',          // không dấu
+    '01': '\u0300',    // huyền  (  ̀)
+    '02': '\u0301',    // sắc    (  ́)
+    '03': '\u0309',    // hỏi    (  ̉)
+    '04': '\u0303',    // ngã    (  ̃)
+    '05': '\u0323',    // nặng   (  ̣)
+  };
+
+  var toneMarkToCode = {
+    '\u0300': '01',
+    '\u0301': '02',
+    '\u0309': '03',
+    '\u0303': '04',
+    '\u0323': '05',
+  };
+
+  /*
+   * Bảng phân tích ký tự tiếng Việt có dấu → [ký_tự_cơ_bản, combining_mark]
+   * Dùng để chuyển ký tự đã gộp (precomposed) về dạng cơ sở + dấu riêng.
+   */
+  var decomposedVowels = {
+    'à':['a','\u0300'],'á':['a','\u0301'],'ả':['a','\u0309'],'ã':['a','\u0303'],'ạ':['a','\u0323'],
+    'è':['e','\u0300'],'é':['e','\u0301'],'ẻ':['e','\u0309'],'ẽ':['e','\u0303'],'ẹ':['e','\u0323'],
+    'ì':['i','\u0300'],'í':['i','\u0301'],'ỉ':['i','\u0309'],'ĩ':['i','\u0303'],'ị':['i','\u0323'],
+    'ò':['o','\u0300'],'ó':['o','\u0301'],'ỏ':['o','\u0309'],'õ':['o','\u0303'],'ọ':['o','\u0323'],
+    'ù':['u','\u0300'],'ú':['u','\u0301'],'ủ':['u','\u0309'],'ũ':['u','\u0303'],'ụ':['u','\u0323'],
+    'ỳ':['y','\u0300'],'ý':['y','\u0301'],'ỷ':['y','\u0309'],'ỹ':['y','\u0303'],'ỵ':['y','\u0323'],
+    'ằ':['ă','\u0300'],'ắ':['ă','\u0301'],'ẳ':['ă','\u0309'],'ẵ':['ă','\u0303'],'ặ':['ă','\u0323'],
+    'ầ':['â','\u0300'],'ấ':['â','\u0301'],'ẩ':['â','\u0309'],'ẫ':['â','\u0303'],'ậ':['â','\u0323'],
+    'ề':['ê','\u0300'],'ế':['ê','\u0301'],'ể':['ê','\u0309'],'ễ':['ê','\u0303'],'ệ':['ê','\u0323'],
+    'ồ':['ô','\u0300'],'ố':['ô','\u0301'],'ổ':['ô','\u0309'],'ỗ':['ô','\u0303'],'ộ':['ô','\u0323'],
+    'ờ':['ơ','\u0300'],'ớ':['ơ','\u0301'],'ở':['ơ','\u0309'],'ỡ':['ơ','\u0303'],'ợ':['ơ','\u0323'],
+    'ừ':['ư','\u0300'],'ứ':['ư','\u0301'],'ử':['ư','\u0309'],'ữ':['ư','\u0303'],'ự':['ư','\u0323'],
+  };
+
+  /*
+   * Bảng tra ngược: base + combining_mark → precomposed character
+   * Vd: 'a' + '\u0301' → 'á'
+   */
+  var composeMap = {};
+  Object.keys(decomposedVowels).forEach(function (ch) {
+    var parts = decomposedVowels[ch];
+    composeMap[parts[0] + parts[1]] = ch;
+  });
+
+  /* ---------- GIẢI MÃ: chuỗi số → văn bản ---------- */
+  function decodeWord(word) {
+    var result = '';
+    var i = 0;
+
+    while (i < word.length) {
+      var token = word.slice(i, i + 2);
+
+      if (token.length < 2) {
+        // Ký tự lẻ không thuộc mã → giữ nguyên
+        result += word[i];
+        i++;
+        continue;
+      }
+
+      if (codeToChar[token]) {
+        var base     = codeToChar[token];
+        var toneCode = word.slice(i + 2, i + 4);
+
+        if (toneCode.length === 2 && toneCodeToMark[toneCode] !== undefined) {
+          // Có mã thanh đi kèm → ghép ký tự có thanh
+          var mark     = toneCodeToMark[toneCode];
+          var composed = composeMap[base + mark] || (base + mark);
+          result += composed;
+          i += 4;
+        } else {
+          // Không có mã thanh → ký tự không dấu
+          result += base;
+          i += 2;
+        }
+      } else {
+        // Không phải mã hợp lệ → giữ nguyên ký tự
+        result += word[i];
+        i++;
+      }
+    }
+
+    return result;
+  }
+
+  /* ---------- MÃ HÓA: văn bản → chuỗi số ---------- */
+  function encodeWord(word) {
+    var result = '';
+
+    for (var j = 0; j < word.length; j++) {
+      var ch = word[j].toLowerCase();
+
+      if (decomposedVowels[ch]) {
+        // Ký tự có dấu → mã ký tự cơ bản + mã thanh
+        var parts = decomposedVowels[ch];
+        result += (charToCode[parts[0]] || parts[0]) + (toneMarkToCode[parts[1]] || '00');
+      } else if (charToCode[ch]) {
+        // Ký tự không dấu trong bảng → chỉ mã ký tự
+        result += charToCode[ch];
+      } else {
+        // Ký tự ngoài bảng (số, dấu câu…) → giữ nguyên
+        result += word[j];
+      }
+    }
+
+    return result;
+  }
+
+  /*
+   * Hàm dịch công khai: xử lý từng từ, bảo toàn dấu câu cuối từ
+   * @param {string} text – văn bản đầu vào
+   * @param {string} mode – 'd' (giải mã) | 'e' (mã hóa)
+   * @returns {string}
+   */
+  window._tr = function (text, mode) {
+    return text.split(' ').map(function (word) {
+      if (!word) return word;
+
+      // Tách phần thân từ và dấu câu cuối (.,?!;: …)
+      var parts = word.match(/^(.*?)([.,?!;:\u2026\u201c\u201d"'()\[\]]+)?$/);
+      var body  = parts[1] || '';
+      var punc  = parts[2] || '';
+
+      return (mode === 'd' ? decodeWord(body) : encodeWord(body)) + punc;
+    }).join(' ');
+  };
+
 })();
 
-/* ===== NAVIGATION STATE ===== */
-var _navHistory = ['lock'];
-var _navIdx = 0;
 
-function updateNavBtns(){
-  var canUndo = (_navIdx > 0);
-  var canRedo = (_navIdx < _navHistory.length - 1);
-  document.getElementById('btn-undo').disabled = !canUndo;
-  document.getElementById('btn-redo').disabled = !canRedo;
+/* ============================================================
+   QUẢN LÝ LỊCH SỬ ĐIỀU HƯỚNG (UNDO / REDO)
+   Trạng thái:
+     'lock' – màn hình nhập mật khẩu
+     'main' – trang dịch thuật chính
+   ============================================================ */
+var _navHistory = ['lock'];   // Bắt đầu ở trạng thái khóa
+var _navIdx     = 0;
+
+/** Cập nhật trạng thái disabled của hai nút ← → */
+function updateNavBtns() {
+  document.getElementById('btn-undo').disabled = (_navIdx <= 0);
+  document.getElementById('btn-redo').disabled = (_navIdx >= _navHistory.length - 1);
 }
 
-function navPush(state){
+/** Thêm trạng thái mới vào lịch sử (xóa phần redo phía trước nếu có) */
+function navPush(state) {
   _navHistory = _navHistory.slice(0, _navIdx + 1);
   _navHistory.push(state);
   _navIdx = _navHistory.length - 1;
   updateNavBtns();
 }
 
-function navUndo(){
-  if(_navIdx <= 0) return;
+/** Quay về trạng thái trước */
+function navUndo() {
+  if (_navIdx <= 0) return;
   _navIdx--;
   applyNavState(_navHistory[_navIdx]);
   updateNavBtns();
 }
 
-function navRedo(){
-  if(_navIdx >= _navHistory.length - 1) return;
+/** Tiến đến trạng thái sau */
+function navRedo() {
+  if (_navIdx >= _navHistory.length - 1) return;
   _navIdx++;
   applyNavState(_navHistory[_navIdx]);
   updateNavBtns();
 }
 
-function applyNavState(state){
-  var pw = document.getElementById('pw-screen');
-  if(state === 'lock'){
-    pw.style.display = 'flex';
-    pw.style.opacity = '1';
-    setTimeout(function(){ document.getElementById('pw-input').focus(); }, 50);
+/** Áp dụng trạng thái điều hướng lên UI */
+function applyNavState(state) {
+  var pwScreen = document.getElementById('pw-screen');
+
+  if (state === 'lock') {
+    // Hiện màn hình mật khẩu
+    pwScreen.style.display  = 'flex';
+    pwScreen.style.opacity  = '1';
+    setTimeout(function () {
+      document.getElementById('pw-input').focus();
+    }, 50);
   } else {
-    pw.style.display = 'none';
-    pw.style.opacity = '0';
+    // Ẩn màn hình mật khẩu
+    pwScreen.style.display  = 'none';
+    pwScreen.style.opacity  = '0';
   }
 }
 
-/* ===== UI ===== */
-var _m='d';
-function setMode(m){
-  _m=m;
-  document.getElementById('tab-d').classList.toggle('active',m==='d');
-  document.getElementById('tab-e').classList.toggle('active',m==='e');
-  document.getElementById('lbl-in').textContent=m==='d'?'Nhập chuỗi mã':'Nhập văn bản';
-  document.getElementById('lbl-out').textContent=m==='d'?'Văn bản đã giải':'Mã hóa';
-  document.getElementById('inp').placeholder=m==='d'?'Nhập chuỗi mã cần giải…':'Nhập văn bản Tiếng Việt hoặc Tiếng Anh cần mã hóa…';
+
+/* ============================================================
+   UI – ĐIỀU KHIỂN GIAO DIỆN CHÍNH
+   ============================================================ */
+var _mode = 'd';   // Chế độ hiện tại: 'd' giải mã | 'e' mã hóa
+
+/** Chuyển đổi giữa chế độ giải mã và mã hóa */
+function setMode(mode) {
+  _mode = mode;
+
+  document.getElementById('tab-d').classList.toggle('active', mode === 'd');
+  document.getElementById('tab-e').classList.toggle('active', mode === 'e');
+
+  document.getElementById('lbl-in').textContent  = mode === 'd' ? 'Nhập chuỗi mã'  : 'Nhập văn bản';
+  document.getElementById('lbl-out').textContent = mode === 'd' ? 'Văn bản đã giải' : 'Mã hóa';
+
+  document.getElementById('inp').placeholder = mode === 'd'
+    ? 'Nhập chuỗi mã cần giải…'
+    : 'Nhập văn bản Tiếng Việt hoặc Tiếng Anh cần mã hóa…';
+
   clr();
 }
-function run(){
-  var v=document.getElementById('inp').value.trim(),o=document.getElementById('out');
-  if(!v){o.textContent='';o.classList.add('empty');return;}
-  o.textContent=window._tr(v,_m);o.classList.remove('empty');
+
+/** Thực hiện dịch và hiển thị kết quả */
+function run() {
+  var input  = document.getElementById('inp').value.trim();
+  var outEl  = document.getElementById('out');
+
+  if (!input) {
+    outEl.textContent = '';
+    outEl.classList.add('empty');
+    return;
+  }
+
+  outEl.textContent = window._tr(input, _mode);
+  outEl.classList.remove('empty');
 }
-function syncLive(){run();}
-function clr(){
-  document.getElementById('inp').value='';
-  var o=document.getElementById('out');o.textContent='';o.classList.add('empty');
+
+/** Dịch tự động khi người dùng nhập */
+function syncLive() { run(); }
+
+/** Xóa toàn bộ nội dung */
+function clr() {
+  document.getElementById('inp').value = '';
+  var outEl = document.getElementById('out');
+  outEl.textContent = '';
+  outEl.classList.add('empty');
 }
-function cp(){
-  var t=document.getElementById('out').textContent;
-  if(!t)return;
-  try{
-    var ta=document.createElement('textarea');
-    ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
-    document.body.appendChild(ta);ta.select();
+
+/** Sao chép kết quả vào clipboard
+ *  Ưu tiên dùng navigator.clipboard (HTTPS / localhost),
+ *  fallback về execCommand cho môi trường file:// hoặc HTTP */
+function cp() {
+  var text = document.getElementById('out').textContent;
+  if (!text) return;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    // API hiện đại – hoạt động trên HTTPS và localhost
+    navigator.clipboard.writeText(text)
+      .then(function () { showToast('✓ Đã sao chép!'); })
+      .catch(function () { fallbackCopy(text); });
+  } else {
+    // Fallback – hoạt động trên file:// và HTTP thông thường
+    fallbackCopy(text);
+  }
+}
+
+/** Sao chép dự phòng dùng execCommand (mọi môi trường) */
+function fallbackCopy(text) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value          = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity  = '0';
+    document.body.appendChild(ta);
+    ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-  }catch(e){}
-  showToast('✓ Đã sao chép!');
+    showToast('✓ Đã sao chép!');
+  } catch (e) {
+    showToast('⚠ Không thể sao chép');
+  }
 }
-function showToast(msg){
-  var el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  setTimeout(function(){el.classList.remove('show');},2000);
+
+/** Hiển thị toast thông báo trong 2 giây */
+function showToast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function () { el.classList.remove('show'); }, 2000);
 }
-document.addEventListener('keydown',function(e){
-  if((e.ctrlKey||e.metaKey)&&e.key==='Enter')run();
-  if(e.altKey&&e.key==='ArrowLeft'){e.preventDefault();navUndo();}
-  if(e.altKey&&e.key==='ArrowRight'){e.preventDefault();navRedo();}
+
+/* Phím tắt:
+   Ctrl/Cmd + Enter → dịch
+   Alt + ←         → undo
+   Alt + →         → redo */
+document.addEventListener('keydown', function (e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { run(); }
+  if (e.altKey && e.key === 'ArrowLeft')  { e.preventDefault(); navUndo(); }
+  if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); navRedo(); }
 });
 
-/* ===== P ===== */
-// Hash P_Normal
-var _H  = 'd8b7da5d8736c3d519758f0c6cdf4a412043c1fdf6e456ac7795f98104b5f4b4';
-// Hash P_Admin
-var _HA = 'fd6eb0d3bdd9aba7bfa8f3040ee8a56d25e5de8354df9a4bda6cad2fc2f8a090';
 
-async function checkPw(){
-  var v=document.getElementById('pw-input').value;
-  var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));
-  var h=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+/* ============================================================
+   PW
+   ============================================================ */
+var _HASH_NORMAL = 'd8b7da5d8736c3d519758f0c6cdf4a412043c1fdf6e456ac7795f98104b5f4b4';
+var _HASH_ADMIN  = 'bf555c15a954839a59b56b9386521f29c0d5fcf7b220479027a25f19fd117437';
 
-  if(h===_H || h===_HA){
-    var isAdmin = (h===_HA);
-    var s=document.getElementById('pw-screen');
-    s.style.transition='opacity .4s';s.style.opacity='0';
-    setTimeout(function(){s.style.display='none';},400);
+/** Kiểm tra mật khẩu và mở trang nếu đúng */
+async function checkPw() {
+  var value  = document.getElementById('pw-input').value;
+  var buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  var hash   = Array.from(new Uint8Array(buffer))
+                    .map(function (b) { return b.toString(16).padStart(2, '0'); })
+                    .join('');
 
-    // Hiện nút Undo/Redo góc trái
-    document.getElementById('nav-btns').style.display='flex';
+  if (hash === _HASH_NORMAL || hash === _HASH_ADMIN) {
+    var isAdmin   = (hash === _HASH_ADMIN);
+    var pwScreen  = document.getElementById('pw-screen');
 
+    // Mờ dần và ẩn màn hình mật khẩu
+    pwScreen.style.transition = 'opacity .4s';
+    pwScreen.style.opacity    = '0';
+    setTimeout(function () { pwScreen.style.display = 'none'; }, 400);
+
+    // Hiện nút điều hướng (undo/redo) góc trái
+    document.getElementById('nav-btns').style.display = 'flex';
+
+    // Đẩy trạng thái 'main' vào lịch sử điều hướng
     navPush('main');
 
-    if(isAdmin){
-      incrementAdmin();
-      showInnerCounter();
-      showAdminCounter();
+    // Cập nhật bộ đếm tương ứng
+    if (isAdmin) {
+      incrementAdmin();   // Tăng bộ đếm admin rồi hiển thị
     } else {
-      incrementInner();
-      showInnerCounter();
+      incrementInner();   // Tăng bộ đếm thường
     }
+    // Cả hai loại đăng nhập đều hiển thị đủ 2 bộ đếm (trong + admin)
+    showInnerCounter();
+    showAdminCounter();
+
   } else {
-    var err=document.getElementById('pw-err'),inp=document.getElementById('pw-input');
-    err.classList.add('show');inp.style.borderColor='var(--accent)';
-    inp.value='';inp.focus();
-    setTimeout(function(){err.classList.remove('show');inp.style.borderColor='';},2000);
+    // Sai mật khẩu: hiện thông báo lỗi và reset input
+    var errEl = document.getElementById('pw-err');
+    var inpEl = document.getElementById('pw-input');
+    errEl.classList.add('show');
+    inpEl.style.borderColor = 'var(--accent)';
+    inpEl.value = '';
+    inpEl.focus();
+    setTimeout(function () {
+      errEl.classList.remove('show');
+      inpEl.style.borderColor = '';
+    }, 2000);
   }
 }
 
-function toggleEye(){
-  var i=document.getElementById('pw-input');
-  i.type=i.type==='password'?'text':'password';
+/** Chuyển đổi hiện/ẩn mật khẩu trong input */
+function toggleEye() {
+  var inp = document.getElementById('pw-input');
+  inp.type = (inp.type === 'password') ? 'text' : 'password';
 }
+
+// Focus input ngay khi tải trang
 document.getElementById('pw-input').focus();
-document.getElementById('pw-input').addEventListener('keydown',function(e){
-  if(e.key==='Enter'){e.preventDefault();checkPw();}
+
+// Nhấn Enter để xác nhận
+document.getElementById('pw-input').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); checkPw(); }
 });
 
-/* ===== BỘ ĐẾM ===== */
-function setNum(id,n){ var el=document.getElementById(id);if(el)el.textContent=n; }
 
-function showInnerCounter(){
-  document.getElementById('cnt-inner').style.display='flex';
-  document.getElementById('div-inner').style.display='block';
-}
-function showAdminCounter(){
-  document.getElementById('cnt-admin').style.display='flex';
-  document.getElementById('div-admin').style.display='block';
-}
+/* ============================================================
+   BỘ ĐẾM TRUY CẬP (dùng localStorage – hoạt động trên mọi
+   trình duyệt và GitHub Pages, dữ liệu lưu theo thiết bị)
+   - cnt-outer : tăng mỗi lần tải trang (luôn chạy)
+   - cnt-inner : tăng khi đăng nhập đúng mật khẩu thường
+   - cnt-admin : tăng khi đăng nhập đúng mật khẩu admin
+   ============================================================ */
 
-// Bộ đếm NGOÀI: tăng mỗi lần tải trang
-async function incrementOuter(){
-  var cur=0;
-  try{var r=await window.storage.get('cnt-outer');if(r)cur=parseInt(r.value)||0;}catch(e){}
-  cur++;
-  try{await window.storage.set('cnt-outer',String(cur));}catch(e){}
-  setNum('num-outer',cur);
+/** Đọc giá trị số từ localStorage, trả về 0 nếu chưa có */
+function lsGet(key) {
+  try { return parseInt(localStorage.getItem(key)) || 0; }
+  catch (e) { return 0; }
 }
 
-// Bộ đếm TRONG: tăng khi nhập đúng mật khẩu thường
-async function incrementInner(){
-  var cur=0;
-  try{var r=await window.storage.get('cnt-inner');if(r)cur=parseInt(r.value)||0;}catch(e){}
-  cur++;
-  try{await window.storage.set('cnt-inner',String(cur));}catch(e){}
-  setNum('num-inner',cur);
+/** Ghi giá trị số vào localStorage */
+function lsSet(key, val) {
+  try { localStorage.setItem(key, String(val)); } catch (e) {}
 }
 
-// Bộ đếm ADMIN: tăng khi nhập đúng mật khẩu admin
-async function incrementAdmin(){
-  var cur=0;
-  try{var r=await window.storage.get('cnt-admin');if(r)cur=parseInt(r.value)||0;}catch(e){}
-  cur++;
-  try{await window.storage.set('cnt-admin',String(cur));}catch(e){}
-  setNum('num-admin',cur);
+/** Cập nhật số hiển thị trên giao diện */
+function setNum(id, n) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = n;
 }
 
-// Khởi động: tăng bộ đếm ngoài ngay, đọc trong+admin từ storage (không tăng)
-async function initCounters(){
-  // Tăng và hiển thị bộ đếm ngoài
-  await incrementOuter();
-
-  // Đọc bộ đếm trong và admin (chỉ để sẵn số, không hiện)
-  var keys=['cnt-inner','cnt-admin'];
-  var ids=['num-inner','num-admin'];
-  for(var i=0;i<keys.length;i++){
-    var n=0;
-    try{var r=await window.storage.get(keys[i]);if(r)n=parseInt(r.value)||0;}catch(e){}
-    setNum(ids[i],n);
-  }
+/** Hiện bộ đếm TRONG và điền số liệu từ localStorage */
+function showInnerCounter() {
+  setNum('num-inner', lsGet('cnt-inner'));
+  document.getElementById('cnt-inner').style.display = 'flex';
+  document.getElementById('div-inner').style.display = 'block';
 }
 
+/** Hiện bộ đếm ADMIN và điền số liệu từ localStorage */
+function showAdminCounter() {
+  setNum('num-admin', lsGet('cnt-admin'));
+  document.getElementById('cnt-admin').style.display = 'flex';
+  document.getElementById('div-admin').style.display = 'block';
+}
+
+/** Tăng và lưu bộ đếm NGOÀI (lượt xem trang) */
+function incrementOuter() {
+  var cur = lsGet('cnt-outer') + 1;
+  lsSet('cnt-outer', cur);
+  setNum('num-outer', cur);
+}
+
+/** Tăng và lưu bộ đếm TRONG (đăng nhập thường) */
+function incrementInner() {
+  var cur = lsGet('cnt-inner') + 1;
+  lsSet('cnt-inner', cur);
+  setNum('num-inner', cur);
+}
+
+/** Tăng và lưu bộ đếm ADMIN (đăng nhập admin) */
+function incrementAdmin() {
+  var cur = lsGet('cnt-admin') + 1;
+  lsSet('cnt-admin', cur);
+  setNum('num-admin', cur);
+}
+
+/**
+ * Khởi động bộ đếm khi tải trang:
+ *   1. Tăng ngay bộ đếm NGOÀI
+ *   2. Ép ẩn cnt-inner và cnt-admin (chống bfcache giữ lại trạng thái)
+ *      Số liệu chỉ được đọc + hiển thị SAU KHI đăng nhập đúng mật khẩu
+ */
+function initCounters() {
+  incrementOuter();
+
+  // Reset cứng – đảm bảo không lộ counter dù trình duyệt cache DOM cũ
+  document.getElementById('cnt-inner').style.display = 'none';
+  document.getElementById('cnt-admin').style.display = 'none';
+  document.getElementById('div-inner').style.display = 'none';
+  document.getElementById('div-admin').style.display = 'none';
+}
+
+// Khởi chạy
 initCounters();
 updateNavBtns();
 </script>
