@@ -521,7 +521,7 @@ footer span { color: var(--accent); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { display: inline-block; animation: spin 1s linear infinite; }
 
-.cell-main  { color: var(--ink); font-weight: 700; line-height: 1.4; }
+.cell-main  { color: var(--ink); font-weight: 700; line-height: 1.4; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .cell-sub   { color: var(--muted); font-size: 9px; margin-top: 2px; line-height: 1.5; }
 .cell-loc   { color: var(--accent2); font-weight: 700; line-height: 1.4; }
 .cell-ip    { color: var(--muted); font-size: 9px; margin-top: 2px; font-family: 'Space Mono', monospace; }
@@ -591,7 +591,7 @@ footer span { color: var(--accent); }
 .btn-export svg { width: 11px; height: 11px; }
 
 /* ══════════════════════════════════════════════
-   BẢNG THỐNG KÊ IP
+   BẢNG THỐNG KÊ THIẾT BỊ
    ══════════════════════════════════════════════ */
 .ip-stats-section {
   margin-top: 36px;
@@ -702,6 +702,14 @@ footer span { color: var(--accent); }
   padding: 24px; text-align: center;
   font-family: 'Space Mono', monospace; font-size: 10px;
   color: var(--muted); letter-spacing: .5px;
+}
+
+/* ── DEVICE ID BADGE ── */
+.dev-badge {
+  display: inline-block; background: rgba(192,57,43,.1);
+  color: var(--accent); border: 1px solid rgba(192,57,43,.3);
+  padding: 2px 6px; border-radius: 3px; font-weight: bold;
+  font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .5px;
 }
 
 @media (max-width: 700px) {
@@ -913,7 +921,7 @@ footer span { color: var(--accent); }
     </div>
 
     <div class="log-search-row">
-      <input type="text" id="log-search" placeholder="Tìm theo IP, thành phố, trình duyệt, thiết bị…" oninput="renderLogs()">
+      <input type="text" id="log-search" placeholder="Tìm theo ID thiết bị, IP mạng, thành phố…" oninput="renderLogs()">
       <div class="log-date-group">
         <label>Từ</label>
         <input type="date" class="date-inp" id="date-from" onchange="renderLogs()">
@@ -927,15 +935,16 @@ footer span { color: var(--accent); }
       <table class="log-table" id="log-table" style="display:none">
         <thead>
           <tr>
-            <th style="width:120px">Loại</th>
-            <th style="width:155px" class="sortable sort-desc" id="th-ts" onclick="toggleSort('ts')">
+            <th style="width:110px">Loại</th>
+            <th style="width:145px" class="sortable sort-desc" id="th-ts" onclick="toggleSort('ts')">
               Thời gian <span class="sort-arrow"></span>
             </th>
+            <th style="width:115px">ID Thiết bị</th>
             <th style="width:160px" class="sortable" id="th-br" onclick="toggleSort('br')">
-              Trình duyệt · Thiết bị <span class="sort-arrow"></span>
+              Trình duyệt · OS <span class="sort-arrow"></span>
             </th>
-            <th>Địa điểm · IP · ISP</th>
-            <th style="width:130px">Múi giờ · Màn hình</th>
+            <th>Vị trí · IP Mạng · ISP</th>
+            <th style="width:110px">Khác</th>
           </tr>
         </thead>
         <tbody id="log-body"></tbody>
@@ -944,10 +953,10 @@ footer span { color: var(--accent); }
 
     <div class="log-pagination" id="log-pagination"></div>
 
-    <!-- ══ BẢNG THỐNG KÊ IP ══ -->
+    <!-- ══ BẢNG THỐNG KÊ THIẾT BỊ ══ -->
     <div class="ip-stats-section" id="ip-stats-section">
       <div class="ip-stats-header">
-        <div class="ip-stats-title">Top IP đăng nhập nhiều nhất</div>
+        <div class="ip-stats-title">Top Thiết Bị Đăng Nhập</div>
         <div class="ip-mode-tabs">
           <button class="ip-mode-tab active" onclick="setIpMode('all')"    id="ipt-all">Tất cả</button>
           <button class="ip-mode-tab"        onclick="setIpMode('normal')" id="ipt-normal">🔒 Thường</button>
@@ -1077,7 +1086,6 @@ function _detectOS(ua) {
   return '';
 }
 
-
 /* ══════════════════════════════════════════
    HÀM HELPER: XỬ LÝ TIMEOUT AN TOÀN TRÁNH LỖI CLONE
    ══════════════════════════════════════════ */
@@ -1091,10 +1099,10 @@ function fetchWithTimeout(url, timeoutMs) {
 }
 
 /* ══════════════════════════════════════════
-   GEO IP — FALLBACK CHAIN (Đã đổi API ưu tiên để tránh Adblock)
+   GEO IP — FALLBACK CHAIN (Ưu tiên GeoJS để tránh Adblock)
    ══════════════════════════════════════════ */
 function _fetchGeo() {
-  /* ── Nguồn 1: get.geojs.io (Ưu tiên mới: HTTPS, ít bị Adblock chặn) ── */
+  /* ── Nguồn 1: get.geojs.io ── */
   return fetchWithTimeout('https://get.geojs.io/v1/ip/geo.json', 5000)
     .then(function(r) {
       if (!r.ok) throw new Error('geojs: HTTP ' + r.status);
@@ -1121,7 +1129,7 @@ function _fetchGeo() {
     .catch(function(e1) {
       console.warn('[geo] geojs failed:', e1.message, '— trying ipapi.co');
 
-      /* ── Nguồn 2: ipapi.co (Backup) ── */
+      /* ── Nguồn 2: ipapi.co ── */
       return fetchWithTimeout('https://ipapi.co/json/', 5000)
         .then(function(r) {
           if (!r.ok) throw new Error('ipapi: HTTP ' + r.status);
@@ -1146,7 +1154,7 @@ function _fetchGeo() {
         .catch(function(e2) {
           console.warn('[geo] ipapi failed:', e2.message, '— trying Cloudflare trace');
 
-          /* ── Nguồn 3: Cloudflare /cdn-cgi/trace (Last resort - Chỉ ra VN) ── */
+          /* ── Nguồn 3: Cloudflare /cdn-cgi/trace ── */
           return fetchWithTimeout('https://cloudflare.com/cdn-cgi/trace', 5000)
             .then(function(r) {
               if (!r.ok) throw new Error('cloudflare: HTTP ' + r.status);
@@ -1191,6 +1199,13 @@ function fbIncrement(type) {
     _sessionLogged = true;
   }
 
+  // Tạo và cấp ID Thiết bị (lưu vĩnh viễn ở máy)
+  var deviceId = localStorage.getItem('hun_device_id');
+  if (!deviceId) {
+    deviceId = 'ID-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    localStorage.setItem('hun_device_id', deviceId);
+  }
+
   db.ref('counters/' + keyMap[type]).transaction(
     function(n){ return (n||0)+1; },
     function(err,ok,snap){ if(!err&&ok) setNum('num-'+keyMap[type], snap.val()); }
@@ -1198,15 +1213,16 @@ function fbIncrement(type) {
 
   var ua = navigator.userAgent;
   var logData = {
-    type:    type,
-    ts:      Date.now(),
-    ua:      ua,
-    browser: _detectBrowser(ua),
-    device:  _detectDevice(ua),
-    os:      _detectOS(ua),
-    lang:    navigator.language || '',
-    tz:      Intl.DateTimeFormat().resolvedOptions().timeZone || '',
-    screen:  screen.width + 'x' + screen.height
+    type:     type,
+    ts:       Date.now(),
+    ua:       ua,
+    browser:  _detectBrowser(ua),
+    device:   _detectDevice(ua),
+    os:       _detectOS(ua),
+    lang:     navigator.language || '',
+    tz:       Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+    screen:   screen.width + 'x' + screen.height,
+    deviceId: deviceId
   };
 
   /* Lấy địa lý qua fallback chain */
@@ -1399,7 +1415,7 @@ function getFilteredLogs() {
     if (_filter !== 'all' && l.type !== _filter) return false;
     if (search) {
       var hay = [
-        l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'', l.isp||'',
+        l.deviceId||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'', l.isp||'',
         l.browser||'', l.device||'', l.os||'',
         l.ua||'', l.tz||'', l.lang||'', l.screen||'',
         labelType(l.type)
@@ -1424,7 +1440,6 @@ function getFilteredLogs() {
 
 /* ══════════════════════════════════════════
    XÂY DỰNG CHUỖI ĐỊA CHỈ ĐẦY ĐỦ
-   Thứ tự: Phường/Quận → Thành phố → Tỉnh/TP → Quốc gia
    ══════════════════════════════════════════ */
 function buildLocationStr(log) {
   var parts = [];
@@ -1508,9 +1523,14 @@ function renderLogs() {
 
     var extra = [log.tz, log.screen].filter(Boolean).join(' · ');
 
+    var devIdStr = log.deviceId 
+      ? '<span class="dev-badge">' + esc(log.deviceId) + '</span>' 
+      : '<span style="color:var(--muted);font-style:italic">Chưa rõ</span>';
+
     return '<tr>'
       + '<td>' + badgeHtml(log.type) + '</td>'
       + '<td><span style="color:var(--ink)">' + esc(dstr) + '</span></td>'
+      + '<td>' + devIdStr + '</td>'
       + '<td>'
         + '<div class="cell-main">' + esc(browser) + '</div>'
         + '<div class="cell-sub">' + esc(device) + (os ? ' · ' + esc(os) : '') + '</div>'
@@ -1583,14 +1603,14 @@ function esc(s) {
 
 function exportCSV() {
   var list = getFilteredLogs();
-  var rows = [['Loại','Thời gian','IP','Quận/Phường','Thành phố','Tỉnh/TP','Quốc gia','Mã bưu chính','Toạ độ','ISP','ASN','Trình duyệt','Thiết bị','OS','Múi giờ','Ngôn ngữ','Màn hình','Nguồn Geo']];
+  var rows = [['Loại','Thời gian','ID Thiết bị','IP Mạng','Quận/Phường','Thành phố','Tỉnh/TP','Quốc gia','Mã bưu chính','Toạ độ','ISP','ASN','Trình duyệt','Thiết bị','OS','Múi giờ','Ngôn ngữ','Màn hình','Nguồn Geo']];
   list.forEach(function(l) {
     var d    = new Date(l.ts);
     var dstr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN');
     var coord = (l.latitude && l.longitude) ? l.latitude+','+l.longitude : '';
     var srcMap = {1:'ipinfo.io', 2:'freeipapi.com', 3:'ipwho.is', 4:'cloudflare-trace', 5:'geojs.io', 6:'ipapi.co'};
     rows.push([
-      labelType(l.type), dstr,
+      labelType(l.type), dstr, l.deviceId||'',
       l.ip||'', l.district||'', l.city||'', l.region||'', l.country||'',
       l.postal||'', coord, l.isp||'', l.asn||'',
       l.browser || _detectBrowser(l.ua||''),
@@ -1613,7 +1633,7 @@ function exportCSV() {
 
 
 /* ══════════════════════════════════════════
-   BẢNG THỐNG KÊ IP
+   BẢNG THỐNG KÊ THIẾT BỊ ĐĂNG NHẬP
    ══════════════════════════════════════════ */
 var _ipMode = 'all';
 
@@ -1626,22 +1646,24 @@ function setIpMode(mode) {
   renderIpStats();
 }
 
-function buildIpMap(typeFilter) {
+function buildDeviceMap(typeFilter) {
   var map = {};
   _allLogs.forEach(function(log) {
-    if (!log.ip) return;
+    var key = log.deviceId || log.ip;
+    if (!key) return;
     if (log.type === 'view') return;
     if (typeFilter === 'normal' && log.type !== 'login_normal') return;
     if (typeFilter === 'admin'  && log.type !== 'login_admin')  return;
 
-    var ip = log.ip;
-    if (!map[ip]) {
-      map[ip] = {
-        ip:       ip,
+    if (!map[key]) {
+      map[key] = {
+        id:       key,
+        isDevId:  !!log.deviceId,
         total:    0,
         normal:   0,
         admin:    0,
         lastTs:   0,
+        ip:       log.ip       || '',
         city:     log.city     || '',
         district: log.district || '',
         region:   log.region   || '',
@@ -1652,12 +1674,13 @@ function buildIpMap(typeFilter) {
         os:       log.os       || _detectOS(log.ua||'')
       };
     }
-    var entry = map[ip];
+    var entry = map[key];
     entry.total++;
     if (log.type === 'login_normal') entry.normal++;
     if (log.type === 'login_admin')  entry.admin++;
     if (log.ts > entry.lastTs) {
       entry.lastTs  = log.ts;
+      if (log.ip)       entry.ip       = log.ip; 
       if (log.city)     entry.city     = log.city;
       if (log.district) entry.district = log.district;
       if (log.region)   entry.region   = log.region;
@@ -1693,7 +1716,7 @@ function renderIpStats() {
 
   var html = '';
   filteredCols.forEach(function(col) {
-    var map = buildIpMap(col.key);
+    var map = buildDeviceMap(col.key);
     var sorted = Object.values(map).sort(function(a,b) {
       var va = col.key==='normal' ? a.normal : col.key==='admin' ? a.admin : a.total;
       var vb = col.key==='normal' ? b.normal : col.key==='admin' ? b.admin : b.total;
@@ -1727,7 +1750,8 @@ function renderIpStats() {
         html += '<div class="ip-row">';
         html += '  <div class="ip-rank' + rankCls + '">#' + rank + '</div>';
         html += '  <div class="ip-info">';
-        html += '    <div class="ip-addr">' + esc(entry.ip) + '</div>';
+        html += '    <div class="ip-addr">' + (entry.isDevId ? '🆔 ' : '🌐 ') + esc(entry.id) + '</div>';
+        if (entry.isDevId && entry.ip) html += '    <div class="ip-isp" style="color:var(--muted)">IP Mạng: ' + esc(entry.ip) + '</div>';
         if (locStr)     html += '    <div class="ip-location">📍 ' + esc(locStr) + '</div>';
         if (accessInfo) html += '    <div class="ip-isp">' + esc(accessInfo) + '</div>';
         if (entry.isp)  html += '    <div class="ip-isp" style="color:var(--muted)">' + esc(entry.isp) + '</div>';
