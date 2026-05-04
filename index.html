@@ -6,545 +6,733 @@
 <title>Bộ Giải Mã</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-/* ============================================================
-   RESET & BIẾN CSS TOÀN CỤC
-   ============================================================ */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* ── RESET & BIẾN ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:       #f5f0e8;
-  --ink:      #1a1a2e;
-  --card:     #fffdf7;
-  --border:   #d4c9b0;
-  --accent:   #c0392b;   /* đỏ chủ đạo */
-  --accent2:  #2c3e7a;   /* xanh đậm */
-  --muted:    #8a7f6e;
+  --bg:      #f5f0e8;
+  --ink:     #1a1a2e;
+  --card:    #fffdf7;
+  --border:  #d4c9b0;
+  --accent:  #c0392b;
+  --accent2: #2c3e7a;
+  --orange:  #b45309;
+  --muted:   #8a7f6e;
 }
 
-/* ============================================================
-   BODY & NỀN
-   ============================================================ */
 body {
   background: var(--bg);
-  /* Hiệu ứng nền chấm bi trang trí */
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(192,57,43,.04)  0%, transparent 50%),
+    radial-gradient(circle at 20% 20%, rgba(192,57,43,.04) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(44,62,122,.04)  0%, transparent 50%);
   color: var(--ink);
   font-family: 'Nunito', sans-serif;
   min-height: 100vh;
 }
-
-/* Lớp chấm bi phủ toàn màn hình */
 body::before {
   content: '';
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E");
   background-size: 30px 30px;
-  pointer-events: none;
-  z-index: 0;
+  pointer-events: none; z-index: 0;
 }
 
-/* ============================================================
-   KHUNG NỘI DUNG CHÍNH
-   ============================================================ */
+/* ── LAYOUT ── */
 .wrap {
-  position: relative;
-  z-index: 1;
-  max-width: 780px;
-  margin: 0 auto;
+  position: relative; z-index: 1;
+  max-width: 780px; margin: 0 auto;
   padding: 48px 20px 80px;
 }
 
-/* ============================================================
-   HEADER
-   ============================================================ */
+/* ── HEADER ── */
 .stamp {
   display: inline-block;
-  border: 2.5px solid var(--accent);
-  color: var(--accent);
+  border: 2.5px solid var(--accent); color: var(--accent);
   font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 3px;
-  padding: 4px 14px;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-  position: relative;
+  font-size: 10px; letter-spacing: 3px;
+  padding: 4px 14px; text-transform: uppercase;
+  margin-bottom: 20px; position: relative;
 }
-
-/* Hai chấm tròn hai bên stamp */
-.stamp::before,
-.stamp::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-  transform: translateY(-50%);
+.stamp::before, .stamp::after {
+  content: ''; position: absolute; top: 50%;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); transform: translateY(-50%);
 }
 .stamp::before { left: -14px; }
 .stamp::after  { right: -14px; }
 
-header {
-  text-align: center;
-  margin-bottom: 52px;
-  padding-top: 12px;
-}
-
+header { text-align: center; margin-bottom: 52px; padding-top: 12px; }
 h1 {
   font-size: clamp(2.4rem, 6vw, 4rem);
-  font-weight: 900;
-  color: var(--ink);
-  line-height: 1.05;
-  margin-bottom: 10px;
-  letter-spacing: -1px;
+  font-weight: 900; color: var(--ink);
+  line-height: 1.05; margin-bottom: 10px; letter-spacing: -1px;
 }
+h1 em { font-style: normal; color: var(--accent); }
+.tagline { font-size: .95rem; color: var(--muted); font-weight: 600; letter-spacing: .8px; }
 
-h1 em {
-  font-style: normal;
-  color: var(--accent);
-}
-
-.tagline {
-  font-size: .95rem;
-  color: var(--muted);
-  font-weight: 600;
-  letter-spacing: .8px;
-}
-
-/* ============================================================
-   BA BỘ ĐẾM – GÓC TRÊN PHẢI
-   Bộ đếm NGOÀI : số lần tải trang (luôn hiển thị)
-   Bộ đếm TRONG : số lần đăng nhập thường (hiện sau khi vào)
-   Bộ đếm ADMIN  : số lần đăng nhập admin  (chỉ hiện với admin)
-   ============================================================ */
+/* ══════════════════════════════════════════════
+   BỘ ĐẾM GÓC PHẢI
+   ══════════════════════════════════════════════ */
 #counters {
-  position: fixed;
-  top: 12px;
-  right: 14px;
+  position: fixed; top: 12px; right: 14px;
   z-index: 10000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
   user-select: none;
 }
 
+.cnt-row {
+  display: flex; align-items: center; gap: 8px;
+}
+
 .cnt {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  display: flex; align-items: center; gap: 4px;
   font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  letter-spacing: .3px;
+  font-size: 10px; letter-spacing: .3px;
+  pointer-events: none;
 }
+#cnt-outer       { color: rgba(138,127,110,.55); }
+#cnt-outer svg   { opacity: .4; }
+#cnt-outer .cnum { opacity: .7; }
+#cnt-inner       { color: rgba(44,62,122,.5); display: none; cursor: pointer; pointer-events: all; position: relative; }
+#cnt-inner svg   { opacity: .4; transition: opacity .2s; }
+#cnt-inner .cnum { opacity: .75; }
+#cnt-inner:hover svg  { opacity: .7; }
+#cnt-inner:hover .cnum { opacity: 1; }
+#cnt-inner.normal-mode .cnum { display: none; }
+#cnt-inner.normal-mode svg   { opacity: .35; }
+#cnt-inner.normal-mode:hover svg { opacity: .65; }
 
-/* Bộ đếm NGOÀI – màu nhạt, luôn hiển thị */
-#cnt-outer          { color: rgba(138,127,110,.55); }
-#cnt-outer svg      { opacity: .4; }
-#cnt-outer .cnum    { opacity: .7; }
-
-/* Bộ đếm TRONG – hiện sau khi đăng nhập thành công */
-#cnt-inner          { color: rgba(44,62,122,.5); display: none; }
-#cnt-inner svg      { opacity: .4; }
-#cnt-inner .cnum    { opacity: .75; }
-
-/* Bộ đếm ADMIN – chỉ hiện khi đăng nhập bằng mật khẩu admin */
-#cnt-admin          { color: rgba(180,83,9,.5); display: none; }
-#cnt-admin svg      { opacity: .4; }
-#cnt-admin .cnum    { opacity: .75; }
-
-/* Thanh ngăn giữa các bộ đếm */
-.cnt-div {
-  width: 1px;
-  height: 12px;
-  background: rgba(138,127,110,.3);
+#inner-dropdown {
   display: none;
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  min-width: 160px;
+  z-index: 10001;
+  overflow: hidden;
+}
+#inner-dropdown.open { display: block; }
+#cnt-admin       { color: rgba(180,83,9,.7); display: none; cursor: pointer; pointer-events: all; position: relative; }
+#cnt-admin svg   { opacity: .6; transition: opacity .2s; }
+#cnt-admin .cnum { opacity: .85; }
+#cnt-admin:hover svg  { opacity: 1; }
+#cnt-admin:hover .cnum { opacity: 1; }
+.cnt-div { width: 1px; height: 12px; background: rgba(138,127,110,.3); display: none; }
+
+/* ══════════════════════════════════════════════
+   ADMIN DROPDOWN MENU
+   ══════════════════════════════════════════════ */
+#admin-dropdown {
+  display: none;
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  min-width: 200px;
+  z-index: 10001;
+  overflow: hidden;
+}
+#admin-dropdown.open { display: block; }
+
+.adm-section {
+  border-bottom: 1px solid var(--border);
+  padding: 6px 0;
+}
+.adm-section:last-child { border-bottom: none; }
+
+.adm-section-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  padding: 4px 14px 2px;
 }
 
-/* ============================================================
-   NÚT UNDO / REDO – GÓC TRÊN TRÁI
-   Cho phép quay lại màn hình mật khẩu hoặc vào lại trang dịch
-   ============================================================ */
+.adm-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 8px 14px;
+  background: none; border: none;
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  letter-spacing: .5px; color: var(--ink);
+  cursor: pointer; text-align: left;
+  transition: background .15s, color .15s;
+}
+.adm-item:hover { background: var(--bg); }
+.adm-item.danger { color: var(--accent); }
+.adm-item.danger:hover { background: rgba(192,57,43,.06); }
+.adm-item svg { width: 11px; height: 11px; flex-shrink: 0; opacity: .7; }
+
+/* ── NAV BTNS GÓC TRÁI ── */
 #nav-btns {
-  position: fixed;
-  top: 12px;
-  left: 14px;
+  position: fixed; top: 12px; left: 14px;
   z-index: 10000;
-  display: none;       /* Ẩn cho đến khi đăng nhập lần đầu */
-  align-items: center;
-  gap: 6px;
+  display: none; align-items: center; gap: 6px;
 }
-
 .nav-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 4px;
   color: rgba(138,127,110,.5);
   transition: color .2s, background .2s;
 }
+.nav-btn:hover:not(:disabled) { color: var(--ink); background: rgba(138,127,110,.1); }
+.nav-btn:disabled { opacity: .25; cursor: default; }
+.nav-btn svg { width: 14px; height: 14px; }
 
-.nav-btn:hover:not(:disabled) {
-  color: var(--ink);
-  background: rgba(138,127,110,.1);
-}
-
-.nav-btn:disabled {
-  opacity: .25;
-  cursor: default;
-}
-
-.nav-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* ============================================================
-   TABS CHỌN CHẾ ĐỘ
-   ============================================================ */
+/* ── TABS ── */
 .tabs {
-  display: flex;
-  border: 2px solid var(--ink);
-  overflow: hidden;
-  margin-bottom: 28px;
+  display: flex; border: 2px solid var(--ink);
+  overflow: hidden; margin-bottom: 28px;
   box-shadow: 4px 4px 0 var(--ink);
 }
-
 .tab {
-  flex: 1;
-  padding: 13px 10px;
-  border: none;
-  background: var(--card);
-  color: var(--muted);
+  flex: 1; padding: 13px 10px; border: none;
+  background: var(--card); color: var(--muted);
   font-family: 'Nunito', sans-serif;
-  font-size: .95rem;
-  font-weight: 700;
-  cursor: pointer;
+  font-size: .95rem; font-weight: 700; cursor: pointer;
   border-right: 2px solid var(--ink);
-  transition: all .2s;
-  letter-spacing: .3px;
+  transition: all .2s; letter-spacing: .3px;
 }
-
 .tab:last-child { border-right: none; }
 .tab.active     { background: var(--ink); color: var(--card); }
 .tab:hover:not(.active) { background: var(--bg); }
 
-/* ============================================================
-   CARD – KHUNG CHỨA NỘI DUNG
-   ============================================================ */
+/* ── CARD ── */
 .card {
   background: var(--card);
   border: 2px solid var(--ink);
   box-shadow: 6px 6px 0 var(--ink);
-  padding: 28px;
-  margin-bottom: 24px;
+  padding: 28px; margin-bottom: 24px;
 }
-
 label {
   display: block;
   font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 10px;
+  font-size: 11px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
 }
-
 textarea {
-  width: 100%;
-  background: var(--bg);
-  border: 2px solid var(--border);
-  color: var(--ink);
+  width: 100%; background: var(--bg);
+  border: 2px solid var(--border); color: var(--ink);
   font-family: 'Nunito', sans-serif;
-  font-size: 1.05rem;
-  line-height: 1.7;
-  padding: 16px;
-  resize: vertical;
-  outline: none;
-  transition: border-color .2s;
-  min-height: 130px;
-  border-radius: 0;
+  font-size: 1.05rem; line-height: 1.7;
+  padding: 16px; resize: vertical; outline: none;
+  transition: border-color .2s; min-height: 130px; border-radius: 0;
 }
-
-textarea:focus         { border-color: var(--ink); }
-textarea::placeholder  { color: var(--muted); font-style: italic; }
-
-/* Hộp hiển thị kết quả */
+textarea:focus { border-color: var(--ink); }
+textarea::placeholder { color: var(--muted); font-style: italic; }
 .output-box {
-  width: 100%;
-  min-height: 130px;
-  background: var(--bg);
-  border: 2px solid var(--border);
-  padding: 16px;
-  font-family: 'Nunito', sans-serif;
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: var(--ink);
-  white-space: pre-wrap;
-  word-break: break-all;
+  width: 100%; min-height: 130px;
+  background: var(--bg); border: 2px solid var(--border);
+  padding: 16px; font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem; line-height: 1.7; color: var(--ink);
+  white-space: pre-wrap; word-break: break-all;
 }
-
-/* Trạng thái rỗng – hiển thị chữ placeholder */
 .output-box.empty::after {
   content: 'Kết quả sẽ hiện ở đây…';
-  color: var(--muted);
-  font-style: italic;
+  color: var(--muted); font-style: italic;
 }
 
-/* ============================================================
-   ACTIONS – HÀNG NÚT BẤM
-   ============================================================ */
+/* ── ACTIONS ── */
 .actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 18px;
+  display: flex; gap: 10px; flex-wrap: wrap;
+  justify-content: space-between; align-items: center; margin-top: 18px;
 }
-
 .btn {
-  padding: 11px 24px;
-  border: 2px solid var(--ink);
+  padding: 11px 24px; border: 2px solid var(--ink);
   font-family: 'Nunito', sans-serif;
-  font-size: .95rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all .15s;
-  letter-spacing: .2px;
+  font-size: .95rem; font-weight: 800;
+  cursor: pointer; transition: all .15s; letter-spacing: .2px;
 }
-
-/* Nút chính – đỏ */
-.btn-main { background: var(--accent); color: #fff; box-shadow: 3px 3px 0 var(--ink); }
-.btn-main:hover   { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
-.btn-main:active  { transform: translate( 1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
-
-/* Nút phụ – trong suốt */
+.btn-main  { background: var(--accent); color: #fff; box-shadow: 3px 3px 0 var(--ink); }
+.btn-main:hover  { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+.btn-main:active { transform: translate( 1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
 .btn-ghost { background: transparent; color: var(--muted); border-color: var(--border); }
 .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+.btn-copy  { background: var(--accent2); color: #fff; border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+.btn-copy:hover  { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
 
-/* Nút sao chép – xanh đậm */
-.btn-copy { background: var(--accent2); color: #fff; border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
-.btn-copy:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
-
-/* Mũi tên phân cách input / output */
 .arrow-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin: 8px 0 20px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; margin: 8px 0 20px;
   font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  color: var(--muted);
-  letter-spacing: 1px;
+  font-size: 12px; color: var(--muted); letter-spacing: 1px;
 }
-.arrow-row::before, .arrow-row::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
+.arrow-row::before, .arrow-row::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-/* ============================================================
-   TOAST THÔNG BÁO
-   ============================================================ */
+/* ── TOAST ── */
 .toast {
-  position: fixed;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);  /* Ẩn bên dưới màn hình */
-  background: var(--ink);
-  color: var(--card);
+  position: fixed; bottom: 32px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink); color: var(--card);
   padding: 12px 28px;
-  font-family: 'Nunito', sans-serif;
-  font-weight: 700;
-  font-size: .9rem;
-  border: 2px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--accent);
-  z-index: 999;
-  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .9rem;
+  border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--accent);
+  z-index: 99999; transition: transform .3s cubic-bezier(.34,1.56,.64,1);
   pointer-events: none;
 }
-
 .toast.show { transform: translateX(-50%) translateY(0); }
 
-/* ============================================================
-   FOOTER
-   ============================================================ */
 footer {
-  text-align: center;
-  margin-top: 48px;
+  text-align: center; margin-top: 48px;
   font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 1px;
+  font-size: 11px; color: var(--muted); letter-spacing: 1px;
 }
-
 footer span { color: var(--accent); }
 
-/* ============================================================
-   MÀN HÌNH NHẬP MẬT KHẨU
-   ============================================================ */
+/* ── MÀN HÌNH MẬT KHẨU ── */
 #pw-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
+  position: fixed; inset: 0; z-index: 9000;
   background: var(--bg);
   background-image:
     radial-gradient(circle at 20% 20%, rgba(192,57,43,.04) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(44,62,122,.04)  0%, transparent 50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   transition: opacity .4s;
 }
-
-/* Lớp chấm bi cho màn hình mật khẩu */
 #pw-screen::before {
-  content: '';
-  position: absolute;
-  inset: 0;
+  content: ''; position: absolute; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E");
-  background-size: 30px 30px;
-  pointer-events: none;
+  background-size: 30px 30px; pointer-events: none;
 }
-
 .pw-box {
-  position: relative;
-  background: var(--card);
-  border: 2px solid var(--ink);
-  box-shadow: 8px 8px 0 var(--ink);
-  padding: 44px 40px 36px;
-  width: 100%;
-  max-width: 380px;
-  text-align: center;
+  position: relative; background: var(--card);
+  border: 2px solid var(--ink); box-shadow: 8px 8px 0 var(--ink);
+  padding: 44px 40px 36px; width: 100%; max-width: 380px; text-align: center;
 }
-
 .pw-icon { font-size: 2rem; margin-bottom: 12px; }
-
-.pw-box h2 {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: var(--ink);
-  margin-bottom: 6px;
-}
-
+.pw-box h2 { font-size: 1.5rem; font-weight: 900; color: var(--ink); margin-bottom: 6px; }
 .pw-sub {
-  font-size: .85rem;
-  color: var(--muted);
-  font-family: 'Space Mono', monospace;
-  margin-bottom: 28px;
-  letter-spacing: .3px;
+  font-size: .85rem; color: var(--muted);
+  font-family: 'Space Mono', monospace; margin-bottom: 28px; letter-spacing: .3px;
 }
-
-/* Nhóm input + nút mắt */
 .pw-wrap { position: relative; margin-bottom: 16px; }
-
 #pw-input {
-  width: 100%;
-  background: var(--bg);
-  border: 2px solid var(--border);
-  color: var(--ink);
+  width: 100%; background: var(--bg);
+  border: 2px solid var(--border); color: var(--ink);
   font-family: 'Space Mono', monospace;
-  font-size: 1.4rem;
-  letter-spacing: 6px;
-  padding: 14px 48px 14px 16px;
-  outline: none;
-  text-align: center;
-  border-radius: 0;
-  transition: border-color .2s;
+  font-size: 1.4rem; letter-spacing: 6px;
+  padding: 14px 48px 14px 16px; outline: none;
+  text-align: center; border-radius: 0; transition: border-color .2s;
 }
-
 #pw-input:focus { border-color: var(--ink); }
-
-/* Ẩn icon reveal mặc định của trình duyệt */
-#pw-input::-ms-reveal,
-#pw-input::-ms-clear { display: none; }
-
-/* Nút hiện/ẩn mật khẩu */
+#pw-input::-ms-reveal, #pw-input::-ms-clear { display: none; }
 #pw-eye {
-  position: absolute;
-  right: 12px;
-  top: 50%;
+  position: absolute; right: 12px; top: 50%;
   transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 1rem;
-  padding: 4px;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 1rem; padding: 4px;
 }
 #pw-eye:hover { color: var(--ink); }
-
-/* Thông báo sai mật khẩu */
 .pw-err {
-  color: var(--accent);
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  min-height: 18px;
-  margin-bottom: 14px;
-  opacity: 0;
-  transition: opacity .2s;
+  color: var(--accent); font-family: 'Space Mono', monospace;
+  font-size: 11px; letter-spacing: 1px;
+  min-height: 18px; margin-bottom: 14px;
+  opacity: 0; transition: opacity .2s;
 }
 .pw-err.show { opacity: 1; }
-
 .btn-pw { width: 100%; font-size: 1rem; padding: 14px; }
-
-/* Huy hiệu admin – chỉ hiện nếu admin đăng nhập */
 #admin-badge {
-  display: none;
-  margin-top: 14px;
+  display: none; margin-top: 14px;
   font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: rgba(180,83,9,.6);
-  letter-spacing: 1px;
+  font-size: 10px; color: rgba(180,83,9,.6); letter-spacing: 1px;
 }
 
-/* ============================================================
-   RESPONSIVE – MÀN HÌNH NHỎ
-   ============================================================ */
+/* ── CONFIRM DIALOG ── */
+#confirm-overlay {
+  display: none; position: fixed; inset: 0; z-index: 20000;
+  background: rgba(26,26,46,.5); backdrop-filter: blur(2px);
+  align-items: center; justify-content: center;
+}
+#confirm-overlay.open { display: flex; }
+.confirm-box {
+  background: var(--card); border: 2px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 32px 28px 24px; max-width: 340px; width: 90%; text-align: center;
+}
+.confirm-box h3 {
+  font-size: 1.1rem; font-weight: 900; color: var(--ink); margin-bottom: 10px;
+}
+.confirm-box p {
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  color: var(--muted); letter-spacing: .5px; line-height: 1.6; margin-bottom: 22px;
+}
+.confirm-box p strong { color: var(--accent); font-weight: 700; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.btn-confirm-yes {
+  padding: 10px 22px; border: 2px solid var(--ink);
+  background: var(--accent); color: #fff;
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: .9rem;
+  cursor: pointer; box-shadow: 3px 3px 0 var(--ink);
+  transition: all .15s;
+}
+.btn-confirm-yes:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+.btn-confirm-no {
+  padding: 10px 22px; border: 2px solid var(--border);
+  background: transparent; color: var(--muted);
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: .9rem;
+  cursor: pointer; transition: all .15s;
+}
+.btn-confirm-no:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ══════════════════════════════════════════════
+   TRANG LOG ADMIN
+   ══════════════════════════════════════════════ */
+#log-screen {
+  position: fixed; inset: 0; z-index: 8000;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(192,57,43,.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(44,62,122,.04)  0%, transparent 50%);
+  display: none; overflow-y: auto;
+}
+#log-screen::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 30px 30px; pointer-events: none; z-index: 0;
+}
+.log-wrap {
+  position: relative; z-index: 1;
+  max-width: 1040px; margin: 0 auto; padding: 60px 20px 80px;
+}
+.log-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+}
+.log-title { font-size: 1.8rem; font-weight: 900; color: var(--ink); letter-spacing: -0.5px; }
+.log-title em { font-style: normal; color: var(--orange); }
+
+.log-header-right { display: flex; align-items: center; gap: 10px; }
+
+.log-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--card); border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 16px 20px; text-align: center;
+  cursor: default;
+  transition: transform .15s, box-shadow .15s;
+}
+.stat-card:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
+.stat-num { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; line-height: 1; }
+.stat-num.red    { color: var(--accent); }
+.stat-num.blue   { color: var(--accent2); }
+.stat-num.orange { color: var(--orange); }
+.stat-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+
+.stat-card.clickable { cursor: pointer; }
+.stat-card.clickable.sel { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.log-filters {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 14px; align-items: center;
+}
+.filter-btn {
+  padding: 6px 14px; border: 2px solid var(--border);
+  background: var(--card); color: var(--muted);
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; cursor: pointer; transition: all .15s;
+}
+.filter-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.filter-btn:hover:not(.active) { border-color: var(--ink); color: var(--ink); }
+.log-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; }
+
+.log-search-row {
+  display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
+}
+#log-search {
+  flex: 1; min-width: 160px;
+  background: var(--card); border: 2px solid var(--border);
+  color: var(--ink); font-family: 'Space Mono', monospace; font-size: 11px;
+  padding: 7px 12px; outline: none; border-radius: 0;
+  transition: border-color .2s;
+}
+#log-search:focus { border-color: var(--ink); }
+#log-search::placeholder { color: var(--muted); }
+.log-date-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.log-date-group label {
+  font-size: 9px; letter-spacing: 1px; color: var(--muted);
+  margin-bottom: 0; text-transform: uppercase; white-space: nowrap;
+  pointer-events: none;
+}
+.date-inp {
+  background: var(--card); border: 2px solid var(--border);
+  color: var(--ink); font-family: 'Space Mono', monospace; font-size: 10px;
+  padding: 6px 8px; outline: none; border-radius: 0; cursor: pointer;
+  transition: border-color .2s;
+}
+.date-inp:focus { border-color: var(--ink); }
+
+.log-table-wrap {
+  background: var(--card); border: 2px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--ink); overflow: hidden; overflow-x: auto;
+}
+.log-table { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 760px; }
+.log-table th {
+  background: var(--ink); color: var(--card);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left; white-space: nowrap;
+}
+.log-table th.sortable { cursor: pointer; user-select: none; }
+.log-table th.sortable:hover { background: #2e2e46; }
+.log-table th .sort-arrow { margin-left: 4px; opacity: .5; }
+.log-table th.sort-asc  .sort-arrow::after { content: '↑'; opacity: 1; }
+.log-table th.sort-desc .sort-arrow::after { content: '↓'; opacity: 1; }
+.log-table th .sort-arrow::after { content: '↕'; }
+.log-table td {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  vertical-align: top; font-family: 'Space Mono', monospace; font-size: 10px;
+}
+.log-table tr:last-child td { border-bottom: none; }
+.log-table tr:hover td { background: rgba(212,201,176,.25); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px;
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase; font-weight: 700; white-space: nowrap;
+  border-radius: 2px;
+}
+.badge-icon { font-size: 11px; line-height: 1; }
+
+.badge-view {
+  background: rgba(138,127,110,.12);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.badge-login_normal {
+  background: rgba(44,62,122,.1);
+  color: var(--accent2);
+  border: 1px solid rgba(44,62,122,.3);
+}
+.badge-login_admin {
+  background: rgba(180,83,9,.1);
+  color: var(--orange);
+  border: 1px solid rgba(180,83,9,.3);
+}
+
+.log-status {
+  text-align: center; padding: 40px;
+  font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+
+.cell-main  { color: var(--ink); font-weight: 700; line-height: 1.4; }
+.cell-sub   { color: var(--muted); font-size: 9px; margin-top: 2px; line-height: 1.5; }
+.cell-loc   { color: var(--accent2); font-weight: 700; line-height: 1.4; }
+.cell-ip    { color: var(--muted); font-size: 9px; margin-top: 2px; font-family: 'Space Mono', monospace; }
+.cell-isp   { color: var(--muted); font-size: 9px; margin-top: 1px; }
+
+/* ── GEO SOURCE BADGE ── */
+.geo-src {
+  display: inline-block;
+  font-family: 'Space Mono', monospace; font-size: 7px;
+  letter-spacing: .5px; padding: 1px 5px;
+  border-radius: 2px; margin-left: 4px; vertical-align: middle;
+  opacity: .6;
+}
+.geo-src-1 { background: rgba(44,62,122,.12); color: var(--accent2); }
+.geo-src-2 { background: rgba(39,174,96,.12); color: #27ae60; }
+.geo-src-3 { background: rgba(180,83,9,.12);  color: var(--orange); }
+.geo-src-4 { background: rgba(138,127,110,.12); color: var(--muted); }
+
+.btn-refresh {
+  padding: 8px 18px; border: 2px solid var(--ink);
+  background: var(--card); color: var(--ink);
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: all .15s;
+}
+.btn-refresh:hover { background: var(--ink); color: var(--card); }
+.btn-refresh svg { width: 12px; height: 12px; }
+
+.log-pagination {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 16px; flex-wrap: wrap;
+}
+.pg-btn {
+  padding: 5px 10px; border: 1.5px solid var(--border);
+  background: var(--card); color: var(--muted);
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  cursor: pointer; transition: all .15s;
+}
+.pg-btn:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+.pg-btn:disabled { opacity: .3; cursor: default; }
+.pg-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.pg-info { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); padding: 0 6px; }
+
+.realtime-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: #27ae60; margin-right: 5px;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .5; transform: scale(.8); }
+}
+.realtime-label {
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  color: rgba(39,174,96,.7); letter-spacing: .5px;
+  display: flex; align-items: center;
+}
+
+.btn-export {
+  padding: 8px 14px; border: 2px solid var(--border);
+  background: var(--card); color: var(--muted);
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+  transition: all .15s;
+}
+.btn-export:hover { border-color: var(--accent2); color: var(--accent2); }
+.btn-export svg { width: 11px; height: 11px; }
+
+/* ══════════════════════════════════════════════
+   BẢNG THỐNG KÊ IP
+   ══════════════════════════════════════════════ */
+.ip-stats-section {
+  margin-top: 36px;
+}
+.ip-stats-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+.ip-stats-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px; font-weight: 700; color: var(--ink);
+  letter-spacing: 1px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.ip-stats-title::before {
+  content: '';
+  display: inline-block; width: 10px; height: 10px;
+  background: var(--orange); border: 1.5px solid var(--ink);
+}
+.ip-mode-tabs {
+  display: flex; gap: 0; border: 2px solid var(--ink); overflow: hidden;
+}
+.ip-mode-tab {
+  padding: 5px 14px; border: none; background: var(--card);
+  color: var(--muted); font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; border-right: 1px solid var(--border);
+  transition: all .15s;
+}
+.ip-mode-tab:last-child { border-right: none; }
+.ip-mode-tab.active { background: var(--ink); color: var(--card); }
+.ip-mode-tab:hover:not(.active) { background: var(--bg); }
+
+.ip-stats-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+.ip-col-wrap {
+  background: var(--card); border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink); overflow: hidden;
+}
+.ip-col-head {
+  padding: 10px 14px;
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border);
+}
+.ip-col-head.col-all    { background: rgba(26,26,46,.05);  color: var(--ink); }
+.ip-col-head.col-normal { background: rgba(44,62,122,.08); color: var(--accent2); }
+.ip-col-head.col-admin  { background: rgba(180,83,9,.08);  color: var(--orange); }
+.ip-col-head svg { width: 10px; height: 10px; opacity: .7; flex-shrink: 0; }
+
+.ip-row {
+  display: grid; grid-template-columns: 18px 1fr auto;
+  align-items: start; gap: 8px;
+  padding: 9px 14px; border-bottom: 1px solid rgba(212,201,176,.5);
+  transition: background .12s;
+}
+.ip-row:last-child { border-bottom: none; }
+.ip-row:hover { background: rgba(212,201,176,.2); }
+.ip-rank {
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  color: var(--muted); font-weight: 700; padding-top: 1px; line-height: 1;
+}
+.ip-rank.rank-1 { color: var(--accent); }
+.ip-rank.rank-2 { color: var(--orange); }
+.ip-rank.rank-3 { color: var(--accent2); }
+.ip-info { min-width: 0; }
+.ip-addr {
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  font-weight: 700; color: var(--ink); line-height: 1.3;
+  word-break: break-all;
+}
+.ip-location {
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  color: var(--accent2); margin-top: 2px; line-height: 1.4;
+}
+.ip-isp {
+  font-family: 'Space Mono', monospace; font-size: 8px;
+  color: var(--muted); margin-top: 1px; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;
+}
+.ip-last {
+  font-family: 'Space Mono', monospace; font-size: 8px;
+  color: var(--muted); margin-top: 2px; line-height: 1.3;
+}
+.ip-count-badge {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0;
+}
+.ip-count-num {
+  font-family: 'Space Mono', monospace; font-size: 1.1rem;
+  font-weight: 700; line-height: 1;
+}
+.ip-count-num.cnt-all    { color: var(--ink); }
+.ip-count-num.cnt-normal { color: var(--accent2); }
+.ip-count-num.cnt-admin  { color: var(--orange); }
+.ip-count-label {
+  font-family: 'Space Mono', monospace; font-size: 7px;
+  color: var(--muted); letter-spacing: .5px; text-transform: uppercase;
+}
+
+.ip-bar-wrap { margin-top: 4px; height: 3px; background: var(--border); border-radius: 1px; }
+.ip-bar { height: 3px; border-radius: 1px; transition: width .4s; }
+.ip-bar.bar-all    { background: var(--ink); }
+.ip-bar.bar-normal { background: var(--accent2); }
+.ip-bar.bar-admin  { background: var(--orange); }
+
+.ip-empty {
+  padding: 24px; text-align: center;
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  color: var(--muted); letter-spacing: .5px;
+}
+
+@media (max-width: 700px) {
+  .ip-stats-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 500px) {
-  .card          { padding: 18px; }
-  h1             { font-size: 2rem; }
-  .actions       { flex-direction: column; align-items: stretch; }
-  .btn           { text-align: center; }
-  .pw-box        { padding: 32px 20px 28px; }
-  #pw-input      { font-size: 1.2rem; letter-spacing: 4px; }
-  #counters      { top: 8px; right: 10px; }
-  #nav-btns      { top: 8px; left: 10px; }
+  .card { padding: 18px; }
+  h1 { font-size: 2rem; }
+  .actions { flex-direction: column; align-items: stretch; }
+  .btn { text-align: center; }
+  .pw-box { padding: 32px 20px 28px; }
+  #pw-input { font-size: 1.2rem; letter-spacing: 4px; }
+  #counters { top: 8px; right: 10px; }
+  #nav-btns { top: 8px; left: 10px; }
+  .log-stats { grid-template-columns: repeat(3,1fr); }
+  .stat-num { font-size: 1.4rem; }
+  .log-date-group { display: none; }
 }
 </style>
 </head>
 <body>
 
-<!-- ============================================================
-     NÚT UNDO / REDO (góc trái – hiện sau khi đăng nhập)
-     Undo : quay về màn hình mật khẩu
-     Redo : vào lại trang dịch thuật
-     ============================================================ -->
+<!-- ── NAV BTNS GÓC TRÁI ── -->
 <div id="nav-btns">
-  <button class="nav-btn" id="btn-undo" onclick="navUndo()" disabled title="Quay lại trang nhập mật khẩu">
+  <button class="nav-btn" id="btn-undo" onclick="navUndo()" disabled title="Quay lại (Alt+←)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="9 14 4 9 9 4"/>
       <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
     </svg>
   </button>
-  <button class="nav-btn" id="btn-redo" onclick="navRedo()" disabled title="Vào lại trang dịch thuật">
+  <button class="nav-btn" id="btn-redo" onclick="navRedo()" disabled title="Tiến (Alt+→)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="15 14 20 9 15 4"/>
       <path d="M4 20v-7a4 4 0 0 1 4-4h12"/>
@@ -552,104 +740,249 @@ footer span { color: var(--accent); }
   </button>
 </div>
 
-<!-- ============================================================
-     BA BỘ ĐẾM (góc phải)
-     ============================================================ -->
+<!-- ── BỘ ĐẾM GÓC PHẢI ── -->
 <div id="counters">
+  <div class="cnt-row">
+    <div class="cnt" id="cnt-outer" title="Lượt mở trang (toàn cầu, realtime)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <span class="cnum" id="num-outer">·</span>
+    </div>
 
-  <!-- Bộ đếm NGOÀI: lượt mở trang -->
-  <div class="cnt" id="cnt-outer" title="Lượt mở trang">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-         stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-    <span class="cnum" id="num-outer">·</span>
+    <div class="cnt-div" id="div-inner"></div>
+    <div class="cnt" id="cnt-inner" title="Đã đăng nhập" onclick="toggleInnerMenu(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+        <rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span class="cnum" id="num-inner">·</span>
+      <div id="inner-dropdown">
+        <div class="adm-section">
+          <button class="adm-item" onclick="doLogout(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Đăng xuất
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cnt-div" id="div-admin"></div>
+    <div class="cnt" id="cnt-admin" title="★ Admin — bấm để xem tùy chọn" onclick="toggleAdminMenu(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span class="cnum" id="num-admin">·</span>
+
+      <div id="admin-dropdown">
+        <div class="adm-section">
+          <div class="adm-section-label">Quản trị</div>
+          <button class="adm-item" onclick="admGoLog(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+            Chi tiết truy cập
+          </button>
+        </div>
+        <div class="adm-section">
+          <div class="adm-section-label">Xóa bộ đếm</div>
+          <button class="adm-item danger" onclick="admClearCounter(event,'outer')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+            </svg>
+            Xóa đếm lượt xem
+          </button>
+          <button class="adm-item danger" onclick="admClearCounter(event,'inner')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+            </svg>
+            Xóa đếm đăng nhập
+          </button>
+          <button class="adm-item danger" onclick="admClearCounter(event,'admin')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+            </svg>
+            Xóa đếm admin
+          </button>
+        </div>
+        <div class="adm-section">
+          <button class="adm-item" onclick="doLogout(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Đăng xuất
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div class="cnt-div" id="div-inner"></div>
-
-  <!-- Bộ đếm TRONG: lần nhập đúng mật khẩu thường -->
-  <div class="cnt" id="cnt-inner" title="Lần nhập đúng mật khẩu">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-         stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <rect x="3" y="11" width="18" height="11" rx="2"/>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-    </svg>
-    <span class="cnum" id="num-inner">·</span>
-  </div>
-
-  <div class="cnt-div" id="div-admin"></div>
-
-  <!-- Bộ đếm ADMIN: lần đăng nhập bằng mật khẩu admin -->
-  <div class="cnt" id="cnt-admin" title="Lần đăng nhập admin">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-         stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
-    </svg>
-    <span class="cnum" id="num-admin">·</span>
-  </div>
-
 </div>
 
-<!-- ============================================================
-     MÀN HÌNH NHẬP MẬT KHẨU
-     ============================================================ -->
+<!-- ── CONFIRM DIALOG ── -->
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Xác nhận xóa?</h3>
+    <p id="confirm-msg">Hành động này <strong>không thể hoàn tác</strong>. Bộ đếm sẽ về 0.</p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-yes" id="confirm-yes">Xóa ngay</button>
+      <button class="btn-confirm-no"  onclick="closeConfirm()">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MÀN HÌNH MẬT KHẨU ── -->
 <div id="pw-screen">
   <div class="pw-box">
     <div class="pw-icon">🔑</div>
     <h2>Nhập Mật Khẩu</h2>
     <p class="pw-sub">Trang web được bảo vệ riêng tư</p>
-
     <div class="pw-wrap">
-      <input type="password" id="pw-input" maxlength="30"
-             placeholder="••••••" autocomplete="off">
+      <input type="password" id="pw-input" maxlength="30" placeholder="••••••" autocomplete="off">
       <button id="pw-eye" onclick="toggleEye()" title="Hiện/ẩn">👁</button>
     </div>
-
     <div class="pw-err" id="pw-err">Mật khẩu không đúng</div>
     <button class="btn btn-main btn-pw" onclick="checkPw()">Xác nhận →</button>
-
-    <!-- Chỉ hiện khi nhập mật khẩu admin -->
     <div id="admin-badge">★ ADMIN MODE</div>
   </div>
 </div>
 
-<!-- ============================================================
-     NỘI DUNG CHÍNH
-     ============================================================ -->
-<div class="wrap">
+<!-- ══════════════════════════════════════════════
+     TRANG LOG ADMIN
+     ══════════════════════════════════════════════ -->
+<div id="log-screen">
+  <div class="log-wrap">
+    <div class="log-header">
+      <div class="log-title">📊 Chi tiết <em>Truy Cập</em></div>
+      <div class="log-header-right">
+        <div class="realtime-label"><span class="realtime-dot"></span>Realtime</div>
+        <button class="btn-export" onclick="exportCSV()" title="Xuất CSV">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          CSV
+        </button>
+        <button class="btn-refresh" onclick="loadLogs()" title="Tải lại dữ liệu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Tải lại
+        </button>
+      </div>
+    </div>
 
+    <div class="log-stats">
+      <div class="stat-card clickable" id="sc-all" onclick="setFilter('all')" title="Tất cả">
+        <div class="stat-num red"    id="stat-outer">–</div>
+        <div class="stat-label">👁 Lượt xem trang</div>
+      </div>
+      <div class="stat-card clickable" id="sc-normal" onclick="setFilter('login_normal')" title="Chỉ đăng nhập thường">
+        <div class="stat-num blue"   id="stat-inner">–</div>
+        <div class="stat-label">🔒 Đăng nhập thường</div>
+      </div>
+      <div class="stat-card clickable" id="sc-admin" onclick="setFilter('login_admin')" title="Chỉ đăng nhập Admin">
+        <div class="stat-num orange" id="stat-admin">–</div>
+        <div class="stat-label">👤 Đăng nhập Admin</div>
+      </div>
+    </div>
+
+    <div class="log-filters">
+      <button class="filter-btn active" onclick="setFilter('all')"          id="f-all">Tất cả</button>
+      <button class="filter-btn"        onclick="setFilter('view')"         id="f-view">👁 Xem trang</button>
+      <button class="filter-btn"        onclick="setFilter('login_normal')" id="f-normal">🔒 Đăng nhập</button>
+      <button class="filter-btn"        onclick="setFilter('login_admin')"  id="f-admin">👤 Admin</button>
+      <span class="log-count" id="log-count"></span>
+    </div>
+
+    <div class="log-search-row">
+      <input type="text" id="log-search" placeholder="Tìm theo IP, thành phố, trình duyệt, thiết bị…" oninput="renderLogs()">
+      <div class="log-date-group">
+        <label>Từ</label>
+        <input type="date" class="date-inp" id="date-from" onchange="renderLogs()">
+        <label>đến</label>
+        <input type="date" class="date-inp" id="date-to" onchange="renderLogs()">
+      </div>
+    </div>
+
+    <div class="log-table-wrap">
+      <div class="log-status" id="log-status"><span class="spin">⟳</span> Đang tải…</div>
+      <table class="log-table" id="log-table" style="display:none">
+        <thead>
+          <tr>
+            <th style="width:120px">Loại</th>
+            <th style="width:155px" class="sortable sort-desc" id="th-ts" onclick="toggleSort('ts')">
+              Thời gian <span class="sort-arrow"></span>
+            </th>
+            <th style="width:160px" class="sortable" id="th-br" onclick="toggleSort('br')">
+              Trình duyệt · Thiết bị <span class="sort-arrow"></span>
+            </th>
+            <th>Địa điểm · IP · ISP</th>
+            <th style="width:130px">Múi giờ · Màn hình</th>
+          </tr>
+        </thead>
+        <tbody id="log-body"></tbody>
+      </table>
+    </div>
+
+    <div class="log-pagination" id="log-pagination"></div>
+
+    <!-- ══ BẢNG THỐNG KÊ IP ══ -->
+    <div class="ip-stats-section" id="ip-stats-section">
+      <div class="ip-stats-header">
+        <div class="ip-stats-title">Top IP đăng nhập nhiều nhất</div>
+        <div class="ip-mode-tabs">
+          <button class="ip-mode-tab active" onclick="setIpMode('all')"    id="ipt-all">Tất cả</button>
+          <button class="ip-mode-tab"        onclick="setIpMode('normal')" id="ipt-normal">🔒 Thường</button>
+          <button class="ip-mode-tab"        onclick="setIpMode('admin')"  id="ipt-admin">👤 Admin</button>
+        </div>
+      </div>
+      <div class="ip-stats-grid" id="ip-stats-grid"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── TRANG CHÍNH ── -->
+<div class="wrap" id="main-wrap">
   <header>
     <div><span class="stamp">Mật Mã Riêng Tư</span></div>
     <h1>Bộ <em>Giải Mã</em><br>Ngôn Ngữ Bí Mật</h1>
     <p class="tagline">♡ Chỉ dành cho người có chìa khóa ♡</p>
   </header>
 
-  <!-- Tab chọn chế độ -->
   <div class="tabs">
     <button class="tab active" id="tab-d" onclick="setMode('d')">🔓 Giải mã → Văn bản</button>
     <button class="tab"        id="tab-e" onclick="setMode('e')">🔐 Văn bản → Mã hóa</button>
   </div>
 
-  <!-- Ô nhập liệu -->
   <div class="card">
     <label id="lbl-in">Nhập chuỗi mã</label>
-    <textarea id="inp"
-              placeholder="Nhập nội dung cần dịch…"
-              oninput="syncLive()"></textarea>
+    <textarea id="inp" placeholder="Nhập nội dung cần dịch…" oninput="syncLive()"></textarea>
   </div>
-
   <div class="arrow-row">▼ kết quả ▼</div>
-
-  <!-- Ô hiển thị kết quả -->
   <div class="card">
     <label id="lbl-out">Văn bản đã giải</label>
     <div class="output-box empty" id="out"></div>
   </div>
 
-  <!-- Hàng nút bấm -->
   <div class="actions">
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-main"  onclick="run()">⚡ Dịch</button>
@@ -659,68 +992,779 @@ footer span { color: var(--accent); }
   </div>
 
   <footer>
-    <p>Trang web riêng tư · <span>Không chia sẻ</span> nội dung với người lạ</p>
+    <p>Đăng công khai vì lí do bảo mật · <span>Nói với cả thế giới</span> nhưng chỉ để mình em hiểu</p>
   </footer>
-
 </div>
 
-<!-- Toast thông báo -->
 <div class="toast" id="toast"></div>
 
+<div id="fb-err" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;
+  background:#c0392b;color:#fff;font-family:monospace;font-size:12px;
+  padding:10px 16px;text-align:center;letter-spacing:.5px;">
+  ⚠ Không thể kết nối Firebase — kiểm tra mạng hoặc tắt VPN/adblock rồi tải lại trang
+</div>
+
+<!-- ── FIREBASE SDK ── -->
+<script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-app-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-database-compat.min.js"></script>
 
 <script>
-/* ============================================================
-   CIPHER ENGINE – BỘ MÃ HÓA / GIẢI MÃ
-   Sơ đồ mã:
-     - Mỗi ký tự cơ bản được ánh xạ thành một cặp chữ số 2 ký tự (vd: 'a' ↔ '21')
-     - Dấu thanh tiếng Việt được mã hóa thêm 2 chữ số phía sau (vd: dấu huyền ↔ '01')
-     - Ký tự có thanh đầy đủ = mã_ký_tự + mã_thanh (4 chữ số tổng)
-   ============================================================ */
-(function () {
+/* ══════════════════════════════════════════
+   FIREBASE INIT
+   ══════════════════════════════════════════ */
+var db = null;
 
-  /* Bảng ánh xạ: mã số ↔ ký tự cơ bản (không dấu thanh) */
-  var charToCode = {};   // 'a' → '21'
-  var codeToChar = {};   // '21' → 'a'
+var firebaseConfig = {
+  apiKey:            "AIzaSyD8ttUULzdFqPLmeK2J9JOGfEzzG949k8I",
+  authDomain:        "hun-cipher.firebaseapp.com",
+  databaseURL:       "https://hun-cipher-default-rtdb.firebaseio.com",
+  projectId:         "hun-cipher",
+  storageBucket:     "hun-cipher.firebasestorage.app",
+  messagingSenderId: "1049763241075",
+  appId:             "1:1049763241075:web:b5696c5bb26366f3ee9e06"
+};
 
-  [
-    ['21','a'],['22','b'],['23','c'],
-    ['31','d'],['32','e'],['33','f'],
-    ['41','g'],['42','h'],['43','i'],
-    ['51','j'],['52','k'],['53','l'],
-    ['61','m'],['62','n'],['63','o'],
-    ['71','p'],['72','q'],['73','r'],['74','s'],
-    ['81','t'],['82','u'],['83','v'],
-    ['91','w'],['92','x'],['93','y'],['94','z'],
-    /* Ký tự đặc biệt tiếng Việt */
-    ['11','ă'],['12','â'],['13','ê'],['14','ô'],['15','ơ'],['16','ư']
-  ].forEach(function (pair) {
-    codeToChar[pair[0]] = pair[1];
-    charToCode[pair[1]] = pair[0];
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+} catch(e) {
+  console.error('Firebase init failed:', e);
+  var _el = document.getElementById('fb-err');
+  if (_el) _el.style.display = 'block';
+}
+
+
+/* ══════════════════════════════════════════
+   HELPERS: PHÁT HIỆN THIẾT BỊ / TRÌNH DUYỆT / OS
+   ══════════════════════════════════════════ */
+function _detectDevice(ua) {
+  if (/iPhone/.test(ua))              return 'iPhone';
+  if (/iPad/.test(ua))                return 'iPad';
+  if (/Android.*Mobile/.test(ua))     return 'Android Phone';
+  if (/Android/.test(ua))             return 'Android Tablet';
+  if (/CrOS/.test(ua))                return 'Chromebook';
+  if (/Macintosh/.test(ua))           return 'MacBook/Mac';
+  if (/Windows NT/.test(ua))          return 'Windows PC';
+  if (/Linux/.test(ua))               return 'Linux PC';
+  return 'Không xác định';
+}
+
+function _detectBrowser(ua) {
+  if (/Edg\//.test(ua))              return 'Microsoft Edge';
+  if (/OPR\/|Opera\//.test(ua))      return 'Opera';
+  if (/SamsungBrowser/.test(ua))     return 'Samsung Browser';
+  if (/CriOS/.test(ua))              return 'Chrome (iOS)';
+  if (/FxiOS/.test(ua))              return 'Firefox (iOS)';
+  if (/YaBrowser/.test(ua))          return 'Yandex Browser';
+  if (/UCBrowser/.test(ua))          return 'UC Browser';
+  if (/Chrome\//.test(ua))           return 'Chrome';
+  if (/Firefox\//.test(ua))          return 'Firefox';
+  if (/Safari\//.test(ua))           return 'Safari';
+  return 'Khác';
+}
+
+function _detectOS(ua) {
+  if (/Windows NT 10\.0/.test(ua))   return 'Windows 10/11';
+  if (/Windows NT 6\.3/.test(ua))    return 'Windows 8.1';
+  if (/Windows NT 6\.1/.test(ua))    return 'Windows 7';
+  if (/Windows NT/.test(ua))         return 'Windows';
+  if (/iPhone OS ([\d_]+)/.test(ua)) return 'iOS ' + RegExp.$1.replace(/_/g,'.');
+  if (/iPad.*OS ([\d_]+)/.test(ua))  return 'iPadOS ' + RegExp.$1.replace(/_/g,'.');
+  if (/Android ([\d.]+)/.test(ua))   return 'Android ' + RegExp.$1;
+  if (/Mac OS X ([\d_]+)/.test(ua))  return 'macOS ' + RegExp.$1.replace(/_/g,'.');
+  if (/CrOS/.test(ua))               return 'Chrome OS';
+  if (/Linux/.test(ua))              return 'Linux';
+  return '';
+}
+
+
+/* ══════════════════════════════════════════
+   HÀM HELPER: XỬ LÝ TIMEOUT AN TOÀN TRÁNH LỖI CLONE
+   ══════════════════════════════════════════ */
+function fetchWithTimeout(url, timeoutMs) {
+  return Promise.race([
+    fetch(url),
+    new Promise(function(_, reject) {
+      setTimeout(function() { reject(new Error('Request timeout')); }, timeoutMs || 5000);
+    })
+  ]);
+}
+
+/* ══════════════════════════════════════════
+   GEO IP — FALLBACK CHAIN (Đã đổi API ưu tiên để tránh Adblock)
+   ══════════════════════════════════════════ */
+function _fetchGeo() {
+  /* ── Nguồn 1: get.geojs.io (Ưu tiên mới: HTTPS, ít bị Adblock chặn) ── */
+  return fetchWithTimeout('https://get.geojs.io/v1/ip/geo.json', 5000)
+    .then(function(r) {
+      if (!r.ok) throw new Error('geojs: HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(d) {
+      if (!d.ip) throw new Error('geojs: no ip in response');
+      var ispName = d.organization_name || d.organization || '';
+      var asnStr = d.asn ? 'AS' + d.asn : '';
+      return {
+        geoSrc:    5,
+        ip:        d.ip        || '',
+        district:  '',
+        city:      d.city      || '',
+        region:    d.region    || '',
+        country:   d.country   || '',
+        postal:    '',
+        latitude:  d.latitude  || '',
+        longitude: d.longitude || '',
+        isp:       ispName,
+        asn:       asnStr
+      };
+    })
+    .catch(function(e1) {
+      console.warn('[geo] geojs failed:', e1.message, '— trying ipapi.co');
+
+      /* ── Nguồn 2: ipapi.co (Backup) ── */
+      return fetchWithTimeout('https://ipapi.co/json/', 5000)
+        .then(function(r) {
+          if (!r.ok) throw new Error('ipapi: HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function(d) {
+          if (d.error || !d.ip) throw new Error('ipapi: ' + (d.reason || 'no ip'));
+          return {
+            geoSrc:    6,
+            ip:        d.ip        || '',
+            district:  '',
+            city:      d.city      || '',
+            region:    d.region    || '',
+            country:   d.country_name || '',
+            postal:    d.postal    || '',
+            latitude:  d.latitude  || '',
+            longitude: d.longitude || '',
+            isp:       d.org       || '',
+            asn:       d.asn       || ''
+          };
+        })
+        .catch(function(e2) {
+          console.warn('[geo] ipapi failed:', e2.message, '— trying Cloudflare trace');
+
+          /* ── Nguồn 3: Cloudflare /cdn-cgi/trace (Last resort - Chỉ ra VN) ── */
+          return fetchWithTimeout('https://cloudflare.com/cdn-cgi/trace', 5000)
+            .then(function(r) {
+              if (!r.ok) throw new Error('cloudflare: HTTP ' + r.status);
+              return r.text();
+            })
+            .then(function(txt) {
+              var obj = {};
+              txt.trim().split('\n').forEach(function(line) {
+                var idx = line.indexOf('=');
+                if (idx > 0) obj[line.slice(0, idx)] = line.slice(idx + 1);
+              });
+              return {
+                geoSrc:    4,
+                ip:        obj.ip  || '',
+                district:  '',
+                city:      '',
+                region:    '',
+                country:   obj.loc || '',
+                postal:    '',
+                latitude:  '',
+                longitude: '',
+                isp:       '',
+                asn:       ''
+              };
+            });
+        });
+    });
+}
+
+
+/* ══════════════════════════════════════════
+   FIREBASE: LOG & COUNTER
+   ══════════════════════════════════════════ */
+var _sessionLogged = false;
+
+function fbIncrement(type) {
+  if (!db) return;
+  var keyMap = { view:'outer', login_normal:'inner', login_admin:'admin' };
+
+  if (type === 'view') {
+    if (_sessionLogged) return;
+    _sessionLogged = true;
+  }
+
+  db.ref('counters/' + keyMap[type]).transaction(
+    function(n){ return (n||0)+1; },
+    function(err,ok,snap){ if(!err&&ok) setNum('num-'+keyMap[type], snap.val()); }
+  );
+
+  var ua = navigator.userAgent;
+  var logData = {
+    type:    type,
+    ts:      Date.now(),
+    ua:      ua,
+    browser: _detectBrowser(ua),
+    device:  _detectDevice(ua),
+    os:      _detectOS(ua),
+    lang:    navigator.language || '',
+    tz:      Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+    screen:  screen.width + 'x' + screen.height
+  };
+
+  /* Lấy địa lý qua fallback chain */
+  _fetchGeo()
+    .then(function(geo) {
+      logData.ip        = geo.ip        || '';
+      logData.city      = geo.city      || '';
+      logData.district  = geo.district  || '';
+      logData.region    = geo.region    || '';
+      logData.country   = geo.country   || '';
+      logData.postal    = geo.postal    || '';
+      logData.latitude  = geo.latitude  || '';
+      logData.longitude = geo.longitude || '';
+      logData.isp       = geo.isp       || '';
+      logData.asn       = geo.asn       || '';
+      logData.geoSrc    = geo.geoSrc    || 0;
+      db.ref('logs').push(logData);
+    })
+    .catch(function(err) {
+      console.warn('[geo] All sources failed:', err);
+      logData.geoSrc = 0;
+      db.ref('logs').push(logData);
+    });
+}
+
+function fbListenOuter() {
+  if (!db) return;
+  db.ref('counters/outer').on('value', function(s){ setNum('num-outer', s.val()||0); });
+}
+
+function fbListenAll() {
+  if (!db) return;
+  db.ref('counters/outer').on('value', function(s){
+    var n = s.val()||0; setNum('num-outer', n);
+    var el = document.getElementById('stat-outer'); if (el) el.textContent = n;
+  });
+  db.ref('counters/inner').on('value', function(s){
+    var n = s.val()||0; setNum('num-inner', n);
+    var el = document.getElementById('stat-inner'); if (el) el.textContent = n;
+  });
+  db.ref('counters/admin').on('value', function(s){
+    var n = s.val()||0; setNum('num-admin', n);
+    var el = document.getElementById('stat-admin'); if (el) el.textContent = n;
+  });
+  db.ref('logs').on('value', function(snap) {
+    var list = [];
+    snap.forEach(function(c){ list.push(Object.assign({_k:c.key}, c.val())); });
+    _allLogs = list.reverse();
+    var logScreen = document.getElementById('log-screen');
+    if (logScreen && logScreen.style.display === 'block') {
+      renderLogs();
+      renderIpStats();
+    }
+  });
+}
+
+
+/* ══════════════════════════════════════════
+   ADMIN DROPDOWN
+   ══════════════════════════════════════════ */
+var _dropOpen = false;
+var _innerDropOpen = false;
+
+function toggleAdminMenu(e) {
+  if (!_isAdmin) return;
+  e.stopPropagation();
+  _dropOpen = !_dropOpen;
+  document.getElementById('admin-dropdown').classList.toggle('open', _dropOpen);
+}
+function closeAdminMenu() {
+  _dropOpen = false;
+  document.getElementById('admin-dropdown').classList.remove('open');
+}
+function toggleInnerMenu(e) {
+  if (_isAdmin) return;
+  e.stopPropagation();
+  _innerDropOpen = !_innerDropOpen;
+  document.getElementById('inner-dropdown').classList.toggle('open', _innerDropOpen);
+}
+function closeInnerMenu() {
+  _innerDropOpen = false;
+  var el = document.getElementById('inner-dropdown');
+  if (el) el.classList.remove('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!document.getElementById('cnt-admin').contains(e.target)) closeAdminMenu();
+  if (!document.getElementById('cnt-inner').contains(e.target)) closeInnerMenu();
+});
+
+function doLogout(e) {
+  if (e) e.stopPropagation();
+  closeAdminMenu(); closeInnerMenu();
+
+  if (db) {
+    db.ref('counters/outer').off();
+    db.ref('counters/inner').off();
+    db.ref('counters/admin').off();
+    db.ref('logs').off();
+  }
+
+  _loggedIn = false; _isAdmin = false;
+  _hist = []; _hidx = -1;
+
+  document.getElementById('main-wrap').style.display  = 'none';
+  document.getElementById('log-screen').style.display = 'none';
+  document.getElementById('nav-btns').style.display   = 'none';
+
+  ['cnt-inner','cnt-admin','div-inner','div-admin'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.style.display = 'none';
   });
 
-  /* Bảng mã thanh: mã số ↔ combining diacritic Unicode */
-  var toneCodeToMark = {
-    '00': '',          // không dấu
-    '01': '\u0300',    // huyền  (  ̀)
-    '02': '\u0301',    // sắc    (  ́)
-    '03': '\u0309',    // hỏi    (  ̉)
-    '04': '\u0303',    // ngã    (  ̃)
-    '05': '\u0323',    // nặng   (  ̣)
-  };
+  var pw = document.getElementById('pw-screen');
+  pw.style.display = 'flex'; pw.style.opacity = '0';
+  setTimeout(function(){ pw.style.transition = 'opacity .3s'; pw.style.opacity = '1'; }, 10);
 
-  var toneMarkToCode = {
-    '\u0300': '01',
-    '\u0301': '02',
-    '\u0309': '03',
-    '\u0303': '04',
-    '\u0323': '05',
-  };
+  if (db) fbListenOuter();
 
-  /*
-   * Bảng phân tích ký tự tiếng Việt có dấu → [ký_tự_cơ_bản, combining_mark]
-   * Dùng để chuyển ký tự đã gộp (precomposed) về dạng cơ sở + dấu riêng.
-   */
-  var decomposedVowels = {
+  var inp = document.getElementById('pw-input');
+  inp.value = ''; inp.type = 'password';
+  setTimeout(function(){ inp.focus(); }, 350);
+  updateNavBtns();
+}
+
+function admGoLog(e) {
+  e.stopPropagation(); closeAdminMenu(); navGoLog();
+}
+
+var _pendingClearKey = null;
+var _counterLabels = { outer: 'lượt xem trang', inner: 'đăng nhập thường', admin: 'đăng nhập admin' };
+
+function admClearCounter(e, key) {
+  e.stopPropagation(); closeAdminMenu();
+  _pendingClearKey = key;
+  document.getElementById('confirm-title').textContent = 'Xóa bộ đếm ' + _counterLabels[key] + '?';
+  document.getElementById('confirm-msg').innerHTML =
+    'Hành động này <strong>không thể hoàn tác</strong>.<br>Bộ đếm <strong>' + _counterLabels[key] + '</strong> sẽ về 0.';
+  document.getElementById('confirm-yes').onclick = function(){ doResetCounter(_pendingClearKey); };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm() {
+  _pendingClearKey = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+function doResetCounter(key) {
+  closeConfirm();
+  if (!db || !key) return;
+  db.ref('counters/' + key).set(0, function(err) {
+    showToast(err ? '⚠ Lỗi: ' + err.message : '✓ Đã xóa bộ đếm ' + _counterLabels[key] + '!');
+  });
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeConfirm(); closeAdminMenu(); closeInnerMenu(); }
+});
+
+
+/* ══════════════════════════════════════════
+   TRANG LOG
+   ══════════════════════════════════════════ */
+var _allLogs = [], _filter = 'all', _page = 1, _perPage = 25;
+var _sortField = 'ts', _sortDir = 'desc';
+
+function loadLogs() {
+  var statusEl = document.getElementById('log-status');
+  var tableEl  = document.getElementById('log-table');
+  if (!db) {
+    statusEl.innerHTML = '⚠ Firebase không khả dụng';
+    statusEl.style.display = 'block'; tableEl.style.display = 'none'; return;
+  }
+  statusEl.innerHTML = '<span class="spin">⟳</span> Đang tải…';
+  statusEl.style.display = 'block'; tableEl.style.display = 'none';
+  db.ref('logs').orderByChild('ts').once('value', function(snap) {
+    _allLogs = [];
+    snap.forEach(function(c){ _allLogs.push(Object.assign({_k:c.key}, c.val())); });
+    _allLogs.reverse();
+    statusEl.style.display = 'none';
+    _page = 1; renderLogs(); renderIpStats();
+  }, function(err) {
+    statusEl.innerHTML = '⚠ Lỗi: ' + err.message;
+  });
+}
+
+function getFilteredLogs() {
+  var search   = (document.getElementById('log-search').value||'').toLowerCase().trim();
+  var dateFrom = document.getElementById('date-from').value;
+  var dateTo   = document.getElementById('date-to').value;
+
+  return _allLogs.filter(function(l) {
+    if (_filter !== 'all' && l.type !== _filter) return false;
+    if (search) {
+      var hay = [
+        l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'', l.isp||'',
+        l.browser||'', l.device||'', l.os||'',
+        l.ua||'', l.tz||'', l.lang||'', l.screen||'',
+        labelType(l.type)
+      ].join(' ').toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    if (dateFrom) {
+      var ds = new Date(l.ts).toISOString().slice(0,10);
+      if (ds < dateFrom) return false;
+    }
+    if (dateTo) {
+      var ds2 = new Date(l.ts).toISOString().slice(0,10);
+      if (ds2 > dateTo) return false;
+    }
+    return true;
+  }).sort(function(a,b) {
+    var va = a[_sortField]||'', vb = b[_sortField]||'';
+    if (_sortDir === 'asc') return va > vb ? 1 : va < vb ? -1 : 0;
+    return va < vb ? 1 : va > vb ? -1 : 0;
+  });
+}
+
+/* ══════════════════════════════════════════
+   XÂY DỰNG CHUỖI ĐỊA CHỈ ĐẦY ĐỦ
+   Thứ tự: Phường/Quận → Thành phố → Tỉnh/TP → Quốc gia
+   ══════════════════════════════════════════ */
+function buildLocationStr(log) {
+  var parts = [];
+  var district = (log.district || '').trim();
+  var city     = (log.city     || '').trim();
+  var region   = (log.region   || '').trim();
+  var country  = (log.country  || '').trim();
+
+  if (district && district !== city && district !== region) parts.push(district);
+  if (city && city !== region) parts.push(city);
+  if (region) parts.push(region);
+  if (country) parts.push(country);
+
+  return parts.filter(Boolean).join(', ');
+}
+
+/* Nhãn nguồn geo */
+function geoSrcBadge(src) {
+  if (!src) return '';
+  var labels = { 1: 'ipinfo', 2: 'freeipapi', 3: 'ipwho', 4: 'cf', 5: 'geojs', 6: 'ipapi' };
+  var cls    = { 1: 'geo-src-1', 2: 'geo-src-2', 3: 'geo-src-3', 4: 'geo-src-4', 5: 'geo-src-2', 6: 'geo-src-1' };
+  return '<span class="geo-src ' + (cls[src]||'geo-src-1') + '">' + (labels[src]||'geo') + '</span>';
+}
+
+function badgeHtml(type) {
+  var icon, label, cls;
+  if (type === 'view') {
+    icon = '👁'; label = 'Xem trang'; cls = 'badge-view';
+  } else if (type === 'login_normal') {
+    icon = '🔒'; label = 'Đăng nhập'; cls = 'badge-login_normal';
+  } else {
+    icon = '👤'; label = 'Admin'; cls = 'badge-login_admin';
+  }
+  return '<span class="badge ' + cls + '"><span class="badge-icon">' + icon + '</span>' + label + '</span>';
+}
+
+function renderLogs() {
+  var list     = getFilteredLogs();
+  document.getElementById('log-count').textContent = list.length + ' bản ghi';
+  var tbody    = document.getElementById('log-body');
+  var tableEl  = document.getElementById('log-table');
+  var statusEl = document.getElementById('log-status');
+
+  if (list.length === 0) {
+    statusEl.innerHTML = 'Chưa có bản ghi nào phù hợp';
+    statusEl.style.display = 'block';
+    tableEl.style.display  = 'none';
+    document.getElementById('log-pagination').innerHTML = '';
+    return;
+  }
+
+  var totalPages = Math.ceil(list.length / _perPage);
+  if (_page > totalPages) _page = totalPages;
+  var start = (_page-1)*_perPage, end = Math.min(start+_perPage, list.length);
+  var pageList = list.slice(start, end);
+
+  tbody.innerHTML = pageList.map(function(log) {
+    var d    = new Date(log.ts);
+    var dstr = d.toLocaleDateString('vi-VN') + ' '
+             + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+    var browser = log.browser || _detectBrowser(log.ua||'');
+    var device  = log.device  || _detectDevice(log.ua||'');
+    var os      = log.os      || _detectOS(log.ua||'');
+
+    var locStr  = buildLocationStr(log);
+    var locHtml = locStr
+      ? '📍 ' + esc(locStr) + geoSrcBadge(log.geoSrc)
+      : '<span style="color:var(--muted);font-style:italic">Chưa có vị trí</span>';
+
+    var postalStr = log.postal ? ' <span style="color:var(--muted);font-size:8px">[' + esc(log.postal) + ']</span>' : '';
+
+    var ipStr  = log.ip  ? esc(log.ip)  : '–';
+    var ispStr = log.isp ? esc(log.isp) : '';
+
+    var coordStr = (log.latitude && log.longitude)
+      ? '<a href="https://maps.google.com/?q='+log.latitude+','+log.longitude+'" target="_blank" '
+        + 'style="color:var(--accent2);font-size:8px;text-decoration:none;" title="Xem bản đồ">🗺 '
+        + String(log.latitude).slice(0,8) + ',' + String(log.longitude).slice(0,8) + '</a>'
+      : '';
+
+    var extra = [log.tz, log.screen].filter(Boolean).join(' · ');
+
+    return '<tr>'
+      + '<td>' + badgeHtml(log.type) + '</td>'
+      + '<td><span style="color:var(--ink)">' + esc(dstr) + '</span></td>'
+      + '<td>'
+        + '<div class="cell-main">' + esc(browser) + '</div>'
+        + '<div class="cell-sub">' + esc(device) + (os ? ' · ' + esc(os) : '') + '</div>'
+      + '</td>'
+      + '<td>'
+        + '<div class="cell-loc">' + locHtml + postalStr + '</div>'
+        + '<div class="cell-ip">🌐 ' + ipStr + (coordStr ? ' &nbsp;' + coordStr : '') + '</div>'
+        + (ispStr ? '<div class="cell-isp">' + ispStr + (log.asn ? ' · ' + esc(log.asn) : '') + '</div>' : '')
+      + '</td>'
+      + '<td><div class="cell-sub">' + esc(extra) + '</div></td>'
+      + '</tr>';
+  }).join('');
+
+  tableEl.style.display  = 'table';
+  statusEl.style.display = 'none';
+  renderPagination(totalPages, list.length, start, end);
+}
+
+function renderPagination(total, count, start, end) {
+  var pg = document.getElementById('log-pagination');
+  if (total <= 1) { pg.innerHTML = ''; return; }
+  var html = '<button class="pg-btn" onclick="goPage('+(_page-1)+')" '+((_page<=1)?'disabled':'')+'>←</button>';
+  var rs = Math.max(1,_page-2), re = Math.min(total,_page+2);
+  if (rs > 1) html += '<button class="pg-btn" onclick="goPage(1)">1</button>';
+  if (rs > 2) html += '<span class="pg-info">…</span>';
+  for (var i=rs; i<=re; i++)
+    html += '<button class="pg-btn'+(i===_page?' active':'')+'" onclick="goPage('+i+')">'+i+'</button>';
+  if (re < total-1) html += '<span class="pg-info">…</span>';
+  if (re < total)   html += '<button class="pg-btn" onclick="goPage('+total+')">'+total+'</button>';
+  html += '<button class="pg-btn" onclick="goPage('+(_page+1)+')" '+((_page>=total)?'disabled':'')+'>→</button>';
+  html += '<span class="pg-info">'+(start+1)+'–'+end+' / '+count+'</span>';
+  pg.innerHTML = html;
+}
+
+function goPage(n) { _page = n; renderLogs(); document.getElementById('log-screen').scrollTop = 0; }
+
+function toggleSort(field) {
+  if (_sortField === field) _sortDir = _sortDir==='desc'?'asc':'desc';
+  else { _sortField = field; _sortDir = 'desc'; }
+  ['ts','br'].forEach(function(f) {
+    var th = document.getElementById('th-'+f); if (!th) return;
+    th.classList.remove('sort-asc','sort-desc');
+    if (f===_sortField) th.classList.add('sort-'+_sortDir);
+  });
+  renderLogs();
+}
+
+function setFilter(type) {
+  _filter = type; _page = 1;
+  ['all','view','login_normal','login_admin'].forEach(function(t) {
+    var id = 'f-'+(t==='login_normal'?'normal':t==='login_admin'?'admin':t);
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', t===type);
+  });
+  ['sc-all','sc-normal','sc-admin'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.classList.remove('sel');
+  });
+  if (type==='all')          { var e=document.getElementById('sc-all');    if(e) e.classList.add('sel'); }
+  if (type==='login_normal') { var e=document.getElementById('sc-normal'); if(e) e.classList.add('sel'); }
+  if (type==='login_admin')  { var e=document.getElementById('sc-admin');  if(e) e.classList.add('sel'); }
+  renderLogs();
+}
+
+function labelType(t) {
+  return t==='view' ? '👁 Xem trang' : t==='login_normal' ? '🔒 Đăng nhập' : '👤 Admin';
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function exportCSV() {
+  var list = getFilteredLogs();
+  var rows = [['Loại','Thời gian','IP','Quận/Phường','Thành phố','Tỉnh/TP','Quốc gia','Mã bưu chính','Toạ độ','ISP','ASN','Trình duyệt','Thiết bị','OS','Múi giờ','Ngôn ngữ','Màn hình','Nguồn Geo']];
+  list.forEach(function(l) {
+    var d    = new Date(l.ts);
+    var dstr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN');
+    var coord = (l.latitude && l.longitude) ? l.latitude+','+l.longitude : '';
+    var srcMap = {1:'ipinfo.io', 2:'freeipapi.com', 3:'ipwho.is', 4:'cloudflare-trace', 5:'geojs.io', 6:'ipapi.co'};
+    rows.push([
+      labelType(l.type), dstr,
+      l.ip||'', l.district||'', l.city||'', l.region||'', l.country||'',
+      l.postal||'', coord, l.isp||'', l.asn||'',
+      l.browser || _detectBrowser(l.ua||''),
+      l.device  || _detectDevice(l.ua||''),
+      l.os      || _detectOS(l.ua||''),
+      l.tz||'', l.lang||'', l.screen||'',
+      srcMap[l.geoSrc] || ''
+    ]);
+  });
+  var csv  = rows.map(function(r){
+    return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(',');
+  }).join('\n');
+  var blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a'); a.href=url; a.download='logs_'+Date.now()+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✓ Đã xuất CSV!');
+}
+
+
+/* ══════════════════════════════════════════
+   BẢNG THỐNG KÊ IP
+   ══════════════════════════════════════════ */
+var _ipMode = 'all';
+
+function setIpMode(mode) {
+  _ipMode = mode;
+  ['all','normal','admin'].forEach(function(m) {
+    var el = document.getElementById('ipt-'+m);
+    if (el) el.classList.toggle('active', m === mode);
+  });
+  renderIpStats();
+}
+
+function buildIpMap(typeFilter) {
+  var map = {};
+  _allLogs.forEach(function(log) {
+    if (!log.ip) return;
+    if (log.type === 'view') return;
+    if (typeFilter === 'normal' && log.type !== 'login_normal') return;
+    if (typeFilter === 'admin'  && log.type !== 'login_admin')  return;
+
+    var ip = log.ip;
+    if (!map[ip]) {
+      map[ip] = {
+        ip:       ip,
+        total:    0,
+        normal:   0,
+        admin:    0,
+        lastTs:   0,
+        city:     log.city     || '',
+        district: log.district || '',
+        region:   log.region   || '',
+        country:  log.country  || '',
+        isp:      log.isp      || '',
+        browser:  log.browser  || _detectBrowser(log.ua||''),
+        device:   log.device   || _detectDevice(log.ua||''),
+        os:       log.os       || _detectOS(log.ua||'')
+      };
+    }
+    var entry = map[ip];
+    entry.total++;
+    if (log.type === 'login_normal') entry.normal++;
+    if (log.type === 'login_admin')  entry.admin++;
+    if (log.ts > entry.lastTs) {
+      entry.lastTs  = log.ts;
+      if (log.city)     entry.city     = log.city;
+      if (log.district) entry.district = log.district;
+      if (log.region)   entry.region   = log.region;
+      if (log.country)  entry.country  = log.country;
+      if (log.isp)      entry.isp      = log.isp;
+      if (log.browser)  entry.browser  = log.browser || _detectBrowser(log.ua||'');
+      if (log.device)   entry.device   = log.device  || _detectDevice(log.ua||'');
+      if (log.os)       entry.os       = log.os      || _detectOS(log.ua||'');
+    }
+  });
+  return map;
+}
+
+function renderIpStats() {
+  var grid = document.getElementById('ip-stats-grid');
+  if (!grid) return;
+
+  var cols = [
+    { key: 'all',    label: 'Tất cả đăng nhập', cls: 'col-all',    numCls: 'cnt-all',    barCls: 'bar-all',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>' },
+    { key: 'normal', label: '🔒 Đăng nhập thường', cls: 'col-normal', numCls: 'cnt-normal', barCls: 'bar-normal',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+    { key: 'admin',  label: '👤 Đăng nhập Admin',  cls: 'col-admin',  numCls: 'cnt-admin',  barCls: 'bar-admin',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' }
+  ];
+
+  var showKeys;
+  if (_ipMode === 'all')         showKeys = ['all','normal','admin'];
+  else if (_ipMode === 'normal') showKeys = ['all','normal'];
+  else                           showKeys = ['all','admin'];
+
+  var filteredCols = cols.filter(function(c){ return showKeys.indexOf(c.key) !== -1; });
+
+  var html = '';
+  filteredCols.forEach(function(col) {
+    var map = buildIpMap(col.key);
+    var sorted = Object.values(map).sort(function(a,b) {
+      var va = col.key==='normal' ? a.normal : col.key==='admin' ? a.admin : a.total;
+      var vb = col.key==='normal' ? b.normal : col.key==='admin' ? b.admin : b.total;
+      return vb - va;
+    });
+    var top = sorted.slice(0, 8);
+    var maxCount = top.length ? (col.key==='normal' ? top[0].normal : col.key==='admin' ? top[0].admin : top[0].total) : 1;
+
+    html += '<div class="ip-col-wrap">';
+    html += '<div class="ip-col-head ' + col.cls + '">' + col.icon + ' ' + esc(col.label) + '</div>';
+
+    if (top.length === 0) {
+      html += '<div class="ip-empty">Chưa có dữ liệu</div>';
+    } else {
+      top.forEach(function(entry, idx) {
+        var rank    = idx + 1;
+        var rankCls = rank <= 3 ? ' rank-' + rank : '';
+        var count   = col.key==='normal' ? entry.normal : col.key==='admin' ? entry.admin : entry.total;
+        var barPct  = maxCount > 0 ? Math.round(count/maxCount*100) : 0;
+
+        var locStr = buildLocationStr(entry);
+
+        var accessInfo = [entry.browser, entry.device, entry.os].filter(Boolean).join(' · ');
+
+        var lastStr = '';
+        if (entry.lastTs) {
+          var ld = new Date(entry.lastTs);
+          lastStr = ld.toLocaleDateString('vi-VN') + ' ' + ld.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+        }
+
+        html += '<div class="ip-row">';
+        html += '  <div class="ip-rank' + rankCls + '">#' + rank + '</div>';
+        html += '  <div class="ip-info">';
+        html += '    <div class="ip-addr">' + esc(entry.ip) + '</div>';
+        if (locStr)     html += '    <div class="ip-location">📍 ' + esc(locStr) + '</div>';
+        if (accessInfo) html += '    <div class="ip-isp">' + esc(accessInfo) + '</div>';
+        if (entry.isp)  html += '    <div class="ip-isp" style="color:var(--muted)">' + esc(entry.isp) + '</div>';
+        if (lastStr)    html += '    <div class="ip-last">🕐 ' + esc(lastStr) + '</div>';
+        html += '    <div class="ip-bar-wrap"><div class="ip-bar ' + col.barCls + '" style="width:' + barPct + '%"></div></div>';
+        html += '  </div>';
+        html += '  <div class="ip-count-badge">';
+        html += '    <div class="ip-count-num ' + col.numCls + '">' + count + '</div>';
+        html += '    <div class="ip-count-label">lần</div>';
+        html += '  </div>';
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+  });
+
+  grid.style.gridTemplateColumns = filteredCols.length === 3 ? 'repeat(3,1fr)' : 'repeat(2,1fr)';
+  grid.innerHTML = html;
+}
+
+
+/* ══════════════════════════════════════════
+   CIPHER ENGINE
+   ══════════════════════════════════════════ */
+(function(){
+  var c2ch={}, ch2c={};
+  [['21','a'],['22','b'],['23','c'],['31','d'],['32','e'],['33','f'],
+   ['41','g'],['42','h'],['43','i'],['51','j'],['52','k'],['53','l'],
+   ['61','m'],['62','n'],['63','o'],['71','p'],['72','q'],['73','r'],['74','s'],
+   ['81','t'],['82','u'],['83','v'],['91','w'],['92','x'],['93','y'],['94','z'],
+   ['11','ă'],['12','â'],['13','ê'],['14','ô'],['15','ơ'],['16','ư']
+  ].forEach(function(p){ c2ch[p[0]]=p[1]; ch2c[p[1]]=p[0]; });
+
+  var t2m={'00':'','01':'\u0300','02':'\u0301','03':'\u0309','04':'\u0303','05':'\u0323'};
+  var m2t={'\u0300':'01','\u0301':'02','\u0309':'03','\u0303':'04','\u0323':'05'};
+
+  var dv={
     'à':['a','\u0300'],'á':['a','\u0301'],'ả':['a','\u0309'],'ã':['a','\u0303'],'ạ':['a','\u0323'],
     'è':['e','\u0300'],'é':['e','\u0301'],'ẻ':['e','\u0309'],'ẽ':['e','\u0303'],'ẹ':['e','\u0323'],
     'ì':['i','\u0300'],'í':['i','\u0301'],'ỉ':['i','\u0309'],'ĩ':['i','\u0303'],'ị':['i','\u0323'],
@@ -732,412 +1776,261 @@ footer span { color: var(--accent); }
     'ề':['ê','\u0300'],'ế':['ê','\u0301'],'ể':['ê','\u0309'],'ễ':['ê','\u0303'],'ệ':['ê','\u0323'],
     'ồ':['ô','\u0300'],'ố':['ô','\u0301'],'ổ':['ô','\u0309'],'ỗ':['ô','\u0303'],'ộ':['ô','\u0323'],
     'ờ':['ơ','\u0300'],'ớ':['ơ','\u0301'],'ở':['ơ','\u0309'],'ỡ':['ơ','\u0303'],'ợ':['ơ','\u0323'],
-    'ừ':['ư','\u0300'],'ứ':['ư','\u0301'],'ử':['ư','\u0309'],'ữ':['ư','\u0303'],'ự':['ư','\u0323'],
+    'ừ':['ư','\u0300'],'ứ':['ư','\u0301'],'ử':['ư','\u0309'],'ữ':['ư','\u0303'],'ự':['ư','\u0323']
   };
+  var cm={};
+  Object.keys(dv).forEach(function(ch){ var p=dv[ch]; cm[p[0]+p[1]]=ch; });
 
-  /*
-   * Bảng tra ngược: base + combining_mark → precomposed character
-   * Vd: 'a' + '\u0301' → 'á'
-   */
-  var composeMap = {};
-  Object.keys(decomposedVowels).forEach(function (ch) {
-    var parts = decomposedVowels[ch];
-    composeMap[parts[0] + parts[1]] = ch;
-  });
-
-  /* ---------- GIẢI MÃ: chuỗi số → văn bản ---------- */
-  function decodeWord(word) {
-    var result = '';
-    var i = 0;
-
-    while (i < word.length) {
-      var token = word.slice(i, i + 2);
-
-      if (token.length < 2) {
-        // Ký tự lẻ không thuộc mã → giữ nguyên
-        result += word[i];
-        i++;
-        continue;
-      }
-
-      if (codeToChar[token]) {
-        var base     = codeToChar[token];
-        var toneCode = word.slice(i + 2, i + 4);
-
-        if (toneCode.length === 2 && toneCodeToMark[toneCode] !== undefined) {
-          // Có mã thanh đi kèm → ghép ký tự có thanh
-          var mark     = toneCodeToMark[toneCode];
-          var composed = composeMap[base + mark] || (base + mark);
-          result += composed;
-          i += 4;
-        } else {
-          // Không có mã thanh → ký tự không dấu
-          result += base;
-          i += 2;
-        }
-      } else {
-        // Không phải mã hợp lệ → giữ nguyên ký tự
-        result += word[i];
-        i++;
-      }
+  function dec(w){
+    var r='',i=0;
+    while(i<w.length){
+      var tk=w.slice(i,i+2);
+      if(tk.length<2){r+=w[i];i++;continue;}
+      if(c2ch[tk]){
+        var base=c2ch[tk],tc=w.slice(i+2,i+4);
+        if(tc.length===2&&t2m[tc]!==undefined){r+=cm[base+t2m[tc]]||(base+t2m[tc]);i+=4;}
+        else{r+=base;i+=2;}
+      } else {r+=w[i];i++;}
     }
-
-    return result;
+    return r;
   }
-
-  /* ---------- MÃ HÓA: văn bản → chuỗi số ---------- */
-  function encodeWord(word) {
-    var result = '';
-
-    for (var j = 0; j < word.length; j++) {
-      var ch = word[j].toLowerCase();
-
-      if (decomposedVowels[ch]) {
-        // Ký tự có dấu → mã ký tự cơ bản + mã thanh
-        var parts = decomposedVowels[ch];
-        result += (charToCode[parts[0]] || parts[0]) + (toneMarkToCode[parts[1]] || '00');
-      } else if (charToCode[ch]) {
-        // Ký tự không dấu trong bảng → chỉ mã ký tự
-        result += charToCode[ch];
-      } else {
-        // Ký tự ngoài bảng (số, dấu câu…) → giữ nguyên
-        result += word[j];
-      }
+  function enc(w){
+    var r='';
+    for(var j=0;j<w.length;j++){
+      var ch=w[j].toLowerCase();
+      if(dv[ch]){var p=dv[ch];r+=(ch2c[p[0]]||p[0])+(m2t[p[1]]||'00');}
+      else if(ch2c[ch]){r+=ch2c[ch];}
+      else{r+=w[j];}
     }
-
-    return result;
+    return r;
   }
-
-  /*
-   * Hàm dịch công khai: xử lý từng từ, bảo toàn dấu câu cuối từ
-   * @param {string} text – văn bản đầu vào
-   * @param {string} mode – 'd' (giải mã) | 'e' (mã hóa)
-   * @returns {string}
-   */
-  window._tr = function (text, mode) {
-    return text.split(' ').map(function (word) {
-      if (!word) return word;
-
-      // Tách phần thân từ và dấu câu cuối (.,?!;: …)
-      var parts = word.match(/^(.*?)([.,?!;:\u2026\u201c\u201d"'()\[\]]+)?$/);
-      var body  = parts[1] || '';
-      var punc  = parts[2] || '';
-
-      return (mode === 'd' ? decodeWord(body) : encodeWord(body)) + punc;
+  window._tr=function(text,mode){
+    return text.split(' ').map(function(word){
+      if(!word) return word;
+      var p=word.match(/^(.*?)([.,?!;:\u2026\u201c\u201d"'()\[\]]+)?$/);
+      var body=p[1]||'',punc=p[2]||'';
+      return(mode==='d'?dec(body):enc(body))+punc;
     }).join(' ');
   };
-
 })();
 
 
-/* ============================================================
-   QUẢN LÝ LỊCH SỬ ĐIỀU HƯỚNG (UNDO / REDO)
-   Trạng thái:
-     'lock' – màn hình nhập mật khẩu
-     'main' – trang dịch thuật chính
-   ============================================================ */
-var _navHistory = ['lock'];   // Bắt đầu ở trạng thái khóa
-var _navIdx     = 0;
+/* ══════════════════════════════════════════
+   NAVIGATION
+   ══════════════════════════════════════════ */
+var _hist  = [];
+var _hidx  = -1;
+var _loggedIn = false;
+var _isAdmin  = false;
 
-/** Cập nhật trạng thái disabled của hai nút ← → */
-function updateNavBtns() {
-  document.getElementById('btn-undo').disabled = (_navIdx <= 0);
-  document.getElementById('btn-redo').disabled = (_navIdx >= _navHistory.length - 1);
-}
-
-/** Thêm trạng thái mới vào lịch sử (xóa phần redo phía trước nếu có) */
-function navPush(state) {
-  _navHistory = _navHistory.slice(0, _navIdx + 1);
-  _navHistory.push(state);
-  _navIdx = _navHistory.length - 1;
-  updateNavBtns();
-}
-
-/** Quay về trạng thái trước */
-function navUndo() {
-  if (_navIdx <= 0) return;
-  _navIdx--;
-  applyNavState(_navHistory[_navIdx]);
-  updateNavBtns();
-}
-
-/** Tiến đến trạng thái sau */
-function navRedo() {
-  if (_navIdx >= _navHistory.length - 1) return;
-  _navIdx++;
-  applyNavState(_navHistory[_navIdx]);
-  updateNavBtns();
-}
-
-/** Áp dụng trạng thái điều hướng lên UI */
-function applyNavState(state) {
-  var pwScreen = document.getElementById('pw-screen');
-
-  if (state === 'lock') {
-    // Hiện màn hình mật khẩu
-    pwScreen.style.display  = 'flex';
-    pwScreen.style.opacity  = '1';
-    setTimeout(function () {
-      document.getElementById('pw-input').focus();
-    }, 50);
-  } else {
-    // Ẩn màn hình mật khẩu
-    pwScreen.style.display  = 'none';
-    pwScreen.style.opacity  = '0';
-  }
-}
-
-
-/* ============================================================
-   UI – ĐIỀU KHIỂN GIAO DIỆN CHÍNH
-   ============================================================ */
-var _mode = 'd';   // Chế độ hiện tại: 'd' giải mã | 'e' mã hóa
-
-/** Chuyển đổi giữa chế độ giải mã và mã hóa */
-function setMode(mode) {
-  _mode = mode;
-
-  document.getElementById('tab-d').classList.toggle('active', mode === 'd');
-  document.getElementById('tab-e').classList.toggle('active', mode === 'e');
-
-  document.getElementById('lbl-in').textContent  = mode === 'd' ? 'Nhập chuỗi mã'  : 'Nhập văn bản';
-  document.getElementById('lbl-out').textContent = mode === 'd' ? 'Văn bản đã giải' : 'Mã hóa';
-
-  document.getElementById('inp').placeholder = mode === 'd'
-    ? 'Nhập chuỗi mã cần giải…'
-    : 'Nhập văn bản Tiếng Việt hoặc Tiếng Anh cần mã hóa…';
-
-  clr();
-}
-
-/** Thực hiện dịch và hiển thị kết quả */
-function run() {
-  var input  = document.getElementById('inp').value.trim();
-  var outEl  = document.getElementById('out');
-
-  if (!input) {
-    outEl.textContent = '';
-    outEl.classList.add('empty');
+function updateNavBtns(){
+  if (!_loggedIn) {
+    document.getElementById('btn-undo').disabled = true;
+    document.getElementById('btn-redo').disabled = true;
     return;
   }
-
-  outEl.textContent = window._tr(input, _mode);
-  outEl.classList.remove('empty');
+  document.getElementById('btn-undo').disabled = (_hidx <= 0);
+  document.getElementById('btn-redo').disabled = (_hidx >= _hist.length - 1);
 }
 
-/** Dịch tự động khi người dùng nhập */
-function syncLive() { run(); }
-
-/** Xóa toàn bộ nội dung */
-function clr() {
-  document.getElementById('inp').value = '';
-  var outEl = document.getElementById('out');
-  outEl.textContent = '';
-  outEl.classList.add('empty');
+function navPush(s){
+  if (_hidx >= 0 && _hist[_hidx] === s) return;
+  _hist = _hist.slice(0, _hidx + 1);
+  _hist.push(s);
+  _hidx = _hist.length - 1;
+  updateNavBtns();
 }
 
-/** Sao chép kết quả vào clipboard
- *  Ưu tiên dùng navigator.clipboard (HTTPS / localhost),
- *  fallback về execCommand cho môi trường file:// hoặc HTTP */
-function cp() {
-  var text = document.getElementById('out').textContent;
-  if (!text) return;
+function navUndo(){
+  if (!_loggedIn || _hidx <= 0) return;
+  _hidx--;
+  var s = _hist[_hidx];
+  if (s === 'lock') { _hidx++; doLogout(); }
+  else { applyNav(s); updateNavBtns(); }
+}
 
-  if (navigator.clipboard && window.isSecureContext) {
-    // API hiện đại – hoạt động trên HTTPS và localhost
-    navigator.clipboard.writeText(text)
-      .then(function () { showToast('✓ Đã sao chép!'); })
-      .catch(function () { fallbackCopy(text); });
+function navRedo(){
+  if (!_loggedIn || _hidx >= _hist.length - 1) return;
+  _hidx++;
+  applyNav(_hist[_hidx]);
+  updateNavBtns();
+}
+
+function applyNav(s) {
+  var log  = document.getElementById('log-screen');
+  var main = document.getElementById('main-wrap');
+  log.style.display  = 'none';
+  main.style.display = 'none';
+
+  if (s === 'log') {
+    log.style.display = 'block';
+    if (_allLogs.length > 0) {
+      var statusEl = document.getElementById('log-status');
+      if (statusEl) statusEl.style.display = 'none';
+      renderLogs(); renderIpStats();
+    } else { loadLogs(); }
   } else {
-    // Fallback – hoạt động trên file:// và HTTP thông thường
-    fallbackCopy(text);
+    main.style.display = 'block';
+    var mode = (s === 'main-e') ? 'e' : 'd';
+    _mode = mode;
+    document.getElementById('tab-d').classList.toggle('active', mode === 'd');
+    document.getElementById('tab-e').classList.toggle('active', mode === 'e');
+    document.getElementById('lbl-in').textContent  = mode === 'd' ? 'Nhập chuỗi mã'  : 'Nhập văn bản';
+    document.getElementById('lbl-out').textContent = mode === 'd' ? 'Văn bản đã giải' : 'Mã hóa';
+    document.getElementById('inp').placeholder     = mode === 'd' ? 'Nhập chuỗi mã cần giải…' : 'Nhập văn bản cần mã hóa…';
   }
 }
 
-/** Sao chép dự phòng dùng execCommand (mọi môi trường) */
-function fallbackCopy(text) {
-  try {
-    var ta = document.createElement('textarea');
-    ta.value          = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity  = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    showToast('✓ Đã sao chép!');
-  } catch (e) {
-    showToast('⚠ Không thể sao chép');
-  }
+function navGoLog(){
+  if (!_isAdmin) return;
+  if (_hidx >= 0 && _hist[_hidx] !== 'log') _hist[_hidx] = 'main-' + _mode;
+  if (_hidx < _hist.length - 1 && _hist[_hidx + 1] === 'log') {
+    _hidx++; updateNavBtns();
+  } else { navPush('log'); }
+  applyNav('log');
 }
 
-/** Hiển thị toast thông báo trong 2 giây */
-function showToast(msg) {
-  var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(function () { el.classList.remove('show'); }, 2000);
-}
 
-/* Phím tắt:
-   Ctrl/Cmd + Enter → dịch
-   Alt + ←         → undo
-   Alt + →         → redo */
-document.addEventListener('keydown', function (e) {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { run(); }
-  if (e.altKey && e.key === 'ArrowLeft')  { e.preventDefault(); navUndo(); }
-  if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); navRedo(); }
-});
+/* ══════════════════════════════════════════
+   MẬT KHẨU
+   ══════════════════════════════════════════ */
+var _HN = 'd8b7da5d8736c3d519758f0c6cdf4a412043c1fdf6e456ac7795f98104b5f4b4';
+var _HA = 'bf555c15a954839a59b56b9386521f29c0d5fcf7b220479027a25f19fd117437';
 
-
-/* ============================================================
-   PW
-   ============================================================ */
-var _HASH_NORMAL = 'd8b7da5d8736c3d519758f0c6cdf4a412043c1fdf6e456ac7795f98104b5f4b4';
-var _HASH_ADMIN  = 'bf555c15a954839a59b56b9386521f29c0d5fcf7b220479027a25f19fd117437';
-
-/** Kiểm tra mật khẩu và mở trang nếu đúng */
 async function checkPw() {
-  var value  = document.getElementById('pw-input').value;
-  var buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  var hash   = Array.from(new Uint8Array(buffer))
-                    .map(function (b) { return b.toString(16).padStart(2, '0'); })
-                    .join('');
+  var val  = document.getElementById('pw-input').value;
+  var buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+  var hash = Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
 
-  if (hash === _HASH_NORMAL || hash === _HASH_ADMIN) {
-    var isAdmin   = (hash === _HASH_ADMIN);
-    var pwScreen  = document.getElementById('pw-screen');
+  if (hash === _HN || hash === _HA) {
+    _isAdmin  = (hash === _HA);
+    _loggedIn = true;
 
-    // Mờ dần và ẩn màn hình mật khẩu
-    pwScreen.style.transition = 'opacity .4s';
-    pwScreen.style.opacity    = '0';
-    setTimeout(function () { pwScreen.style.display = 'none'; }, 400);
+    var pw = document.getElementById('pw-screen');
+    pw.style.transition = 'opacity .4s'; pw.style.opacity = '0';
+    setTimeout(function(){ pw.style.display = 'none'; }, 400);
 
-    // Hiện nút điều hướng (undo/redo) góc trái
-    document.getElementById('nav-btns').style.display = 'flex';
+    if (_isAdmin) { _hist = ['lock','main-d','log']; _hidx = 1; }
+    else          { _hist = ['lock','main-d'];       _hidx = 1; }
 
-    // Đẩy trạng thái 'main' vào lịch sử điều hướng
-    navPush('main');
+    document.getElementById('main-wrap').style.display = 'block';
+    document.getElementById('nav-btns').style.display  = 'flex';
+    updateNavBtns();
 
-    // Cập nhật bộ đếm tương ứng
-    if (isAdmin) {
-      incrementAdmin();   // Tăng bộ đếm admin rồi hiển thị
+    fbIncrement(_isAdmin ? 'login_admin' : 'login_normal');
+    fbListenAll();
+
+    document.getElementById('div-inner').style.display = 'block';
+    document.getElementById('cnt-inner').style.display = 'flex';
+
+    if (_isAdmin) {
+      document.getElementById('cnt-inner').classList.remove('normal-mode');
+      document.getElementById('cnt-inner').style.cursor        = 'default';
+      document.getElementById('cnt-inner').style.pointerEvents = 'none';
+      document.getElementById('div-admin').style.display = 'block';
+      document.getElementById('cnt-admin').style.display = 'flex';
+      document.getElementById('cnt-admin').style.cursor        = 'pointer';
+      document.getElementById('cnt-admin').style.pointerEvents = 'all';
     } else {
-      incrementInner();   // Tăng bộ đếm thường
+      document.getElementById('cnt-inner').classList.add('normal-mode');
+      document.getElementById('cnt-inner').style.cursor        = 'pointer';
+      document.getElementById('cnt-inner').style.pointerEvents = 'all';
+      document.getElementById('div-admin').style.display = 'none';
+      document.getElementById('cnt-admin').style.display = 'none';
     }
-    // Cả hai loại đăng nhập đều hiển thị đủ 2 bộ đếm (trong + admin)
-    showInnerCounter();
-    showAdminCounter();
 
   } else {
-    // Sai mật khẩu: hiện thông báo lỗi và reset input
-    var errEl = document.getElementById('pw-err');
-    var inpEl = document.getElementById('pw-input');
-    errEl.classList.add('show');
-    inpEl.style.borderColor = 'var(--accent)';
-    inpEl.value = '';
-    inpEl.focus();
-    setTimeout(function () {
-      errEl.classList.remove('show');
-      inpEl.style.borderColor = '';
-    }, 2000);
+    var err = document.getElementById('pw-err');
+    var inp = document.getElementById('pw-input');
+    err.classList.add('show');
+    inp.style.borderColor = 'var(--accent)'; inp.value = ''; inp.focus();
+    setTimeout(function(){ err.classList.remove('show'); inp.style.borderColor = ''; }, 2000);
   }
 }
 
-/** Chuyển đổi hiện/ẩn mật khẩu trong input */
-function toggleEye() {
+function toggleEye(){
   var inp = document.getElementById('pw-input');
   inp.type = (inp.type === 'password') ? 'text' : 'password';
 }
 
-// Focus input ngay khi tải trang
-document.getElementById('pw-input').focus();
 
-// Nhấn Enter để xác nhận
-document.getElementById('pw-input').addEventListener('keydown', function (e) {
-  if (e.key === 'Enter') { e.preventDefault(); checkPw(); }
+/* ══════════════════════════════════════════
+   UI DỊCH THUẬT
+   ══════════════════════════════════════════ */
+var _mode = 'd';
+
+function setMode(m){
+  _mode = m;
+  document.getElementById('tab-d').classList.toggle('active', m === 'd');
+  document.getElementById('tab-e').classList.toggle('active', m === 'e');
+  document.getElementById('lbl-in').textContent  = m === 'd' ? 'Nhập chuỗi mã'  : 'Nhập văn bản';
+  document.getElementById('lbl-out').textContent = m === 'd' ? 'Văn bản đã giải' : 'Mã hóa';
+  document.getElementById('inp').placeholder     = m === 'd' ? 'Nhập chuỗi mã cần giải…' : 'Nhập văn bản cần mã hóa…';
+  clr();
+  if (_loggedIn) navPush('main-' + m);
+}
+function run(){
+  var v = document.getElementById('inp').value.trim();
+  var o = document.getElementById('out');
+  if (!v) { o.textContent = ''; o.classList.add('empty'); return; }
+  o.textContent = window._tr(v, _mode);
+  o.classList.remove('empty');
+}
+function syncLive(){ run(); }
+function clr(){
+  document.getElementById('inp').value = '';
+  var o = document.getElementById('out'); o.textContent = ''; o.classList.add('empty');
+}
+function cp(){
+  var t = document.getElementById('out').textContent; if (!t) return;
+  if (navigator.clipboard && window.isSecureContext)
+    navigator.clipboard.writeText(t).then(function(){ showToast('✓ Đã sao chép!'); }).catch(function(){ fbCopy(t); });
+  else fbCopy(t);
+}
+function fbCopy(t){
+  try {
+    var ta = document.createElement('textarea'); ta.value = t;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast('✓ Đã sao chép!');
+  } catch(e) { showToast('⚠ Không thể sao chép'); }
+}
+function showToast(m){
+  var el = document.getElementById('toast'); el.textContent = m; el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2000);
+}
+function setNum(id, n){ var el = document.getElementById(id); if (el) el.textContent = n; }
+
+document.addEventListener('keydown', function(e){
+  if ((e.ctrlKey||e.metaKey) && e.key==='Enter') run();
+  if (e.altKey && e.key==='ArrowLeft')  { e.preventDefault(); navUndo(); }
+  if (e.altKey && e.key==='ArrowRight') { e.preventDefault(); navRedo(); }
 });
 
 
-/* ============================================================
-   BỘ ĐẾM TRUY CẬP (dùng localStorage – hoạt động trên mọi
-   trình duyệt và GitHub Pages, dữ liệu lưu theo thiết bị)
-   - cnt-outer : tăng mỗi lần tải trang (luôn chạy)
-   - cnt-inner : tăng khi đăng nhập đúng mật khẩu thường
-   - cnt-admin : tăng khi đăng nhập đúng mật khẩu admin
-   ============================================================ */
+/* ══════════════════════════════════════════
+   KHỞI ĐỘNG
+   ══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  ['cnt-inner','cnt-admin','div-inner','div-admin'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  var mw = document.getElementById('main-wrap');
+  if (mw) mw.style.display = 'none';
 
-/** Đọc giá trị số từ localStorage, trả về 0 nếu chưa có */
-function lsGet(key) {
-  try { return parseInt(localStorage.getItem(key)) || 0; }
-  catch (e) { return 0; }
-}
+  document.getElementById('nav-btns').style.display = 'none';
+  updateNavBtns();
 
-/** Ghi giá trị số vào localStorage */
-function lsSet(key, val) {
-  try { localStorage.setItem(key, String(val)); } catch (e) {}
-}
+  if (db) { fbIncrement('view'); fbListenOuter(); }
 
-/** Cập nhật số hiển thị trên giao diện */
-function setNum(id, n) {
-  var el = document.getElementById(id);
-  if (el) el.textContent = n;
-}
-
-/** Hiện bộ đếm TRONG và điền số liệu từ localStorage */
-function showInnerCounter() {
-  setNum('num-inner', lsGet('cnt-inner'));
-  document.getElementById('cnt-inner').style.display = 'flex';
-  document.getElementById('div-inner').style.display = 'block';
-}
-
-/** Hiện bộ đếm ADMIN và điền số liệu từ localStorage */
-function showAdminCounter() {
-  setNum('num-admin', lsGet('cnt-admin'));
-  document.getElementById('cnt-admin').style.display = 'flex';
-  document.getElementById('div-admin').style.display = 'block';
-}
-
-/** Tăng và lưu bộ đếm NGOÀI (lượt xem trang) */
-function incrementOuter() {
-  var cur = lsGet('cnt-outer') + 1;
-  lsSet('cnt-outer', cur);
-  setNum('num-outer', cur);
-}
-
-/** Tăng và lưu bộ đếm TRONG (đăng nhập thường) */
-function incrementInner() {
-  var cur = lsGet('cnt-inner') + 1;
-  lsSet('cnt-inner', cur);
-  setNum('num-inner', cur);
-}
-
-/** Tăng và lưu bộ đếm ADMIN (đăng nhập admin) */
-function incrementAdmin() {
-  var cur = lsGet('cnt-admin') + 1;
-  lsSet('cnt-admin', cur);
-  setNum('num-admin', cur);
-}
-
-/**
- * Khởi động bộ đếm khi tải trang:
- *   1. Tăng ngay bộ đếm NGOÀI
- *   2. Ép ẩn cnt-inner và cnt-admin (chống bfcache giữ lại trạng thái)
- *      Số liệu chỉ được đọc + hiển thị SAU KHI đăng nhập đúng mật khẩu
- */
-function initCounters() {
-  incrementOuter();
-
-  // Reset cứng – đảm bảo không lộ counter dù trình duyệt cache DOM cũ
-  document.getElementById('cnt-inner').style.display = 'none';
-  document.getElementById('cnt-admin').style.display = 'none';
-  document.getElementById('div-inner').style.display = 'none';
-  document.getElementById('div-admin').style.display = 'none';
-}
-
-// Khởi chạy
-initCounters();
-updateNavBtns();
+  var pwInput = document.getElementById('pw-input');
+  if (pwInput) {
+    pwInput.focus();
+    pwInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') { e.preventDefault(); checkPw(); }
+    });
+  }
+});
 </script>
 </body>
 </html>
