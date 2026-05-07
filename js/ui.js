@@ -1,0 +1,229 @@
+/* ══════════════════════════════════════════
+   ui.js — Hàm render & cập nhật giao diện
+   Tất cả hàm chỉ đọc state rồi phản ánh ra DOM,
+   không tự thay đổi state.
+   ══════════════════════════════════════════ */
+
+// ── Alias helper ──
+
+/**
+ * Tra cứu tên alias cho một deviceId.
+ * @param {string} devId
+ * @returns {string|null}
+ */
+function getAliasForId(devId) {
+  if (!devId || !_aliases) return null;
+  for (var aliasName in _aliases) {
+    var ids = _aliases[aliasName].split(',').map(function(s) { return s.trim(); });
+    if (ids.indexOf(devId) !== -1) return aliasName;
+  }
+  return null;
+}
+
+// ── Render content areas ──
+
+function renderHints() {
+  var el = document.getElementById('pw-hints-display');
+  if (!el) return;
+  el.innerHTML =
+    '<div class="hint-title">Password Hints</div>' +
+    '<div style="margin-bottom:12px"><strong>💡 Hint 1:</strong><br>' + esc(currentHints.hint1) + '</div>' +
+    '<div><strong>💡 Hint 2:</strong><br>' + esc(currentHints.hint2) + '</div>';
+}
+
+function renderTitle() {
+  var el = document.getElementById('main-title');
+  if (el) el.innerHTML = currentMainTitle;
+  document.title = currentTabTitle;
+}
+
+function renderNotes() {
+  var tagEl  = document.getElementById('main-tagline');
+  var footEl = document.getElementById('main-footer');
+  if (tagEl)  tagEl.innerHTML  = currentNotes.tagline;
+  if (footEl) footEl.innerHTML = currentNotes.footer;
+}
+
+function renderWelcome() {
+  var welEl = document.getElementById('pw-welcome-display');
+  if (welEl) welEl.innerHTML = esc(currentWelcome);
+}
+
+// ── System protection UI ──
+
+function updateProtectionUI() {
+  var statusText = document.getElementById('shield-status-text');
+  var toggleBtn  = document.getElementById('btn-toggle-shield');
+
+  if (_isProtected) {
+    document.body.classList.add('is-protected');
+    if (statusText) { statusText.textContent = 'ENABLED'; statusText.style.color = 'var(--secure)'; }
+    if (toggleBtn)  { toggleBtn.textContent = 'Disable Protection'; toggleBtn.style.background = 'var(--accent)'; toggleBtn.style.borderColor = 'var(--accent)'; }
+  } else {
+    document.body.classList.remove('is-protected');
+    if (statusText) { statusText.textContent = 'DISABLED'; statusText.style.color = 'var(--muted)'; }
+    if (toggleBtn)  { toggleBtn.textContent = 'Enable Protection'; toggleBtn.style.background = 'var(--secure)'; toggleBtn.style.borderColor = 'var(--secure)'; }
+  }
+}
+
+// ── Counters & stats ──
+
+/**
+ * Cập nhật Session Breakdown (tổng & thực từng loại đăng nhập).
+ * Áp dụng cutoff để bỏ qua dữ liệu cũ trước một mốc thời gian nhất định.
+ */
+function updateSessionBreakdown() {
+  if (!_allLogs) return;
+
+  var uNorm = new Set(), uSec = new Set(), uAdmin = new Set(), uFounder = new Set();
+  var tNorm = 0, tSec = 0, tAdmin = 0, tFounder = 0;
+
+  // Bỏ qua dữ liệu trước mốc reset ngày 05/05/2026 14:44 (UTC+7)
+  var cutoff = new Date('2026-05-05T14:44:00+07:00').getTime();
+
+  _allLogs.forEach(function(l) {
+    if (l.ts < cutoff) return;
+    var id = l.deviceId || l.ip;
+    if (l.type === 'login_normal')   { tNorm++;   uNorm.add(id); }
+    if (l.type === 'login_secondary'){ tSec++;    uSec.add(id); }
+    if (l.type === 'login_admin')    { tAdmin++;  uAdmin.add(id); }
+    if (l.type === 'login_founder')  { tFounder++; uFounder.add(id); }
+  });
+
+  setNum('drop-main',     tNorm);
+  setNum('drop-main-u',   uNorm.size);
+  setNum('drop-sub',      tSec);
+  setNum('drop-sub-u',    uSec.size);
+  setNum('drop-admin',    tAdmin);
+  setNum('drop-admin-u',  uAdmin.size);
+  setNum('drop-founder',  tFounder);
+  setNum('drop-founder-u', uFounder.size);
+}
+
+/**
+ * Cập nhật các số liệu hiển thị trên thanh nav và stat cards.
+ */
+function updateStatsUI() {
+  setNum('login-outer-num', _vOuter);
+  setNum('num-traffic',     _vOuter);
+  setNum('drop-views',      _vOuter);
+  setNum('drop-unique',     _vReal);
+  setNum('stat-outer',      _vOuter);
+  setNum('stat-real',       _vReal);
+
+  var totalAuth = _vNormal + _vSec + _vAdmin + _vFounder;
+  setNum('num-auth',   totalAuth);
+  setNum('stat-inner', _vNormal + _vSec);
+  setNum('stat-admin', _vAdmin);
+  setNum('stat-founder', _vFounder);
+}
+
+// ── Notification list ──
+
+function renderNotiList() {
+  var listEl = document.getElementById('noti-list');
+  if (_allNoti.length === 0) {
+    listEl.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:10px;">No new notifications</div>';
+    return;
+  }
+  listEl.innerHTML = _allNoti.map(function(n) {
+    var d = new Date(n.ts);
+    var timeStr = d.toLocaleDateString('en-US') + ' ' +
+                  d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    return '<div class="noti-item ' + (n.read ? '' : 'unread') + '">' +
+             '<div>' + esc(n.text) + '</div>' +
+             '<div class="noti-time">' + timeStr + '</div>' +
+           '</div>';
+  }).join('');
+}
+
+// ── Profile icon ──
+
+function updateProfileIcon() {
+  var isNormal   = _currentLoginRole === 'normal' || _currentLoginRole === 'secondary';
+  var isAdmin    = _currentLoginRole === 'admin';
+  var isFounder  = _currentLoginRole === 'founder';
+
+  document.getElementById('icon-prof-normal').style.display  = isNormal  ? 'block' : 'none';
+  document.getElementById('icon-prof-admin').style.display   = isAdmin   ? 'block' : 'none';
+  document.getElementById('icon-prof-founder').style.display = isFounder ? 'block' : 'none';
+
+  var pf = document.getElementById('cnt-profile');
+  pf.style.color = isFounder ? 'var(--founder)' : (isAdmin ? 'var(--orange)' : 'var(--accent2)');
+}
+
+// ── Check block ──
+
+function checkBlock() {
+  if (window._myIP && _blockedIPs[window._myIP.replace(/\./g, '-')]) {
+    document.body.innerHTML =
+      '<div style="display:flex;height:100vh;align-items:center;justify-content:center;' +
+      'background:#1a1a2e;color:#e74c3c;font-family:monospace;font-size:24px;' +
+      'font-weight:bold;letter-spacing:2px;">ACCESS DENIED</div>';
+  }
+}
+
+// ── Toggle password visibility ──
+
+function toggleEye() {
+  var inp = document.getElementById('pw-input');
+  var btn = document.getElementById('pw-eye');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+  } else {
+    inp.type = 'password';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+  }
+}
+
+// ── Toast & utility ──
+
+function showToast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2000);
+}
+
+/**
+ * Gán giá trị text cho element theo ID.
+ * @param {string} id
+ * @param {number|string} n
+ */
+function setNum(id, n) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = n;
+}
+
+/**
+ * Escape HTML để tránh XSS.
+ * @param {*} s
+ * @returns {string}
+ */
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Ghép chuỗi địa điểm từ các trường của log.
+ * @param {object} log
+ * @returns {string}
+ */
+function buildLocationStr(log) {
+  var parts    = [];
+  var district = (log.district || '').trim();
+  var city     = (log.city     || '').trim();
+  var region   = (log.region   || '').trim();
+  var country  = (log.country  || '').trim();
+  if (district && district !== city && district !== region) parts.push(district);
+  if (city     && city     !== region)                      parts.push(city);
+  if (region)                                               parts.push(region);
+  if (country)                                              parts.push(country);
+  return parts.filter(Boolean).join(', ');
+}

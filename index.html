@@ -86,7 +86,7 @@ h1 em { font-style: normal; color: var(--accent); }
 .adm-section { border-bottom: 1px solid var(--border); padding: 6px 0; } .adm-section:last-child { border-bottom: none; } .adm-section-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 6px 16px 2px; }
 .adm-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 16px; background: none; border: none; font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--ink); cursor: pointer; text-align: left; transition: background .15s, color .15s, opacity .2s; } .adm-item:hover { background: var(--bg); } .adm-item.danger { color: var(--accent); } .adm-item.danger:hover { background: rgba(192,57,43,.06); } .adm-item.edit { color: var(--accent2); } .adm-item.edit:hover { background: rgba(44,62,122,.06); } .adm-item.founder { color: var(--founder); } .adm-item.founder:hover { background: rgba(142,68,173,.06); } .adm-item.success { color: #27ae60; } .adm-item.success:hover { background: rgba(39,174,96,.06); } .adm-item svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .8; }
 
-/* ── SWITCH MENU REDESIGN ── */
+/* ── SWITCH MENU REDESIGN (OPTIMIZED FOR MOBILE) ── */
 #switch-dropdown {
   border-radius: 16px;
   padding: 24px 20px !important;
@@ -97,15 +97,21 @@ h1 em { font-style: normal; color: var(--accent); }
 .switch-icon {
   font-size: 2rem;
   cursor: pointer;
-  opacity: 0.5;
-  filter: grayscale(0.8);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0.7; /* Sáng hơn mặc định để dễ nhìn trên mobile */
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: inline-block;
+  padding: 4px;
 }
-.switch-icon:hover {
+@media (hover: hover) {
+  .switch-icon:hover {
+    opacity: 1;
+    transform: scale(1.3) translateY(-2px);
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+  }
+}
+.switch-icon:active {
   opacity: 1;
-  filter: grayscale(0) drop-shadow(0 6px 8px rgba(0,0,0,0.15));
-  transform: scale(1.4) translateY(-4px);
+  transform: scale(0.9); /* Phản hồi thu nhỏ nhẹ khi tap trên đt */
 }
 
 /* ── GENERAL ── */
@@ -127,6 +133,13 @@ h1 em { font-style: normal; color: var(--accent); }
 /* ── DIALOG ── */
 .dialog-overlay { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(26,26,46,.5); backdrop-filter: blur(2px); align-items: center; justify-content: center; } .dialog-overlay.open { display: flex; } .dialog-box { background: var(--card); border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 32px 28px 24px; max-width: 380px; width: 90%; text-align: center; } .dialog-box h3 { font-size: 1.3rem; font-weight: 900; color: var(--ink); margin-bottom: 10px; font-family: 'Nunito', sans-serif;} .dialog-box p { font-family: 'Nunito', sans-serif; font-size: 0.9rem; color: var(--muted); letter-spacing: .2px; line-height: 1.6; margin-bottom: 22px; } .dialog-box p strong { color: var(--accent); font-weight: 700; } .dialog-actions { display: flex; gap: 10px; justify-content: center; margin-top: 24px;} .btn-dialog-yes { padding: 10px 22px; border: 2px solid var(--ink); background: var(--accent); color: #fff; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: .9rem; cursor: pointer; box-shadow: 3px 3px 0 var(--ink); transition: all .15s; } .btn-dialog-yes.btn-save { background: var(--accent2); } .btn-dialog-yes:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); } .btn-dialog-no { padding: 10px 22px; border: 2px solid var(--border); background: transparent; color: var(--muted); font-family: 'Nunito', sans-serif; font-weight: 800; font-size: .9rem; cursor: pointer; transition: all .15s; } .btn-dialog-no:hover { border-color: var(--ink); color: var(--ink); } #adjust-input { width: 100%; text-align: center; padding: 10px; font-family: 'Space Mono', monospace; font-size: 1.4rem; font-weight: 700; border: 2px solid var(--border); outline: none; background: var(--bg); color: var(--ink); margin-bottom: 22px; border-radius: 0; transition: border-color .2s; } #adjust-input:focus { border-color: var(--ink); } .form-group { text-align: left; margin-bottom: 16px; } .form-group label { margin-bottom: 6px; font-size: 0.8rem; font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--ink); display: block; } .input-field { width: 100%; background: var(--bg); border: 2px solid var(--border); font-family: 'Space Mono', monospace; padding: 12px; font-size: 1rem; outline: none; transition: border-color 0.2s;} .input-field:focus { border-color: var(--ink); }
 @keyframes popCongrats { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } } #congrats-overlay .dialog-box { animation: popCongrats 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+/* ── TAG INPUT ── */
+.tag-input-container { width: 100%; background: var(--bg); border: 2px solid var(--border); padding: 8px; min-height: 46px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; transition: border-color 0.2s; cursor: text; }
+.tag-input-container:focus-within { border-color: var(--ink); }
+.alias-tag { background: var(--accent2); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: 'Space Mono', monospace; font-size: 10px; display: flex; align-items: center; gap: 6px; }
+.alias-tag span { cursor: pointer; font-weight: bold; }
+.alias-tag span:hover { color: #ff7675; }
 
 /* ── ADMIN SECRET DIALOG (Sparkle effect) ── */
 @keyframes sparkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.2); } }
@@ -151,7 +164,7 @@ h1 em { font-style: normal; color: var(--accent); }
 #pw-input { width: 100%; background: var(--bg); border: 2px solid var(--border); color: var(--ink); font-family: 'Nunito', sans-serif !important; font-style: normal !important; font-weight: 800; font-size: 1.5rem; letter-spacing: 8px; padding: 14px 48px; text-indent: 8px; outline: none; text-align: center; border-radius: 0; transition: border-color .2s; } #pw-input:focus { border-color: var(--ink); } #pw-input::-ms-reveal, #pw-input::-ms-clear { display: none; } #pw-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1rem; padding: 4px; display: flex; align-items: center; justify-content: center; } #pw-eye:hover { color: var(--ink); } .pw-err { color: var(--accent); font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 800; margin-bottom: 16px; display: none; text-align: center; animation: popAlert 0.3s forwards; } .btn-pw { width: 100%; font-size: 1rem; padding: 14px; margin-top: auto; } #admin-badge { display: none; margin-top: 14px; font-family: 'Space Mono', monospace; font-size: 10px; color: rgba(180,83,9,.6); letter-spacing: 1px; } @media (max-width: 860px) { .pw-layout { flex-direction: column-reverse; align-items: center; gap: 20px; } .pw-left, .pw-right { width: 100%; max-width: 440px; } .pw-popup-container { min-height: auto; } }
 
 /* ── LOGS SCREEN ── */
-#log-screen { position: fixed; inset: 0; z-index: 8000; background: var(--bg); display: none; overflow-y: auto; } #log-screen::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E"); background-size: 30px 30px; pointer-events: none; z-index: 0; } .log-wrap { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 60px 20px 80px; } .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; } .log-title { font-size: 1.8rem; font-weight: 900; color: var(--ink); letter-spacing: -0.5px; } .log-title em { font-style: normal; color: var(--orange); } .log-header-right { display: flex; align-items: center; gap: 10px; } .log-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; } @media (max-width: 800px) { .log-stats { grid-template-columns: repeat(3, 1fr); } } @media (max-width: 500px) { .log-stats { grid-template-columns: repeat(2, 1fr); } } .stat-card { background: var(--card); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 16px 20px; text-align: center; cursor: default; transition: transform .15s, box-shadow .15s; } .stat-card:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); } .stat-num { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; line-height: 1; } .stat-num.red { color: var(--accent); } .stat-num.blue { color: var(--accent2); } .stat-num.orange { color: var(--orange); } .stat-num.green { color: #27ae60; } .stat-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 6px; } .stat-card.clickable { cursor: pointer; } .stat-card.clickable.sel { outline: 2px solid var(--ink); outline-offset: 2px; } .log-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; } .filter-btn { padding: 6px 14px; border: 2px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .15s; } .filter-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); } .filter-btn:hover:not(.active) { border-color: var(--ink); color: var(--ink); } .log-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; } .log-search-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; } #log-search { flex: 1; min-width: 160px; background: var(--card); border: 2px solid var(--border); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 11px; padding: 7px 12px; outline: none; border-radius: 0; transition: border-color .2s; } #log-search:focus { border-color: var(--ink); } .log-date-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .log-date-group label { font-size: 9px; letter-spacing: 1px; color: var(--muted); margin-bottom: 0; text-transform: uppercase; white-space: nowrap; pointer-events: none; } .date-inp { background: var(--card); border: 2px solid var(--border); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 10px; padding: 6px 8px; outline: none; border-radius: 0; cursor: pointer; transition: border-color .2s; } .date-inp:focus { border-color: var(--ink); } .log-table-wrap { background: var(--card); border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); overflow: hidden; overflow-x: auto; } .log-table { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 760px; } .log-table th { background: var(--ink); color: var(--card); font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 10px 14px; text-align: left; white-space: nowrap; } .log-table th.sortable { cursor: pointer; user-select: none; } .log-table th.sortable:hover { background: #2e2e46; } .log-table th .sort-arrow { margin-left: 4px; opacity: .5; } .log-table th.sort-asc .sort-arrow::after { content: '↑'; opacity: 1; } .log-table th.sort-desc .sort-arrow::after { content: '↓'; opacity: 1; } .log-table th .sort-arrow::after { content: '↕'; } .log-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; font-family: 'Space Mono', monospace; font-size: 10px; } .log-table tr:last-child td { border-bottom: none; } .log-table tr:hover td { background: rgba(212,201,176,.25); } .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; white-space: nowrap; border-radius: 2px; } .badge-icon { font-size: 11px; line-height: 1; } .badge-view { background: rgba(138,127,110,.12); color: var(--muted); border: 1px solid var(--border); } .badge-login_normal { background: rgba(44,62,122,.1); color: var(--accent2); border: 1px solid rgba(44,62,122,.3); } .badge-login_admin { background: rgba(180,83,9,.1); color: var(--orange); border: 1px solid rgba(180,83,9,.3); } .log-status { text-align: center; padding: 40px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; } @keyframes spin { to { transform: rotate(360deg); } } .spin { display: inline-block; animation: spin 1s linear infinite; } .cell-main { color: var(--ink); font-weight: 700; line-height: 1.4; display:flex; align-items:center; gap:6px; flex-wrap:wrap; } .cell-sub { color: var(--muted); font-size: 9px; margin-top: 2px; line-height: 1.5; } .cell-loc { color: var(--accent2); font-weight: 700; line-height: 1.4; } .cell-ip { color: var(--muted); font-size: 9px; margin-top: 2px; font-family: 'Space Mono', monospace; } .cell-isp { color: var(--muted); font-size: 9px; margin-top: 1px; } .geo-src { display: inline-block; font-family: 'Space Mono', monospace; font-size: 7px; letter-spacing: .5px; padding: 1px 5px; border-radius: 2px; margin-left: 4px; vertical-align: middle; opacity: .6; } .geo-src-1 { background: rgba(44,62,122,.12); color: var(--accent2); } .geo-src-2 { background: rgba(39,174,96,.12); color: #27ae60; } .geo-src-3 { background: rgba(180,83,9,.12); color: var(--orange); } .geo-src-4 { background: rgba(138,127,110,.12); color: var(--muted); } .btn-refresh { padding: 8px 18px; border: 2px solid var(--ink); background: var(--card); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .15s; } .btn-refresh:hover { background: var(--ink); color: var(--card); } .btn-refresh svg { width: 12px; height: 12px; } .log-pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 16px; flex-wrap: wrap; } .pg-btn { padding: 5px 10px; border: 1.5px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; cursor: pointer; transition: all .15s; } .pg-btn:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); } .pg-btn:disabled { opacity: .3; cursor: default; } .pg-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); } .pg-info { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); padding: 0 6px; } .realtime-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #27ae60; margin-right: 5px; animation: pulse-dot 2s ease-in-out infinite; } @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.8); } } .realtime-label { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(39,174,96,.7); letter-spacing: .5px; display: flex; align-items: center; } .btn-export { padding: 8px 14px; border: 2px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all .15s; } .btn-export:hover { border-color: var(--accent2); color: var(--accent2); } .btn-export svg { width: 11px; height: 11px; }
+#log-screen { position: fixed; inset: 0; z-index: 8000; background: var(--bg); display: none; overflow-y: auto; } #log-screen::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23c0392b' opacity='0.06'/%3E%3C/svg%3E"); background-size: 30px 30px; pointer-events: none; z-index: 0; } .log-wrap { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 60px 20px 80px; } .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; } .log-title { font-size: 1.8rem; font-weight: 900; color: var(--ink); letter-spacing: -0.5px; } .log-title em { font-style: normal; color: var(--orange); } .log-header-right { display: flex; align-items: center; gap: 10px; } .log-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; } @media (max-width: 800px) { .log-stats { grid-template-columns: repeat(3, 1fr); } } @media (max-width: 500px) { .log-stats { grid-template-columns: repeat(2, 1fr); } } .stat-card { background: var(--card); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 16px 20px; text-align: center; cursor: default; transition: transform .15s, box-shadow .15s; } .stat-card:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); } .stat-num { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; line-height: 1; } .stat-num.red { color: var(--accent); } .stat-num.blue { color: var(--accent2); } .stat-num.orange { color: var(--orange); } .stat-num.green { color: #27ae60; } .stat-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 6px; } .stat-card.clickable { cursor: pointer; } .stat-card.clickable.sel { outline: 2px solid var(--ink); outline-offset: 2px; } .log-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; } .filter-btn { padding: 6px 14px; border: 2px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .15s; } .filter-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); } .filter-btn:hover:not(.active) { border-color: var(--ink); color: var(--ink); } .log-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; } .log-search-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; } #log-search { flex: 1; min-width: 160px; background: var(--card); border: 2px solid var(--border); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 11px; padding: 7px 12px; outline: none; border-radius: 0; transition: border-color .2s; } #log-search:focus { border-color: var(--ink); } .log-date-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .log-date-group label { font-size: 9px; letter-spacing: 1px; color: var(--muted); margin-bottom: 0; text-transform: uppercase; white-space: nowrap; pointer-events: none; } .date-inp { background: var(--card); border: 2px solid var(--border); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 10px; padding: 6px 8px; outline: none; border-radius: 0; cursor: pointer; transition: border-color .2s; } .date-inp:focus { border-color: var(--ink); } .log-table-wrap { background: var(--card); border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); overflow: hidden; overflow-x: auto; } .log-table { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 760px; } .log-table th { background: var(--ink); color: var(--card); font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 10px 14px; text-align: left; white-space: nowrap; } .log-table th.sortable { cursor: pointer; user-select: none; } .log-table th.sortable:hover { background: #2e2e46; } .log-table th .sort-arrow { margin-left: 4px; opacity: .5; } .log-table th.sort-asc .sort-arrow::after { content: '↑'; opacity: 1; } .log-table th.sort-desc .sort-arrow::after { content: '↓'; opacity: 1; } .log-table th .sort-arrow::after { content: '↕'; } .log-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; font-family: 'Space Mono', monospace; font-size: 10px; } .log-table tr:last-child td { border-bottom: none; } .log-table tr:hover td { background: rgba(212,201,176,.25); } .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; white-space: nowrap; border-radius: 2px; } .badge-icon { font-size: 11px; line-height: 1; } .badge-view { background: rgba(138,127,110,.12); color: var(--muted); border: 1px solid var(--border); } .badge-login_normal { background: rgba(44,62,122,.1); color: var(--accent2); border: 1px solid rgba(44,62,122,.3); } .badge-login_admin { background: rgba(180,83,9,.1); color: var(--orange); border: 1px solid rgba(180,83,9,.3); } .dev-alias { background: rgba(44,62,122,.15); color: var(--accent2); border: 1px dashed var(--accent2); cursor: help; } .log-status { text-align: center; padding: 40px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; } @keyframes spin { to { transform: rotate(360deg); } } .spin { display: inline-block; animation: spin 1s linear infinite; } .cell-main { color: var(--ink); font-weight: 700; line-height: 1.4; display:flex; align-items:center; gap:6px; flex-wrap:wrap; } .cell-sub { color: var(--muted); font-size: 9px; margin-top: 2px; line-height: 1.5; } .cell-loc { color: var(--accent2); font-weight: 700; line-height: 1.4; } .cell-ip { color: var(--muted); font-size: 9px; margin-top: 2px; font-family: 'Space Mono', monospace; } .cell-isp { color: var(--muted); font-size: 9px; margin-top: 1px; } .geo-src { display: inline-block; font-family: 'Space Mono', monospace; font-size: 7px; letter-spacing: .5px; padding: 1px 5px; border-radius: 2px; margin-left: 4px; vertical-align: middle; opacity: .6; } .geo-src-1 { background: rgba(44,62,122,.12); color: var(--accent2); } .geo-src-2 { background: rgba(39,174,96,.12); color: #27ae60; } .geo-src-3 { background: rgba(180,83,9,.12); color: var(--orange); } .geo-src-4 { background: rgba(138,127,110,.12); color: var(--muted); } .btn-refresh { padding: 8px 18px; border: 2px solid var(--ink); background: var(--card); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .15s; } .btn-refresh:hover { background: var(--ink); color: var(--card); } .btn-refresh svg { width: 12px; height: 12px; } .log-pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 16px; flex-wrap: wrap; } .pg-btn { padding: 5px 10px; border: 1.5px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; cursor: pointer; transition: all .15s; } .pg-btn:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); } .pg-btn:disabled { opacity: .3; cursor: default; } .pg-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); } .pg-info { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); padding: 0 6px; } .realtime-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #27ae60; margin-right: 5px; animation: pulse-dot 2s ease-in-out infinite; } @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.8); } } .realtime-label { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(39,174,96,.7); letter-spacing: .5px; display: flex; align-items: center; } .btn-export { padding: 8px 14px; border: 2px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all .15s; } .btn-export:hover { border-color: var(--accent2); color: var(--accent2); } .btn-export svg { width: 11px; height: 11px; }
 .ip-stats-section { margin-top: 36px; } .ip-stats-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; } .ip-stats-title { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; color: var(--ink); letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; } .ip-stats-title::before { content: ''; display: inline-block; width: 10px; height: 10px; background: var(--orange); border: 1.5px solid var(--ink); } .ip-mode-tabs { display: flex; gap: 0; border: 2px solid var(--ink); overflow: hidden; } .ip-mode-tab { padding: 5px 14px; border: none; background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-right: 1px solid var(--border); transition: all .15s; } .ip-mode-tab:last-child { border-right: none; } .ip-mode-tab.active { background: var(--ink); color: var(--card); } .ip-mode-tab:hover:not(.active) { background: var(--bg); } .ip-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; } .ip-col-wrap { background: var(--card); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); overflow: hidden; } .ip-col-head { padding: 10px 14px; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); } .ip-col-head.col-all { background: rgba(26,26,46,.05); color: var(--ink); } .ip-col-head.col-normal { background: rgba(44,62,122,.08); color: var(--accent2); } .ip-col-head.col-admin { background: rgba(180,83,9,.08); color: var(--orange); } .ip-col-head.col-founder { background: rgba(142,68,173,.08); color: var(--founder); } .ip-col-head svg { width: 10px; height: 10px; opacity: .7; flex-shrink: 0; } .ip-row { display: grid; grid-template-columns: 18px 1fr auto 24px; align-items: start; gap: 8px; padding: 9px 14px; border-bottom: 1px solid rgba(212,201,176,.5); transition: opacity .3s, transform .3s; } .ip-row:last-child { border-bottom: none; } .ip-row:hover { background: rgba(212,201,176,.2); } .ip-rank { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); font-weight: 700; padding-top: 1px; line-height: 1; } .ip-rank.rank-1 { color: var(--accent); } .ip-rank.rank-2 { color: var(--orange); } .ip-rank.rank-3 { color: var(--accent2); } .ip-info { min-width: 0; } .ip-addr { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; color: var(--ink); line-height: 1.3; word-break: break-all; } .ip-location { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--accent2); margin-top: 2px; line-height: 1.4; } .ip-isp { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--muted); margin-top: 1px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; } .ip-last { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--muted); margin-top: 2px; line-height: 1.3; } .ip-count-badge { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; } .ip-count-num { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; line-height: 1; } .ip-count-num.cnt-all { color: var(--ink); } .ip-count-num.cnt-normal { color: var(--accent2); } .ip-count-num.cnt-admin { color: var(--orange); } .ip-count-label { font-family: 'Space Mono', monospace; font-size: 7px; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; } .ip-bar-wrap { margin-top: 4px; height: 3px; background: var(--border); border-radius: 1px; } .ip-bar { height: 3px; border-radius: 1px; transition: width .4s; } .ip-bar.bar-all { background: var(--ink); } .ip-bar.bar-normal { background: var(--accent2); } .ip-bar.bar-admin { background: var(--orange); } .ip-bar.bar-founder { background: var(--founder); } .ip-empty { padding: 24px; text-align: center; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: .5px; } .dev-badge { display: inline-block; background: rgba(192,57,43,.1); color: var(--accent); border: 1px solid rgba(192,57,43,.3); padding: 2px 6px; border-radius: 3px; font-weight: bold; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .5px; } .btn-del-ip, .btn-block-ip { background: none; border: none; cursor: pointer; color: rgba(192,57,43,.4); padding: 4px; border-radius: 4px; margin-top: 2px; transition: all .15s; display: flex; align-items: center; justify-content: center; } .btn-del-ip:hover, .btn-block-ip:hover { color: var(--accent); background: rgba(192,57,43,.1); } .btn-del-ip svg, .btn-block-ip svg { width: 14px; height: 14px; }
 @media (max-width: 900px) { .ip-stats-grid { grid-template-columns: repeat(2, 1fr); } } @media (max-width: 600px) { .ip-stats-grid { grid-template-columns: 1fr; } } @media (max-width: 500px) { .card { padding: 18px; } h1 { font-size: 2rem; } .actions { flex-direction: column; align-items: stretch; } .btn { text-align: center; } .log-date-group { display: none; } }
 </style>
@@ -224,13 +237,16 @@ h1 em { font-style: normal; color: var(--accent); }
     <div class="cnt" id="cnt-traffic" title="Traffic Statistics" onclick="toggleTrafficMenu(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       <span class="cnum" id="num-traffic">·</span>
-      <div id="traffic-dropdown" class="dropdown-menu">
+      <div id="traffic-dropdown" class="dropdown-menu" style="min-width: 250px;">
         <div class="adm-section">
           <div class="adm-section-label">Traffic Overview</div>
-          <div class="adm-item" style="cursor:default" title="Total Views">👁 <strong id="drop-views" style="margin-left:auto">0</strong></div>
-          <div class="adm-item" id="item-unique-view" style="cursor:default" title="Unique Visitors">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> 
-            <strong id="drop-unique" style="margin-left:auto">0</strong>
+          <div class="adm-item" style="cursor:default; display:flex; justify-content:space-between;" title="Total Views">
+            <span>👁 Views</span>
+            <span style="font-family:monospace; font-size:10px;"><strong id="drop-views">0</strong></span>
+          </div>
+          <div class="adm-item" id="item-unique-view" style="cursor:default; display:flex; justify-content:space-between;" title="Unique Visitors">
+            <span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px; vertical-align:middle;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique</span>
+            <span style="font-family:monospace; font-size:10px;"><strong id="drop-unique" style="color:var(--secure);">0</strong></span>
           </div>
         </div>
       </div>
@@ -241,13 +257,41 @@ h1 em { font-style: normal; color: var(--accent); }
     <div class="cnt" id="cnt-auth" title="Active Logins" onclick="toggleAuthMenu(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
       <span class="cnum" id="num-auth">·</span>
-      <div id="auth-dropdown" class="dropdown-menu">
+      <div id="auth-dropdown" class="dropdown-menu" style="min-width: 250px;">
         <div class="adm-section">
           <div class="adm-section-label">Session Breakdown</div>
-          <div class="adm-item" style="cursor:default" title="Main Pass">🔒 <strong id="drop-main" style="margin-left:auto">0</strong></div>
-          <div class="adm-item" style="cursor:default" title="Sub Pass">🗝 <strong id="drop-sub" style="margin-left:auto">0</strong></div>
-          <div class="adm-item" style="cursor:default" title="Admin">★ <strong id="drop-admin" style="margin-left:auto">0</strong></div>
-          <div class="adm-item founder-only" style="cursor:default" title="Founder">👑 <strong id="drop-founder" style="margin-left:auto">0</strong></div>
+          <div class="adm-item" style="cursor:default; display:flex; justify-content:space-between;" title="Main Pass">
+            <span>🔒</span>
+            <span style="display:flex; align-items:center; font-family:monospace; font-size:11px;">
+              <strong id="drop-main" style="color:var(--ink); width:24px; text-align:right;">0</strong> 
+              <span style="color:var(--border); margin:0 6px;">|</span> 
+              <strong id="drop-main-u" style="color:var(--secure); width:24px; text-align:left;">0</strong>
+            </span>
+          </div>
+          <div class="adm-item" style="cursor:default; display:flex; justify-content:space-between;" title="Sub Pass">
+            <span>🗝</span>
+            <span style="display:flex; align-items:center; font-family:monospace; font-size:11px;">
+              <strong id="drop-sub" style="color:var(--ink); width:24px; text-align:right;">0</strong> 
+              <span style="color:var(--border); margin:0 6px;">|</span> 
+              <strong id="drop-sub-u" style="color:var(--secure); width:24px; text-align:left;">0</strong>
+            </span>
+          </div>
+          <div class="adm-item" style="cursor:default; display:flex; justify-content:space-between;" title="Admin">
+            <span>★</span>
+            <span style="display:flex; align-items:center; font-family:monospace; font-size:11px;">
+              <strong id="drop-admin" style="color:var(--ink); width:24px; text-align:right;">0</strong> 
+              <span style="color:var(--border); margin:0 6px;">|</span> 
+              <strong id="drop-admin-u" style="color:var(--secure); width:24px; text-align:left;">0</strong>
+            </span>
+          </div>
+          <div class="adm-item founder-only" style="cursor:default; display:flex; justify-content:space-between;" title="Founder">
+            <span>👑</span>
+            <span style="display:flex; align-items:center; font-family:monospace; font-size:11px;">
+              <strong id="drop-founder" style="color:var(--ink); width:24px; text-align:right;">0</strong> 
+              <span style="color:var(--border); margin:0 6px;">|</span> 
+              <strong id="drop-founder-u" style="color:var(--secure); width:24px; text-align:left;">0</strong>
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -277,6 +321,11 @@ h1 em { font-style: normal; color: var(--accent); }
         <div class="adm-section admin-only" style="display:none">
           <div class="adm-section-label">Security</div>
           <button class="adm-item danger" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Admin Pass</button>
+        </div>
+
+        <div class="adm-section founder-only">
+          <div class="adm-section-label">Identities</div>
+          <button class="adm-item success" onclick="openAliasManager()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Manage Identities</button>
         </div>
 
         <div class="adm-section founder-only">
@@ -322,6 +371,41 @@ h1 em { font-style: normal; color: var(--accent); }
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ── ALIAS / IDENTITY MANAGER DIALOG ── -->
+<div class="dialog-overlay" id="alias-overlay">
+  <div class="dialog-box" style="max-width: 500px; width: 95%;">
+    <h3>Identity Management 👥</h3>
+    <p style="margin-bottom:12px; font-size:11px;">Combine multiple Device IDs into a single profile.</p>
+    
+    <div class="form-group" style="margin-bottom: 14px;">
+      <label>Profile Name</label>
+      <input type="text" id="alias-name-input" class="input-field allow-protected" placeholder="Enter profile name...">
+    </div>
+    <div class="form-group" style="margin-bottom: 20px;">
+      <label>Linked Device IDs</label>
+      <div class="tag-input-container allow-protected" id="alias-tags-container" onclick="document.getElementById('alias-tag-input').focus()">
+        <div id="alias-tags-wrapper" style="display:inline; display:flex; flex-wrap:wrap; gap:6px;"></div>
+        <input type="text" id="alias-tag-input" placeholder="Type ID & press Enter..." style="border:none; outline:none; background:transparent; font-family:'Space Mono', monospace; font-size:11px; min-width:140px; padding:4px; flex-grow:1;">
+      </div>
+    </div>
+    <div class="dialog-actions" style="margin-top: 0; margin-bottom: 20px;">
+      <button class="btn-dialog-yes btn-save allow-protected" onclick="submitAlias()" id="btn-save-alias">Save Profile</button>
+      <button class="btn-dialog-no allow-protected" onclick="resetAliasForm()" id="btn-cancel-alias" style="display:none;">Cancel Edit</button>
+    </div>
+    
+    <div style="border-top: 2px dashed var(--border); padding-top: 16px;">
+      <label style="text-align:left; font-weight:bold; color:var(--ink);">Active Profiles</label>
+      <div id="alias-list" style="max-height: 180px; overflow-y: auto; text-align: left; font-family: 'Space Mono', monospace; font-size: 11px; margin-bottom: 10px; background:var(--bg); border:1px solid var(--border); padding:8px;">
+        <!-- List goes here -->
+      </div>
+    </div>
+    
+    <div class="dialog-actions">
+      <button class="btn-dialog-no allow-protected" onclick="closeAliasManager()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -591,11 +675,12 @@ var currentNotes = Object.assign({}, defaultNotes);
 var currentSecretMsgs = Object.assign({}, defaultSecretMsgs);
 var currentTabTitle = defaultTabTitle; var currentMainTitle = defaultMainTitle; var currentWelcome = defaultWelcome;
 
-// Lưu trữ các key log của session này để nâng cấp đặc quyền và dọn dẹp
+// Lưu trữ thông tin
 var _sessionKeys = { view: null, normal: null, normalType: null, admin: null, founder: null };
 var _currentLoginRole = 'normal';
 var _originalRole = 'normal'; 
 var _lastCongratulatedText = ""; var _isProtected = false; var _blockedIPs = {};
+var _aliases = {}; // Lưu trữ Identity Profiles
 
 var _letterRegex = /[a-zA-ZáàảãạâấầẩẫậăắằẳẵặéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠÂẤẦẨẪẬĂẮẰẲẴẶÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ]/;
 window._myIP = '';
@@ -639,6 +724,15 @@ function initFirebase() {
 
         db.ref('settings/notes_v2').on('value', function(snap) { 
             if(snap.exists()) { currentNotes.tagline = snap.val().tagline || defaultNotes.tagline; currentNotes.footer = snap.val().footer || defaultNotes.footer; renderNotes(); } else { db.ref('settings/notes_v2').set(currentNotes); } 
+        });
+        
+        // Listen to Aliases
+        db.ref('settings/aliases').on('value', function(snap) {
+            _aliases = snap.val() || {};
+            if (document.getElementById('log-screen').style.display === 'block') {
+                renderLogs();
+                renderIpStats();
+            }
         });
 
         db.ref('settings/protection').on('value', function(snap) { _isProtected = !!snap.val(); updateProtectionUI(); });
@@ -720,7 +814,7 @@ function toggleEye() {
 }
 
 /* ══════════════════════════════════════════
-   HELPERS & GEO
+   HELPERS, GEO & ALIAS
    ══════════════════════════════════════════ */
 function _detectDevice(ua) { if (/iPhone/.test(ua)) return 'iPhone'; if (/iPad/.test(ua)) return 'iPad'; if (/Android.*Mobile/.test(ua)) return 'Android Phone'; if (/Android/.test(ua)) return 'Android Tablet'; if (/CrOS/.test(ua)) return 'Chromebook'; if (/Macintosh/.test(ua)) return 'MacBook/Mac'; if (/Windows NT/.test(ua)) return 'Windows PC'; if (/Linux/.test(ua)) return 'Linux PC'; return 'Unknown'; }
 function _detectBrowser(ua) { if (/Edg\//.test(ua)) return 'Microsoft Edge'; if (/OPR\/|Opera\//.test(ua)) return 'Opera'; if (/SamsungBrowser/.test(ua)) return 'Samsung Browser'; if (/CriOS/.test(ua)) return 'Chrome (iOS)'; if (/FxiOS/.test(ua)) return 'Firefox (iOS)'; if (/YaBrowser/.test(ua)) return 'Yandex Browser'; if (/UCBrowser/.test(ua)) return 'UC Browser'; if (/Chrome\//.test(ua)) return 'Chrome'; if (/Firefox\//.test(ua)) return 'Firefox'; if (/Safari\//.test(ua)) return 'Safari'; return 'Other'; }
@@ -732,6 +826,15 @@ function _fetchGeo() {
     .then(function(r) { if (!r.ok) throw new Error('geojs failed'); return r.json(); })
     .then(function(d) { if (!d.ip) throw new Error('no ip'); window._myIP = d.ip; checkBlock(); return { geoSrc: 5, ip: d.ip||'', city: d.city||'', region: d.region||'', country: d.country||'', latitude: d.latitude||'', longitude: d.longitude||'', isp: d.organization_name||d.organization||'', asn: d.asn?'AS'+d.asn:'' }; })
     .catch(function() { return fetchWithTimeout('https://ipapi.co/json/', 5000).then(function(r) { if (!r.ok) throw new Error('ipapi failed'); return r.json(); }).then(function(d) { if (d.error || !d.ip) throw new Error('no ip'); window._myIP = d.ip; checkBlock(); return { geoSrc: 6, ip: d.ip||'', city: d.city||'', region: d.region||'', country: d.country_name||'', postal: d.postal||'', latitude: d.latitude||'', longitude: d.longitude||'', isp: d.org||'', asn: d.asn||'' }; }).catch(function() { return fetchWithTimeout('https://cloudflare.com/cdn-cgi/trace', 5000).then(function(r) { if (!r.ok) throw new Error('cf failed'); return r.text(); }).then(function(txt) { var obj = {}; txt.trim().split('\n').forEach(function(line) { var idx = line.indexOf('='); if (idx > 0) obj[line.slice(0, idx)] = line.slice(idx + 1); }); window._myIP = obj.ip||''; checkBlock(); return { geoSrc: 4, ip: obj.ip||'', country: obj.loc||'' }; }); }); });
+}
+
+function getAliasForId(devId) {
+    if (!devId || !_aliases) return null;
+    for (let aliasName in _aliases) {
+        let ids = _aliases[aliasName].split(',').map(s => s.trim());
+        if (ids.includes(devId)) return aliasName;
+    }
+    return null;
 }
 
 /* ══════════════════════════════════════════
@@ -773,6 +876,35 @@ function fbIncrement(type) {
   _fetchGeo().then(function(geo) { Object.assign(logData, geo); pushData(logData); }).catch(function(err) { logData.geoSrc = 0; pushData(logData); });
 }
 
+function updateSessionBreakdown() {
+    if (!_allLogs) return;
+    let uNorm = new Set(), uSec = new Set(), uAdmin = new Set(), uFounder = new Set();
+    let tNorm = 0, tSec = 0, tAdmin = 0, tFounder = 0;
+
+    // Chỉ lấy dữ liệu kể từ 14:44 ngày 05/05/2026 (UTC+7)
+    let cutoff = new Date('2026-05-05T14:44:00+07:00').getTime();
+
+    _allLogs.forEach(l => {
+        if (l.ts < cutoff) return; // Bỏ qua dữ liệu cũ
+        
+        let id = l.deviceId || l.ip; 
+        if (l.type === 'login_normal') { tNorm++; uNorm.add(id); }
+        if (l.type === 'login_secondary') { tSec++; uSec.add(id); }
+        if (l.type === 'login_admin') { tAdmin++; uAdmin.add(id); }
+        if (l.type === 'login_founder') { tFounder++; uFounder.add(id); }
+    });
+    
+    // Cập nhật giao diện riêng cho Session Breakdown
+    setNum('drop-main', tNorm);
+    setNum('drop-main-u', uNorm.size);
+    setNum('drop-sub', tSec);
+    setNum('drop-sub-u', uSec.size);
+    setNum('drop-admin', tAdmin);
+    setNum('drop-admin-u', uAdmin.size);
+    setNum('drop-founder', tFounder);
+    setNum('drop-founder-u', uFounder.size);
+}
+
 function updateStatsUI() {
     setNum('login-outer-num', _vOuter);
     setNum('num-traffic', _vOuter);
@@ -783,10 +915,7 @@ function updateStatsUI() {
     
     var totalAuth = _vNormal + _vSec + _vAdmin + _vFounder;
     setNum('num-auth', totalAuth);
-    setNum('drop-main', _vNormal);
-    setNum('drop-sub', _vSec);
-    setNum('drop-admin', _vAdmin);
-    setNum('drop-founder', _vFounder);
+    
     setNum('stat-inner', _vNormal + _vSec);
     setNum('stat-admin', _vAdmin);
     setNum('stat-founder', _vFounder);
@@ -807,6 +936,7 @@ function fbListenAll() {
     var list = [];
     snap.forEach(function(c) { list.push(Object.assign({_k:c.key}, c.val())); });
     _allLogs = list.reverse(); 
+    updateSessionBreakdown();
     var logScreen = document.getElementById('log-screen'); 
     if (logScreen && logScreen.style.display === 'block') { renderLogs(); renderIpStats(); }
   });
@@ -1254,6 +1384,121 @@ function openBlockManager() {
 function closeBlockManager() { document.getElementById('block-overlay').classList.remove('open'); }
 
 /* ══════════════════════════════════════════
+   IDENTITY MANAGER / ALIAS LOGIC (TAG INPUT)
+   ══════════════════════════════════════════ */
+var _currentAliasTags = [];
+var _editingAlias = null;
+
+function renderAliasTags() {
+    var wrapper = document.getElementById('alias-tags-wrapper');
+    wrapper.innerHTML = _currentAliasTags.map((tag, idx) => 
+        `<div class="alias-tag">${esc(tag)} <span onclick="removeAliasTag(${idx})">×</span></div>`
+    ).join('');
+}
+
+function addAliasTag(val) {
+    val = val.trim();
+    if (val && !_currentAliasTags.includes(val)) {
+        _currentAliasTags.push(val);
+        renderAliasTags();
+    }
+    document.getElementById('alias-tag-input').value = '';
+}
+
+function removeAliasTag(idx) {
+    _currentAliasTags.splice(idx, 1);
+    renderAliasTags();
+}
+
+function resetAliasForm() {
+    _editingAlias = null;
+    document.getElementById('alias-name-input').value = '';
+    _currentAliasTags = [];
+    renderAliasTags();
+    document.getElementById('alias-tag-input').value = '';
+    document.getElementById('btn-save-alias').textContent = "Save Profile";
+    document.getElementById('btn-cancel-alias').style.display = "none";
+}
+
+function editAlias(name) {
+    _editingAlias = name;
+    document.getElementById('alias-name-input').value = name;
+    var ids = _aliases[name] || "";
+    _currentAliasTags = ids.split(',').map(s => s.trim()).filter(Boolean);
+    renderAliasTags();
+    document.getElementById('btn-save-alias').textContent = "Update Profile";
+    document.getElementById('btn-cancel-alias').style.display = "inline-block";
+}
+
+function openAliasManager() {
+    if (_isProtected) { showToast('System is protected!'); return; }
+    closeAllMenus();
+    renderAliasList();
+    resetAliasForm();
+    document.getElementById('alias-overlay').classList.add('open');
+}
+function closeAliasManager() { document.getElementById('alias-overlay').classList.remove('open'); }
+
+function renderAliasList() {
+    var listEl = document.getElementById('alias-list');
+    var keys = Object.keys(_aliases);
+    if (keys.length === 0) {
+        listEl.innerHTML = '<div style="color:var(--muted); font-style:italic;">No profiles created yet.</div>';
+        return;
+    }
+    var html = '';
+    keys.forEach(function(aliasName) {
+        var ids = _aliases[aliasName];
+        html += '<div style="border-bottom:1px solid var(--border); padding:8px 0; display:flex; justify-content:space-between; align-items:center; gap:8px;">';
+        html += '<div style="flex:1; min-width:0;"><strong style="color:var(--accent2); font-size:12px;">👤 ' + esc(aliasName) + '</strong><br><div style="font-size:9px; color:var(--muted); word-break:break-all;">' + esc(ids) + '</div></div>';
+        html += '<div style="display:flex; gap:4px;">';
+        html += '<button style="padding:4px 8px; background:var(--bg); border:1px solid var(--accent2); color:var(--accent2); border-radius:3px; cursor:pointer; font-weight:bold; font-size:9px;" onclick="editAlias(\'' + esc(aliasName) + '\')">Edit</button>';
+        html += '<button style="padding:4px 8px; background:var(--bg); border:1px solid var(--accent); color:var(--accent); border-radius:3px; cursor:pointer; font-weight:bold; font-size:9px;" onclick="deleteAlias(\'' + esc(aliasName) + '\')">Remove</button>';
+        html += '</div></div>';
+    });
+    listEl.innerHTML = html;
+}
+
+function submitAlias() {
+    if (_isProtected) { showToast('System is protected!'); return; }
+    var aliasName = document.getElementById('alias-name-input').value.trim();
+    
+    if (!aliasName || _currentAliasTags.length === 0) {
+        showToast('Please provide Profile Name and at least 1 Linked ID!');
+        return;
+    }
+    
+    var idsString = _currentAliasTags.join(', ');
+    
+    if (db) {
+        var updates = {};
+        if (_editingAlias && _editingAlias !== aliasName) {
+            updates['settings/aliases/' + _editingAlias] = null;
+        }
+        updates['settings/aliases/' + aliasName] = idsString;
+
+        db.ref().update(updates, function(err) {
+            if (err) showToast('⚠ Error saving Profile');
+            else {
+                showToast('✓ Profile Saved');
+                resetAliasForm();
+            }
+        });
+    }
+}
+
+function deleteAlias(aliasName) {
+    if (_isProtected) { showToast('System is protected!'); return; }
+    if (confirm("Remove identity mapping for '" + aliasName + "'? Data will separate back into original IDs.")) {
+        if (db) {
+            db.ref('settings/aliases/' + aliasName).remove(function(err) {
+                if(!err) showToast('✓ Profile removed');
+            });
+        }
+    }
+}
+
+/* ══════════════════════════════════════════
    DELETE LOGIC & TRASH BIN (1 DAY)
    ══════════════════════════════════════════ */
 var _pendingDeleteKeys = []; var _pendingDeleteRow = null;
@@ -1440,7 +1685,7 @@ function restoreLog(key) {
 
 /* GLOBAL KEYBOARD EVENT LISTENERS */
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeConfirm(); closeAdjust(); closeAllMenus(); closeChangePw(); closeChangeHints(); closeChangeTitle(); closeChangePopup(); closeElevateModal(); closeChangeNotes(); closeChangeWelcome(); closeChangeSecret(); closeSecretDisplay(); closeAdminSecretDisplay(); closeCongrats(); closeShieldModal(); closeBlockManager(); closeTrash(); closeAdminDenyModal(); }
+  if (e.key === 'Escape') { closeConfirm(); closeAdjust(); closeAllMenus(); closeChangePw(); closeChangeHints(); closeChangeTitle(); closeChangePopup(); closeElevateModal(); closeChangeNotes(); closeChangeWelcome(); closeChangeSecret(); closeSecretDisplay(); closeAdminSecretDisplay(); closeCongrats(); closeShieldModal(); closeBlockManager(); closeTrash(); closeAdminDenyModal(); closeAliasManager(); }
   if (e.key === 'Enter' && document.getElementById('adjust-overlay').classList.contains('open')) { doAdjustCounter(); }
   if (e.key === 'Enter' && document.getElementById('elevate-overlay').classList.contains('open')) { submitElevate(); }
   if (e.key === 'Enter' && document.getElementById('shield-overlay').classList.contains('open')) { submitToggleShield(); }
@@ -1455,11 +1700,30 @@ document.addEventListener('keydown', function(e) {
   if (e.altKey && e.key==='ArrowRight') { e.preventDefault(); navRedo(); } 
 });
 
+/* Bind Alias Tag Input Event */
+document.addEventListener('DOMContentLoaded', function() {
+    var aliasTagInput = document.getElementById('alias-tag-input');
+    if (aliasTagInput) {
+        aliasTagInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                addAliasTag(this.value);
+            }
+        });
+        aliasTagInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            var paste = (e.clipboardData || window.clipboardData).getData('text');
+            var parts = paste.split(/[\n,;]+/);
+            parts.forEach(p => addAliasTag(p));
+        });
+    }
+});
+
 /* ══════════════════════════════════════════
    LOG SCREEN & DETAILED TABLE
    ══════════════════════════════════════════ */
 var _filter = 'all', _page = 1, _perPage = 25, _sortField = 'ts', _sortDir = 'desc';
-function loadLogs() { var statusEl = document.getElementById('log-status'), tableEl  = document.getElementById('log-table'); if (!db) { statusEl.innerHTML = '⚠ Firebase unavailable'; statusEl.style.display = 'block'; tableEl.style.display = 'none'; return; } statusEl.innerHTML = '<span class="spin">⟳</span> Loading...'; statusEl.style.display = 'block'; tableEl.style.display = 'none'; db.ref('logs').orderByChild('ts').once('value', function(snap) { _allLogs = []; snap.forEach(function(c){ _allLogs.push(Object.assign({_k:c.key}, c.val())); }); _allLogs.reverse(); statusEl.style.display = 'none'; _page = 1; renderLogs(); renderIpStats(); }, function(err) { statusEl.innerHTML = '⚠ Error: ' + err.message; }); }
+function loadLogs() { var statusEl = document.getElementById('log-status'), tableEl  = document.getElementById('log-table'); if (!db) { statusEl.innerHTML = '⚠ Firebase unavailable'; statusEl.style.display = 'block'; tableEl.style.display = 'none'; return; } statusEl.innerHTML = '<span class="spin">⟳</span> Loading...'; statusEl.style.display = 'block'; tableEl.style.display = 'none'; db.ref('logs').orderByChild('ts').once('value', function(snap) { _allLogs = []; snap.forEach(function(c){ _allLogs.push(Object.assign({_k:c.key}, c.val())); }); _allLogs.reverse(); statusEl.style.display = 'none'; _page = 1; updateSessionBreakdown(); renderLogs(); renderIpStats(); }, function(err) { statusEl.innerHTML = '⚠ Error: ' + err.message; }); }
 function getFilteredLogs() { var search = (document.getElementById('log-search').value||'').toLowerCase().trim(); var dateFrom = document.getElementById('date-from').value, dateTo = document.getElementById('date-to').value; return _allLogs.filter(function(l) { if (_filter !== 'all' && l.type !== _filter) return false; if (search) { var hay = [ l.deviceId||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'', l.isp||'', l.browser||'', l.device||'', l.os||'', l.ua||'', l.tz||'', l.lang||'', l.screen||'', labelType(l.type) ].join(' ').toLowerCase(); if (hay.indexOf(search) === -1) return false; } if (dateFrom) { var ds = new Date(l.ts).toISOString().slice(0,10); if (ds < dateFrom) return false; } if (dateTo) { var ds2 = new Date(l.ts).toISOString().slice(0,10); if (ds2 > dateTo) return false; } return true; }).sort(function(a,b) { var va = a[_sortField]||'', vb = b[_sortField]||''; if (_sortDir === 'asc') return va > vb ? 1 : va < vb ? -1 : 0; return va < vb ? 1 : va > vb ? -1 : 0; }); }
 function buildLocationStr(log) { var parts = [], district = (log.district || '').trim(), city = (log.city || '').trim(), region = (log.region || '').trim(), country = (log.country || '').trim(); if (district && district !== city && district !== region) parts.push(district); if (city && city !== region) parts.push(city); if (region) parts.push(region); if (country) parts.push(country); return parts.filter(Boolean).join(', '); }
 function geoSrcBadge(src) { if (!src) return ''; var labels = { 1: 'ipinfo', 2: 'freeipapi', 3: 'ipwho', 4: 'cf', 5: 'geojs', 6: 'ipapi' }; var cls = { 1: 'geo-src-1', 2: 'geo-src-2', 3: 'geo-src-3', 4: 'geo-src-4', 5: 'geo-src-2', 6: 'geo-src-1' }; return '<span class="geo-src ' + (cls[src]||'geo-src-1') + '">' + (labels[src]||'geo') + '</span>'; }
@@ -1476,7 +1740,16 @@ function renderLogs() {
     var postalStr = log.postal ? ' <span style="color:var(--muted);font-size:8px">[' + esc(log.postal) + ']</span>' : '', ipStr = log.ip ? esc(log.ip) : '–', ispStr = log.isp ? esc(log.isp) : '';
     var coordStr = (log.latitude && log.longitude) ? '<a href="https://maps.google.com/?q='+log.latitude+','+log.longitude+'" target="_blank" style="color:var(--accent2);font-size:8px;text-decoration:none;" title="View map">🗺 ' + String(log.latitude).slice(0,8) + ',' + String(log.longitude).slice(0,8) + '</a>' : '';
     var extra = [log.tz, log.screen].filter(Boolean).join(' · ');
-    var devIdStr = log.deviceId ? '<span class="dev-badge">' + esc(log.deviceId) + '</span>' : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
+    
+    // Xử lý hiển thị Alias
+    var aliasName = getAliasForId(log.deviceId);
+    var devIdStr = '';
+    if (aliasName) {
+        devIdStr = '<span class="dev-badge dev-alias" title="Original ID: ' + esc(log.deviceId) + '">👤 ' + esc(aliasName) + '</span>';
+    } else {
+        devIdStr = log.deviceId ? '<span class="dev-badge">' + esc(log.deviceId) + '</span>' : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
+    }
+
     var delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log" onclick="deleteSingleLog(\'' + log._k + '\', \'' + log.type + '\', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
     return '<tr><td>' + badgeHtml(log.type) + '</td><td><span style="color:var(--ink)">' + esc(dstr) + '</span></td><td>' + devIdStr + '</td><td><div class="cell-main">' + esc(browser) + '</div><div class="cell-sub">' + esc(device) + (os ? ' · ' + esc(os) : '') + '</div></td><td><div class="cell-loc">' + locHtml + postalStr + '</div><div class="cell-ip">🌐 ' + ipStr + (coordStr ? ' &nbsp;' + coordStr : '') + '</div>' + (ispStr ? '<div class="cell-isp">' + ispStr + (log.asn ? ' · ' + esc(log.asn) : '') + '</div>' : '') + '</td><td><div class="cell-sub">' + esc(extra) + '</div></td><td style="vertical-align:middle;">' + delBtn + '</td></tr>';
   }).join('');
@@ -1502,10 +1775,10 @@ function setFilter(type) {
 }
 function labelType(t) { return t==='view' ? '👁 Page view' : t==='login_normal' ? '🔒 User' : t==='login_founder' ? '👑 Founder' : '★ Admin'; }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function exportCSV() { var list = getFilteredLogs(); var rows = [['Type','Timestamp','Device ID','IP Address','District','City','Region','Country','Postal Code','Coordinates','ISP','ASN','Browser','Device','OS','Timezone','Language','Screen','Geo Source']]; list.forEach(function(l) { var d = new Date(l.ts), dstr = d.toLocaleDateString('en-US') + ' ' + d.toLocaleTimeString('en-US'); var coord = (l.latitude && l.longitude) ? l.latitude+','+l.longitude : ''; var srcMap = {1:'ipinfo.io', 2:'freeipapi.com', 3:'ipwho.is', 4:'cloudflare-trace', 5:'geojs.io', 6:'ipapi.co'}; rows.push([ labelType(l.type), dstr, l.deviceId||'', l.ip||'', l.district||'', l.city||'', l.region||'', l.country||'', l.postal||'', coord, l.isp||'', l.asn||'', l.browser || _detectBrowser(l.ua||''), l.device  || _detectDevice(l.ua||''), l.os || _detectOS(l.ua||''), l.tz||'', l.lang||'', l.screen||'', srcMap[l.geoSrc] || '' ]); }); var csv  = rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n'); var blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); var url  = URL.createObjectURL(blob); var a = document.createElement('a'); a.href=url; a.download='logs_'+Date.now()+'.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast('✓ CSV Exported!'); }
+function exportCSV() { var list = getFilteredLogs(); var rows = [['Type','Timestamp','Device ID','Alias Name','IP Address','District','City','Region','Country','Postal Code','Coordinates','ISP','ASN','Browser','Device','OS','Timezone','Language','Screen','Geo Source']]; list.forEach(function(l) { var d = new Date(l.ts), dstr = d.toLocaleDateString('en-US') + ' ' + d.toLocaleTimeString('en-US'); var coord = (l.latitude && l.longitude) ? l.latitude+','+l.longitude : ''; var srcMap = {1:'ipinfo.io', 2:'freeipapi.com', 3:'ipwho.is', 4:'cloudflare-trace', 5:'geojs.io', 6:'ipapi.co'}; rows.push([ labelType(l.type), dstr, l.deviceId||'', getAliasForId(l.deviceId)||'', l.ip||'', l.district||'', l.city||'', l.region||'', l.country||'', l.postal||'', coord, l.isp||'', l.asn||'', l.browser || _detectBrowser(l.ua||''), l.device  || _detectDevice(l.ua||''), l.os || _detectOS(l.ua||''), l.tz||'', l.lang||'', l.screen||'', srcMap[l.geoSrc] || '' ]); }); var csv  = rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n'); var blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); var url  = URL.createObjectURL(blob); var a = document.createElement('a'); a.href=url; a.download='logs_'+Date.now()+'.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast('✓ CSV Exported!'); }
 
 /* ══════════════════════════════════════════
-   DEVICE STATS (FINGERPRINTING)
+   DEVICE STATS (FINGERPRINTING) & ALIASING
    ══════════════════════════════════════════ */
 var _ipMode = 'all';
 function setIpMode(mode) { _ipMode = mode; ['all','normal','admin','founder'].forEach(function(m) { var el = document.getElementById('ipt-'+m); if (el) el.classList.toggle('active', m === mode); }); renderIpStats(); }
@@ -1518,10 +1791,29 @@ function buildDeviceMap(typeFilter) {
     if (typeFilter === 'founder' && log.type !== 'login_founder') return;
     
     var devId = log.deviceId || '', fp = (log.ip||'') + '|' + (log.device||'') + '|' + (log.os||'') + '|' + (log.browser||'') + '|' + (log.screen||'');
-    var groupId = null; if (devId && idToGroup[devId]) groupId = idToGroup[devId]; else if (fpToGroup[fp]) groupId = fpToGroup[fp]; else { groupCounter++; groupId = 'G' + groupCounter; }
-    if (devId) idToGroup[devId] = groupId; fpToGroup[fp] = groupId;
-    if (!map[groupId]) { map[groupId] = { id: devId || log.ip || 'Unknown Visitor', groupId: groupId, logKeys: [], devIds: [], ips: [], total: 0, normal: 0, admin: 0, founder: 0, lastTs: 0, ip: log.ip||'', city: log.city||'', district: log.district||'', region: log.region||'', country: log.country||'', isp: log.isp||'', browser: log.browser || _detectBrowser(log.ua||''), device: log.device || _detectDevice(log.ua||''), os: log.os || _detectOS(log.ua||'') }; }
-    var entry = map[groupId]; if (log._k) entry.logKeys.push(log._k); if (devId && entry.devIds.indexOf(devId) === -1) entry.devIds.push(devId); if (log.ip && entry.ips.indexOf(log.ip) === -1) entry.ips.push(log.ip);
+    
+    // Alias Logic
+    var aliasName = getAliasForId(devId);
+    var groupId = null;
+    
+    if (aliasName) {
+        groupId = 'ALIAS_' + aliasName;
+    } else {
+        if (devId && idToGroup[devId]) groupId = idToGroup[devId]; 
+        else if (fpToGroup[fp]) groupId = fpToGroup[fp]; 
+        else { groupCounter++; groupId = 'G' + groupCounter; }
+        
+        if (devId) idToGroup[devId] = groupId; 
+        fpToGroup[fp] = groupId;
+    }
+
+    if (!map[groupId]) { map[groupId] = { isAlias: !!aliasName, aliasName: aliasName, id: devId || log.ip || 'Unknown Visitor', groupId: groupId, logKeys: [], devIds: [], ips: [], total: 0, normal: 0, admin: 0, founder: 0, lastTs: 0, ip: log.ip||'', city: log.city||'', district: log.district||'', region: log.region||'', country: log.country||'', isp: log.isp||'', browser: log.browser || _detectBrowser(log.ua||''), device: log.device || _detectDevice(log.ua||''), os: log.os || _detectOS(log.ua||'') }; }
+    
+    var entry = map[groupId]; 
+    if (log._k) entry.logKeys.push(log._k); 
+    if (devId && entry.devIds.indexOf(devId) === -1) entry.devIds.push(devId); 
+    if (log.ip && entry.ips.indexOf(log.ip) === -1) entry.ips.push(log.ip);
+    
     entry.total++; 
     if (log.type === 'login_normal') entry.normal++; 
     if (log.type === 'login_admin')  entry.admin++;
@@ -1529,6 +1821,7 @@ function buildDeviceMap(typeFilter) {
     if (log.ts >= entry.lastTs) { entry.lastTs = log.ts; if (log.ip) entry.ip = log.ip; if (log.city) entry.city = log.city; if (log.district) entry.district = log.district; if (log.region) entry.region = log.region; if (log.country) entry.country = log.country; if (log.isp) entry.isp = log.isp; if (log.browser) entry.browser = log.browser || _detectBrowser(log.ua||''); if (log.device) entry.device = log.device || _detectDevice(log.ua||''); if (log.os) entry.os = log.os || _detectOS(log.ua||''); }
   }); return map;
 }
+
 function renderIpStats() {
   var grid = document.getElementById('ip-stats-grid'); if (!grid) return;
   var cols = [
@@ -1549,8 +1842,20 @@ function renderIpStats() {
       top.forEach(function(entry, idx) {
         var rank = idx + 1, rankCls = rank <= 3 ? ' rank-' + rank : '', count = col.key==='normal' ? entry.normal : col.key==='admin' ? entry.admin : col.key==='founder' ? entry.founder : entry.total; var barPct = maxCount > 0 ? Math.round(count/maxCount*100) : 0, locStr = buildLocationStr(entry), accessInfo = [entry.browser, entry.device, entry.os].filter(Boolean).join(' · '); var lastStr = entry.lastTs ? new Date(entry.lastTs).toLocaleDateString('en-US') + ' ' + new Date(entry.lastTs).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '';
         html += '<div class="ip-row"><div class="ip-rank' + rankCls + '">#' + rank + '</div><div class="ip-info">';
-        var ipDisplay = entry.ips.length > 0 ? entry.ips[0] + (entry.ips.length > 1 ? ' (+'+(entry.ips.length-1)+')' : '') : 'Unknown IP'; html += '<div class="ip-addr">🌐 ' + esc(ipDisplay) + '</div>';
-        if (entry.devIds && entry.devIds.length > 0) { var badges = entry.devIds.map(function(id) { return '<span class="dev-badge" style="margin-right:4px; font-size: 8px;">' + esc(id) + '</span>'; }).join(''); html += '<div style="margin-top:4px; margin-bottom: 2px;">' + badges + '</div>'; }
+        var ipDisplay = entry.ips.length > 0 ? entry.ips[0] + (entry.ips.length > 1 ? ' (+'+(entry.ips.length-1)+')' : '') : 'Unknown IP'; 
+        
+        // Show Alias Name if merged
+        if (entry.isAlias) {
+            html += '<div class="ip-addr" style="color:var(--accent2); margin-bottom:2px;">👤 ' + esc(entry.aliasName) + '</div>';
+        } else {
+            html += '<div class="ip-addr">🌐 ' + esc(ipDisplay) + '</div>';
+        }
+
+        if (entry.devIds && entry.devIds.length > 0) { 
+            var badges = entry.devIds.map(function(id) { return '<span class="dev-badge" style="margin-right:4px; font-size: 8px;">' + esc(id) + '</span>'; }).join(''); 
+            html += '<div style="margin-top:4px; margin-bottom: 2px;">' + badges + '</div>'; 
+        }
+        
         if (locStr) html += '<div class="ip-location">📍 ' + esc(locStr) + '</div>'; if (accessInfo) html += '<div class="ip-isp">' + esc(accessInfo) + '</div>'; if (entry.isp) html += '<div class="ip-isp" style="color:var(--muted)">' + esc(entry.isp) + '</div>'; if (lastStr) html += '<div class="ip-last">🕐 ' + esc(lastStr) + '</div>'; html += '<div class="ip-bar-wrap"><div class="ip-bar ' + col.barCls + '" style="width:' + barPct + '%"></div></div></div>'; html += '<div class="ip-count-badge"><div class="ip-count-num ' + col.numCls + '">' + count + '</div><div class="ip-count-label">times</div></div>';
         
         var keysStr = JSON.stringify(entry.logKeys).replace(/"/g, '&quot;');
