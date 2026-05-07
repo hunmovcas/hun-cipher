@@ -1,0 +1,699 @@
+/* ══════════════════════════════════════════
+   logs.js — Màn hình Analytics & Log Table
+   Render bảng log, thống kê IP/device,
+   xoá log, thùng rác, export CSV.
+   ══════════════════════════════════════════ */
+
+// ══════════════════════════════════════════
+// LOAD & FILTER
+// ══════════════════════════════════════════
+
+function loadLogs() {
+  var statusEl = document.getElementById('log-status');
+  var tableEl  = document.getElementById('log-table');
+
+  if (!db) {
+    statusEl.innerHTML = '⚠ Firebase unavailable';
+    statusEl.style.display = 'block';
+    tableEl.style.display  = 'none';
+    return;
+  }
+
+  statusEl.innerHTML = '<span class="spin">⟳</span> Loading...';
+  statusEl.style.display = 'block';
+  tableEl.style.display  = 'none';
+
+  db.ref('logs').orderByChild('ts').once('value', function(snap) {
+    _allLogs = [];
+    snap.forEach(function(c) { _allLogs.push(Object.assign({ _k: c.key }, c.val())); });
+    _allLogs.reverse();
+    statusEl.style.display = 'none';
+    _page = 1;
+    updateSessionBreakdown();
+    renderLogs();
+    renderIpStats();
+  }, function(err) {
+    statusEl.innerHTML = '⚠ Error: ' + err.message;
+  });
+}
+
+/**
+ * Lọc và sắp xếp log theo filter, search, date range hiện tại.
+ * @returns {Array}
+ */
+function getFilteredLogs() {
+  var search   = (document.getElementById('log-search').value || '').toLowerCase().trim();
+  var dateFrom = document.getElementById('date-from').value;
+  var dateTo   = document.getElementById('date-to').value;
+
+  return _allLogs.filter(function(l) {
+    if (_filter !== 'all' && l.type !== _filter) return false;
+
+    if (search) {
+      var hay = [
+        l.deviceId || '', l.ip || '', l.city || '', l.district || '',
+        l.region || '', l.country || '', l.isp || '', l.browser || '',
+        l.device || '', l.os || '', l.ua || '', l.tz || '',
+        l.lang || '', l.screen || '', labelType(l.type),
+      ].join(' ').toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+
+    if (dateFrom) {
+      var ds = new Date(l.ts).toISOString().slice(0, 10);
+      if (ds < dateFrom) return false;
+    }
+    if (dateTo) {
+      var ds2 = new Date(l.ts).toISOString().slice(0, 10);
+      if (ds2 > dateTo) return false;
+    }
+
+    return true;
+  }).sort(function(a, b) {
+    var va = a[_sortField] || '', vb = b[_sortField] || '';
+    if (_sortDir === 'asc') return va > vb ? 1 : va < vb ? -1 : 0;
+    return va < vb ? 1 : va > vb ? -1 : 0;
+  });
+}
+
+function setFilter(type) {
+  _filter = type;
+  _page   = 1;
+
+  // Filter buttons
+  ['all','view','login_normal','login_admin','login_founder'].forEach(function(t) {
+    var id = 'f-' + (t === 'login_normal' ? 'normal' : t === 'login_admin' ? 'admin' : t === 'login_founder' ? 'founder' : t);
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', t === type);
+  });
+
+  // Stat cards
+  ['sc-all','sc-normal','sc-admin','sc-founder','sc-real'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('sel');
+  });
+  var selMap = { all: 'sc-all', login_normal: 'sc-normal', login_admin: 'sc-admin', login_founder: 'sc-founder' };
+  if (selMap[type]) { var el = document.getElementById(selMap[type]); if (el) el.classList.add('sel'); }
+
+  renderLogs();
+}
+
+function toggleSort(field) {
+  if (_sortField === field) {
+    _sortDir = _sortDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    _sortField = field;
+    _sortDir   = 'desc';
+  }
+  ['ts', 'br'].forEach(function(f) {
+    var th = document.getElementById('th-' + f);
+    if (!th) return;
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (f === _sortField) th.classList.add('sort-' + _sortDir);
+  });
+  renderLogs();
+}
+
+// ══════════════════════════════════════════
+// RENDER LOG TABLE
+// ══════════════════════════════════════════
+
+function renderLogs() {
+  var list     = getFilteredLogs();
+  var tbody    = document.getElementById('log-body');
+  var tableEl  = document.getElementById('log-table');
+  var statusEl = document.getElementById('log-status');
+
+  document.getElementById('log-count').textContent = list.length + ' records';
+
+  if (list.length === 0) {
+    statusEl.innerHTML = 'No matching records found';
+    statusEl.style.display = 'block';
+    tableEl.style.display  = 'none';
+    document.getElementById('log-pagination').innerHTML = '';
+    return;
+  }
+
+  var totalPages = Math.ceil(list.length / _perPage);
+  if (_page > totalPages) _page = totalPages;
+
+  var start    = (_page - 1) * _perPage;
+  var end      = Math.min(start + _perPage, list.length);
+  var pageList = list.slice(start, end);
+
+  tbody.innerHTML = pageList.map(function(log) {
+    var d     = new Date(log.ts);
+    var dstr  = d.toLocaleDateString('en-US') + ' ' +
+                d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    var browser = log.browser || _detectBrowser(log.ua || '');
+    var device  = log.device  || _detectDevice(log.ua  || '');
+    var os      = log.os      || _detectOS(log.ua      || '');
+
+    var locStr  = buildLocationStr(log);
+    var locHtml = locStr
+      ? '📍 ' + esc(locStr) + geoSrcBadge(log.geoSrc)
+      : '<span style="color:var(--muted);font-style:italic">No location</span>';
+
+    var postalStr = log.postal
+      ? ' <span style="color:var(--muted);font-size:8px">[' + esc(log.postal) + ']</span>'
+      : '';
+    var ipStr  = log.ip  ? esc(log.ip)  : '–';
+    var ispStr = log.isp ? esc(log.isp) : '';
+
+    var coordStr = (log.latitude && log.longitude)
+      ? '<a href="https://maps.google.com/?q=' + log.latitude + ',' + log.longitude +
+        '" target="_blank" style="color:var(--accent2);font-size:8px;text-decoration:none;" title="View map">' +
+        '🗺 ' + String(log.latitude).slice(0, 8) + ',' + String(log.longitude).slice(0, 8) + '</a>'
+      : '';
+
+    var extra = [log.tz, log.screen].filter(Boolean).join(' · ');
+
+    // Alias display
+    var aliasName = getAliasForId(log.deviceId);
+    var devIdStr  = aliasName
+      ? '<span class="dev-badge dev-alias" title="Original ID: ' + esc(log.deviceId) + '">👤 ' + esc(aliasName) + '</span>'
+      : log.deviceId
+        ? '<span class="dev-badge">' + esc(log.deviceId) + '</span>'
+        : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
+
+    var delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log"' +
+                 ' onclick="deleteSingleLog(\'' + log._k + '\', \'' + log.type + '\', this)">' +
+                 '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                 '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>' +
+                 '<path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
+
+    return '<tr>' +
+      '<td>' + badgeHtml(log.type) + '</td>' +
+      '<td><span style="color:var(--ink)">' + esc(dstr) + '</span></td>' +
+      '<td>' + devIdStr + '</td>' +
+      '<td><div class="cell-main">' + esc(browser) + '</div>' +
+          '<div class="cell-sub">' + esc(device) + (os ? ' · ' + esc(os) : '') + '</div></td>' +
+      '<td><div class="cell-loc">' + locHtml + postalStr + '</div>' +
+          '<div class="cell-ip">🌐 ' + ipStr + (coordStr ? ' &nbsp;' + coordStr : '') + '</div>' +
+          (ispStr ? '<div class="cell-isp">' + ispStr + (log.asn ? ' · ' + esc(log.asn) : '') + '</div>' : '') +
+          '</td>' +
+      '<td><div class="cell-sub">' + esc(extra) + '</div></td>' +
+      '<td style="vertical-align:middle;">' + delBtn + '</td>' +
+    '</tr>';
+  }).join('');
+
+  tableEl.style.display  = 'table';
+  statusEl.style.display = 'none';
+  renderPagination(totalPages, list.length, start, end);
+}
+
+function renderPagination(total, count, start, end) {
+  var pg = document.getElementById('log-pagination');
+  if (total <= 1) { pg.innerHTML = ''; return; }
+
+  var html = '<button class="pg-btn" onclick="goPage(' + (_page - 1) + ')" ' + (_page <= 1 ? 'disabled' : '') + '>←</button>';
+  var rs = Math.max(1, _page - 2), re = Math.min(total, _page + 2);
+
+  if (rs > 1) html += '<button class="pg-btn" onclick="goPage(1)">1</button>';
+  if (rs > 2) html += '<span class="pg-info">…</span>';
+  for (var i = rs; i <= re; i++) {
+    html += '<button class="pg-btn' + (i === _page ? ' active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+  }
+  if (re < total - 1) html += '<span class="pg-info">…</span>';
+  if (re < total)     html += '<button class="pg-btn" onclick="goPage(' + total + ')">' + total + '</button>';
+
+  html += '<button class="pg-btn" onclick="goPage(' + (_page + 1) + ')" ' + (_page >= total ? 'disabled' : '') + '>→</button>';
+  html += '<span class="pg-info">' + (start + 1) + '–' + end + ' / ' + count + '</span>';
+  pg.innerHTML = html;
+}
+
+function goPage(n) {
+  _page = n;
+  renderLogs();
+  document.getElementById('log-screen').scrollTop = 0;
+}
+
+// ══════════════════════════════════════════
+// RENDER IP / DEVICE STATS
+// ══════════════════════════════════════════
+
+function setIpMode(mode) {
+  _ipMode = mode;
+  ['all','normal','admin','founder'].forEach(function(m) {
+    var el = document.getElementById('ipt-' + m);
+    if (el) el.classList.toggle('active', m === mode);
+  });
+  renderIpStats();
+}
+
+/**
+ * Nhóm log theo thiết bị/alias, theo typeFilter.
+ * @param {'all'|'normal'|'admin'|'founder'} typeFilter
+ * @returns {Object} map of device groups
+ */
+function buildDeviceMap(typeFilter) {
+  var map = {}, idToGroup = {}, fpToGroup = {}, groupCounter = 0;
+  var logs = _allLogs.slice().sort(function(a, b) { return a.ts - b.ts; });
+
+  logs.forEach(function(log) {
+    if (log.type === 'view') return;
+    if (typeFilter === 'normal'  && log.type !== 'login_normal')  return;
+    if (typeFilter === 'admin'   && log.type !== 'login_admin')   return;
+    if (typeFilter === 'founder' && log.type !== 'login_founder') return;
+
+    var devId = log.deviceId || '';
+    var fp    = [log.ip||'', log.device||'', log.os||'', log.browser||'', log.screen||''].join('|');
+    var aliasName = getAliasForId(devId);
+    var groupId;
+
+    if (aliasName) {
+      groupId = 'ALIAS_' + aliasName;
+    } else {
+      if      (devId && idToGroup[devId]) groupId = idToGroup[devId];
+      else if (fpToGroup[fp])             groupId = fpToGroup[fp];
+      else { groupCounter++; groupId = 'G' + groupCounter; }
+      if (devId) idToGroup[devId] = groupId;
+      fpToGroup[fp] = groupId;
+    }
+
+    if (!map[groupId]) {
+      map[groupId] = {
+        isAlias: !!aliasName, aliasName: aliasName,
+        id: devId || log.ip || 'Unknown Visitor', groupId: groupId,
+        logKeys: [], devIds: [], ips: [],
+        total: 0, normal: 0, admin: 0, founder: 0,
+        lastTs: 0,
+        ip: log.ip||'', city: log.city||'', district: log.district||'',
+        region: log.region||'', country: log.country||'', isp: log.isp||'',
+        browser: log.browser || _detectBrowser(log.ua||''),
+        device:  log.device  || _detectDevice(log.ua||''),
+        os:      log.os      || _detectOS(log.ua||''),
+      };
+    }
+
+    var entry = map[groupId];
+    if (log._k)                               entry.logKeys.push(log._k);
+    if (devId && entry.devIds.indexOf(devId) === -1) entry.devIds.push(devId);
+    if (log.ip && entry.ips.indexOf(log.ip)  === -1) entry.ips.push(log.ip);
+
+    entry.total++;
+    if (log.type === 'login_normal')  entry.normal++;
+    if (log.type === 'login_admin')   entry.admin++;
+    if (log.type === 'login_founder') entry.founder++;
+
+    // Cập nhật thông tin mới nhất
+    if (log.ts >= entry.lastTs) {
+      entry.lastTs   = log.ts;
+      if (log.ip)      entry.ip      = log.ip;
+      if (log.city)    entry.city    = log.city;
+      if (log.district)entry.district= log.district;
+      if (log.region)  entry.region  = log.region;
+      if (log.country) entry.country = log.country;
+      if (log.isp)     entry.isp     = log.isp;
+      if (log.browser) entry.browser = log.browser;
+      if (log.device)  entry.device  = log.device;
+      if (log.os)      entry.os      = log.os;
+    }
+  });
+
+  return map;
+}
+
+function renderIpStats() {
+  var grid = document.getElementById('ip-stats-grid');
+  if (!grid) return;
+
+  var COLS = [
+    { key: 'all',     label: 'All Users',  cls: 'col-all',    numCls: 'cnt-all',    barCls: 'bar-all',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>' },
+    { key: 'normal',  label: '🔒 Users',   cls: 'col-normal', numCls: 'cnt-normal', barCls: 'bar-normal',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+    { key: 'admin',   label: '★ Admin',    cls: 'col-admin',  numCls: 'cnt-admin',  barCls: 'bar-admin',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
+    { key: 'founder', label: '👑 Founder', cls: 'col-founder',numCls: 'cnt-admin',  barCls: 'bar-founder',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 4 8 11 2 4 5 16 19 16 22 4 16 11 12 4"/><line x1="5" y1="20" x2="19" y2="20"/></svg>' },
+  ];
+
+  var showKeys     = _ipMode === 'all' ? ['all','normal','admin','founder'] : [_ipMode];
+  var filteredCols = COLS.filter(function(c) { return showKeys.indexOf(c.key) !== -1; });
+  var html = '';
+
+  filteredCols.forEach(function(col) {
+    var map    = buildDeviceMap(col.key);
+    var sorted = Object.values(map).sort(function(a, b) {
+      var va = col.key === 'normal' ? a.normal : col.key === 'admin' ? a.admin : col.key === 'founder' ? a.founder : a.total;
+      var vb = col.key === 'normal' ? b.normal : col.key === 'admin' ? b.admin : col.key === 'founder' ? b.founder : b.total;
+      return vb - va;
+    });
+    var top      = sorted.slice(0, 8);
+    var maxCount = top.length
+      ? (col.key === 'normal' ? top[0].normal : col.key === 'admin' ? top[0].admin : col.key === 'founder' ? top[0].founder : top[0].total)
+      : 1;
+
+    html += '<div class="ip-col-wrap">' +
+              '<div class="ip-col-head ' + col.cls + '">' + col.icon + ' ' + esc(col.label) + '</div>';
+
+    if (top.length === 0) {
+      html += '<div class="ip-empty">No data</div>';
+    } else {
+      top.forEach(function(entry, idx) {
+        var rank     = idx + 1;
+        var rankCls  = rank <= 3 ? ' rank-' + rank : '';
+        var count    = col.key === 'normal' ? entry.normal : col.key === 'admin' ? entry.admin : col.key === 'founder' ? entry.founder : entry.total;
+        var barPct   = maxCount > 0 ? Math.round(count / maxCount * 100) : 0;
+        var locStr   = buildLocationStr(entry);
+        var lastStr  = entry.lastTs
+          ? new Date(entry.lastTs).toLocaleDateString('en-US') + ' ' +
+            new Date(entry.lastTs).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+          : '';
+
+        var ipDisplay = entry.ips.length > 0
+          ? entry.ips[0] + (entry.ips.length > 1 ? ' (+' + (entry.ips.length - 1) + ')' : '')
+          : 'Unknown IP';
+
+        var keysStr = JSON.stringify(entry.logKeys).replace(/"/g, '&quot;');
+
+        html += '<div class="ip-row">' +
+                  '<div class="ip-rank' + rankCls + '">#' + rank + '</div>' +
+                  '<div class="ip-info">';
+
+        if (entry.isAlias) {
+          html += '<div class="ip-addr" style="color:var(--accent2);margin-bottom:2px;">👤 ' + esc(entry.aliasName) + '</div>';
+        } else {
+          html += '<div class="ip-addr">🌐 ' + esc(ipDisplay) + '</div>';
+        }
+
+        if (entry.devIds && entry.devIds.length > 0) {
+          var badges = entry.devIds.map(function(id) {
+            return '<span class="dev-badge" style="margin-right:4px;font-size:8px;">' + esc(id) + '</span>';
+          }).join('');
+          html += '<div style="margin-top:4px;margin-bottom:2px;">' + badges + '</div>';
+        }
+
+        if (locStr) html += '<div class="ip-location">📍 ' + esc(locStr) + '</div>';
+        var accessInfo = [entry.browser, entry.device, entry.os].filter(Boolean).join(' · ');
+        if (accessInfo) html += '<div class="ip-isp">' + esc(accessInfo) + '</div>';
+        if (entry.isp)  html += '<div class="ip-isp" style="color:var(--muted)">' + esc(entry.isp) + '</div>';
+        if (lastStr)    html += '<div class="ip-last">🕐 ' + esc(lastStr) + '</div>';
+
+        html += '<div class="ip-bar-wrap"><div class="ip-bar ' + col.barCls + '" style="width:' + barPct + '%"></div></div>' +
+                '</div>' +
+                '<div class="ip-count-badge">' +
+                  '<div class="ip-count-num ' + col.numCls + '">' + count + '</div>' +
+                  '<div class="ip-count-label">times</div>' +
+                '</div>' +
+                '<div style="display:flex;flex-direction:column;">' +
+                  '<button class="btn-del-ip" title="Delete completely" data-keys="' + keysStr + '" onclick="deleteDeviceLogs(this.dataset.keys, this)">' +
+                  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
+
+        if (entry.ips.length > 0) {
+          html += '<button class="btn-block-ip" title="Block this IP" onclick="blockIP(\'' + esc(entry.ips[0]) + '\')">' +
+                  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></button>';
+        }
+
+        html += '</div></div>';
+      });
+    }
+
+    html += '</div>';
+  });
+
+  // Điều chỉnh số cột grid theo số cột đang hiển thị
+  grid.style.gridTemplateColumns = filteredCols.length === 4
+    ? 'repeat(4,1fr)'
+    : filteredCols.length === 1
+      ? '1fr'
+      : 'repeat(auto-fit, minmax(200px, 1fr))';
+
+  grid.innerHTML = html;
+}
+
+// ══════════════════════════════════════════
+// DELETE LOGIC
+// ══════════════════════════════════════════
+
+/**
+ * Xoá toàn bộ log của một IP/device (từ bảng top).
+ * Deduct counter tương ứng.
+ */
+function deleteDeviceLogs(keysStr, btnEl) {
+  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
+  try { _pendingDeleteKeys = JSON.parse(keysStr); } catch(e) { return; }
+  _pendingDeleteRow = btnEl.closest('.ip-row');
+
+  document.getElementById('confirm-title').textContent = 'Delete IP / Device?';
+  document.getElementById('confirm-msg').innerHTML =
+    'This IP/Device and ALL related logs will be <strong>permanently deleted</strong>. ALL traces will be wiped.' +
+    '<br><strong style="color:var(--accent)">Note: Traffic counters will also be instantly deducted!</strong>';
+  document.getElementById('confirm-yes').onclick = function() { doDeleteDeviceLogs(); };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function doDeleteDeviceLogs() {
+  if (_isProtected) { showToast('System is protected!'); return; }
+  closeConfirm();
+  if (!db || !_pendingDeleteKeys || !_pendingDeleteKeys.length) return;
+
+  // Đếm số lần mỗi loại cần deduct
+  var deduct = { view: 0, login_normal: 0, login_secondary: 0, login_admin: 0, login_founder: 0 };
+  _pendingDeleteKeys.forEach(function(k) {
+    var log = _allLogs.find(function(l) { return l._k === k; });
+    if (log) deduct[log.type] = (deduct[log.type] || 0) + 1;
+  });
+
+  // Animate row removal
+  if (_pendingDeleteRow) {
+    _pendingDeleteRow.style.opacity   = '0';
+    _pendingDeleteRow.style.transform = 'scale(0.95)';
+    setTimeout(function() { if (_pendingDeleteRow) _pendingDeleteRow.remove(); }, 300);
+  }
+
+  var updates = {};
+  _pendingDeleteKeys.forEach(function(k) { updates['logs/' + k] = null; });
+
+  db.ref().update(updates, function(err) {
+    if (err) { showToast('⚠ Error deleting traces!'); return; }
+
+    showToast('✓ IP completely wiped!');
+    if (deduct.view          > 0) db.ref('counters/outer').transaction(function(n)           { return Math.max(0, (n||0) - deduct.view); });
+    if (deduct.login_normal  > 0) db.ref('counters/inner_normal').transaction(function(n)   { return Math.max(0, (n||0) - deduct.login_normal); });
+    if (deduct.login_secondary > 0) db.ref('counters/inner_secondary').transaction(function(n) { return Math.max(0, (n||0) - deduct.login_secondary); });
+    if (deduct.login_admin   > 0) db.ref('counters/admin').transaction(function(n)          { return Math.max(0, (n||0) - deduct.login_admin); });
+    if (deduct.login_founder > 0) db.ref('counters/founder').transaction(function(n)        { return Math.max(0, (n||0) - deduct.login_founder); });
+    db.ref('counters/real_visitors').transaction(function(n) { return Math.max(0, (n||0) - 1); });
+
+    _pendingDeleteKeys = [];
+  });
+}
+
+/**
+ * Xoá 1 dòng log đơn lẻ (chuyển vào trash).
+ */
+function deleteSingleLog(key, type, btnEl) {
+  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
+  _pendingSingleDelete = { key: key, type: type, row: btnEl.closest('tr') };
+
+  document.getElementById('confirm-title').textContent = 'Move Log to Trash?';
+  document.getElementById('confirm-msg').innerHTML =
+    'This log entry will be moved to the Trash and the counter will be deducted.' +
+    '<br><span style="font-size:11px;color:var(--muted)">Logs in trash are kept for 24 hours.</span>';
+  document.getElementById('confirm-yes').onclick = function() { doDeleteSingleLog(); };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function doDeleteSingleLog() {
+  if (_isProtected) { showToast('System is protected!'); return; }
+  closeConfirm();
+  if (!db || !_pendingSingleDelete) return;
+
+  var key  = _pendingSingleDelete.key;
+  var type = _pendingSingleDelete.type;
+  var row  = _pendingSingleDelete.row;
+  var logObj = _allLogs.find(function(l) { return l._k === key; });
+  if (!logObj) return;
+
+  if (row) { row.style.opacity = '0'; setTimeout(function() { row.remove(); }, 300); }
+
+  var trashData = Object.assign({}, logObj);
+  delete trashData._k;
+  trashData.deletedAt = Date.now();
+
+  var updates = {};
+  updates['trash/logs/' + key] = trashData;
+  updates['logs/' + key]       = null;
+
+  var COUNTER_MAP = {
+    view: 'outer', login_normal: 'inner_normal', login_secondary: 'inner_secondary',
+    login_admin: 'admin', login_founder: 'founder',
+  };
+
+  db.ref().update(updates, function(err) {
+    if (err) { showToast('⚠ Error wiping log!'); return; }
+    showToast('✓ Log moved to trash!');
+    var counterRef = COUNTER_MAP[type];
+    if (counterRef) db.ref('counters/' + counterRef).transaction(function(n) { return Math.max(0, (n||0) - 1); });
+    _pendingSingleDelete = null;
+  });
+}
+
+// ══════════════════════════════════════════
+// TRASH BIN
+// ══════════════════════════════════════════
+
+function openTrash() {
+  if (_isProtected) { showToast('System is protected!'); return; }
+  document.getElementById('trash-overlay').classList.add('open');
+
+  var listEl = document.getElementById('trash-list');
+  listEl.innerHTML = '<div style="text-align:center;padding:20px"><span class="spin">⟳</span> Loading trash...</div>';
+
+  db.ref('trash/logs').once('value', function(snap) {
+    var now     = Date.now();
+    var items   = [];
+    var toDelete = {};
+
+    snap.forEach(function(c) {
+      var val = c.val();
+      if (now - val.deletedAt > 86400000) { // xoá cứng sau 24h
+        toDelete['trash/logs/' + c.key] = null;
+      } else {
+        items.push(Object.assign({ _k: c.key }, val));
+      }
+    });
+
+    if (Object.keys(toDelete).length > 0) db.ref().update(toDelete);
+
+    items.sort(function(a, b) { return b.deletedAt - a.deletedAt; });
+
+    if (items.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Trash is empty.</div>';
+      return;
+    }
+
+    listEl.innerHTML = items.map(function(item) {
+      var d    = new Date(item.ts);
+      var delD = new Date(item.deletedAt);
+      var dstr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:8px 4px;">' +
+               '<div><span style="color:var(--accent)">[' + labelType(item.type) + ']</span> ' + dstr +
+               '<br><span style="color:var(--muted);font-size:8px;">IP: ' + (item.ip||'Unknown') + ' | Del: ' + delD.toLocaleString() + '</span></div>' +
+               '<button style="padding:4px 8px;border:1px solid var(--secure);background:transparent;color:var(--secure);cursor:pointer;font-family:\'Nunito\',sans-serif;font-weight:bold;font-size:10px;border-radius:3px;" onclick="restoreLog(\'' + item._k + '\')">Restore</button>' +
+             '</div>';
+    }).join('');
+  });
+}
+
+function closeTrash() {
+  document.getElementById('trash-overlay').classList.remove('open');
+}
+
+function restoreLog(key) {
+  if (_isProtected) { showToast('System is protected!'); return; }
+
+  db.ref('trash/logs/' + key).once('value', function(snap) {
+    var data = snap.val();
+    if (!data) { showToast('Log not found!'); return; }
+
+    var type = data.type;
+    delete data.deletedAt;
+
+    var updates = {};
+    updates['logs/' + key]       = data;
+    updates['trash/logs/' + key] = null;
+
+    db.ref().update(updates, function(err) {
+      if (err) { showToast('⚠ Error restoring log!'); return; }
+      showToast('✓ Log restored!');
+
+      var COUNTER_MAP = {
+        view: 'outer', login_normal: 'inner_normal', login_secondary: 'inner_secondary',
+        login_admin: 'admin', login_founder: 'founder',
+      };
+      var counterRef = COUNTER_MAP[type];
+      if (counterRef) db.ref('counters/' + counterRef).transaction(function(n) { return (n||0) + 1; });
+      openTrash();
+    });
+  });
+}
+
+// ══════════════════════════════════════════
+// EXPORT CSV
+// ══════════════════════════════════════════
+
+function exportCSV() {
+  var list = getFilteredLogs();
+  var rows = [['Type','Timestamp','Device ID','Alias Name','IP Address','District','City','Region','Country',
+               'Postal Code','Coordinates','ISP','ASN','Browser','Device','OS','Timezone','Language','Screen','Geo Source']];
+
+  var GEO_SRC_MAP = { 1:'ipinfo.io', 2:'freeipapi.com', 3:'ipwho.is', 4:'cloudflare-trace', 5:'geojs.io', 6:'ipapi.co' };
+
+  list.forEach(function(l) {
+    var d    = new Date(l.ts);
+    var dstr = d.toLocaleDateString('en-US') + ' ' + d.toLocaleTimeString('en-US');
+    var coord = (l.latitude && l.longitude) ? l.latitude + ',' + l.longitude : '';
+    rows.push([
+      labelType(l.type), dstr, l.deviceId||'', getAliasForId(l.deviceId)||'',
+      l.ip||'', l.district||'', l.city||'', l.region||'', l.country||'', l.postal||'',
+      coord, l.isp||'', l.asn||'',
+      l.browser || _detectBrowser(l.ua||''),
+      l.device  || _detectDevice(l.ua||''),
+      l.os      || _detectOS(l.ua||''),
+      l.tz||'', l.lang||'', l.screen||'',
+      GEO_SRC_MAP[l.geoSrc] || '',
+    ]);
+  });
+
+  var csv  = rows.map(function(r) {
+    return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'logs_' + Date.now() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✓ CSV Exported!');
+}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+
+function labelType(t) {
+  return t === 'view'         ? '👁 Page view'
+       : t === 'login_normal' ? '🔒 User'
+       : t === 'login_founder'? '👑 Founder'
+       : '★ Admin';
+}
+
+function badgeHtml(type) {
+  if (type === 'view')
+    return '<span class="badge badge-view"><span class="badge-icon">👁</span>Page view</span>';
+  if (type === 'login_normal')
+    return '<span class="badge badge-login_normal"><span class="badge-icon">🔒</span>User</span>';
+  if (type === 'login_founder')
+    return '<span class="badge badge-login_admin" style="background:rgba(142,68,173,.1);color:var(--founder);border-color:rgba(142,68,173,.3)"><span class="badge-icon">👑</span>Founder</span>';
+  return '<span class="badge badge-login_admin"><span class="badge-icon">★</span>Admin</span>';
+}
+
+function geoSrcBadge(src) {
+  if (!src) return '';
+  var labels = { 1:'ipinfo', 2:'freeipapi', 3:'ipwho', 4:'cf', 5:'geojs', 6:'ipapi' };
+  var cls    = { 1:'geo-src-1', 2:'geo-src-2', 3:'geo-src-3', 4:'geo-src-4', 5:'geo-src-2', 6:'geo-src-1' };
+  return '<span class="geo-src ' + (cls[src]||'geo-src-1') + '">' + (labels[src]||'geo') + '</span>';
+}
+
+function fbCopy(t) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = t;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✓ Copied to clipboard!');
+  } catch(e) {
+    showToast('⚠ Failed to copy');
+  }
+}
