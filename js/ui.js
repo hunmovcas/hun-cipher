@@ -72,32 +72,80 @@ function updateProtectionUI() {
  * Cập nhật Session Breakdown (tổng & thực từng loại đăng nhập).
  * Áp dụng cutoff để bỏ qua dữ liệu cũ trước một mốc thời gian nhất định.
  */
-function updateSessionBreakdown() {
-  if (!_allLogs) return;
+/**
+ * Nhóm các log theo phiên đăng nhập (cùng deviceId, trong vòng SESSION_GAP ms).
+ * Trả về mảng các phiên, mỗi phiên là { id, types: Set }.
+ */
+function _groupSessions(logs, cutoff) {
+  var SESSION_GAP = 2 * 60 * 60 * 1000; // 2 giờ
+  // Lọc và sắp xếp tăng dần theo thời gian
+  var relevant = logs.filter(function(l) {
+    return l.ts >= cutoff && l.type !== 'view';
+  }).sort(function(a, b) { return a.ts - b.ts; });
 
-  var uNorm = new Set(), uSec = new Set(), uAdmin = new Set(), uFounder = new Set();
-  var tNorm = 0, tSec = 0, tAdmin = 0, tFounder = 0;
-
-  // Bỏ qua dữ liệu trước mốc reset ngày 05/05/2026 14:44 (UTC+7)
-  var cutoff = new Date('2026-05-05T14:44:00+07:00').getTime();
-
-  _allLogs.forEach(function(l) {
-    if (l.ts < cutoff) return;
-    var id = l.deviceId || l.ip;
-    if (l.type === 'login_normal')   { tNorm++;   uNorm.add(id); }
-    if (l.type === 'login_secondary'){ tSec++;    uSec.add(id); }
-    if (l.type === 'login_admin')    { tAdmin++;  uAdmin.add(id); }
-    if (l.type === 'login_founder')  { tFounder++; uFounder.add(id); }
+  // Map: id -> [{ts, type}, ...]
+  var byId = {};
+  relevant.forEach(function(l) {
+    var id = l.deviceId || l.ip || 'unknown';
+    if (!byId[id]) byId[id] = [];
+    byId[id].push({ ts: l.ts, type: l.type });
   });
 
-  setNum('drop-main',     tNorm);
-  setNum('drop-main-u',   uNorm.size);
-  setNum('drop-sub',      tSec);
-  setNum('drop-sub-u',    uSec.size);
-  setNum('drop-admin',    tAdmin);
-  setNum('drop-admin-u',  uAdmin.size);
-  setNum('drop-founder',  tFounder);
-  setNum('drop-founder-u', uFounder.size);
+  var sessions = [];
+  Object.keys(byId).forEach(function(id) {
+    var entries = byId[id];
+    var curSession = null;
+    entries.forEach(function(e) {
+      if (!curSession || e.ts - curSession.lastTs > SESSION_GAP) {
+        curSession = { id: id, types: new Set(), lastTs: e.ts };
+        sessions.push(curSession);
+      }
+      curSession.types.add(e.type);
+      curSession.lastTs = e.ts;
+    });
+  });
+  return sessions;
+}
+
+function updateSessionBreakdown() {
+  if (!_allLogs) return;
+  var cutoff = new Date('2026-05-05T14:44:00+07:00').getTime();
+
+  // ── Bộ đếm TỔNG (mọi log riêng lẻ, theo cutoff) ──
+  var tSub = 0, tMain = 0, tAdmin = 0, tFounder = 0;
+  _allLogs.forEach(function(l) {
+    if (l.ts < cutoff) return;
+    if (l.type === 'login_secondary') tSub++;
+    if (l.type === 'login_normal')    tMain++;
+    if (l.type === 'login_admin')     tAdmin++;
+    if (l.type === 'login_founder')   tFounder++;
+  });
+
+  // ── Bộ đếm THỰC (theo phiên, logic Founder reset) ──
+  var sessions = _groupSessions(_allLogs, cutoff);
+  var uSub = 0, uMain = 0, uAdmin = 0, uFounder = 0;
+  sessions.forEach(function(s) {
+    var hasFounder = s.types.has('login_founder');
+    if (hasFounder) {
+      uFounder++;
+    } else {
+      if (s.types.has('login_secondary')) uSub++;
+      if (s.types.has('login_normal'))    uMain++;
+      if (s.types.has('login_admin'))     uAdmin++;
+    }
+  });
+
+  // Session Breakdown — Total
+  setNum('drop-sub-t',     tSub);
+  setNum('drop-main-t',    tMain);
+  setNum('drop-admin-t',   tAdmin);
+  setNum('drop-founder-t', tFounder);
+
+  // Session Breakdown — Unique
+  setNum('drop-sub-u',     uSub);
+  setNum('drop-main-u',    uMain);
+  setNum('drop-admin-u',   uAdmin);
+  setNum('drop-founder-u', uFounder);
 }
 
 /**
@@ -113,9 +161,13 @@ function updateStatsUI() {
 
   var totalAuth = _vNormal + _vSec + _vAdmin + _vFounder;
   setNum('num-auth',   totalAuth);
-  setNum('stat-inner', _vNormal + _vSec);
-  setNum('stat-admin', _vAdmin);
+  setNum('stat-sub',     _vSec);
+  setNum('stat-inner',   _vNormal);
+  setNum('stat-admin',   _vAdmin);
   setNum('stat-founder', _vFounder);
+
+  // updateSessionBreakdown sẽ cập nhật drop-sub/main/admin/founder-t/u
+  updateSessionBreakdown();
 }
 
 // ── Notification list ──

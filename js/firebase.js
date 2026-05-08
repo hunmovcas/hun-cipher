@@ -151,8 +151,8 @@ function fbIncrement(type) {
     db.ref('counters/founder').transaction(function(n) { return (n || 0) + 1; });
   }
 
-  // Gán loại log thực tế (login_secondary hiển thị là login_normal trong bảng)
-  var logType = (type === 'login_secondary') ? 'login_normal' : type;
+// Ghi nhận độc lập mọi log
+  var logType = type;
 
   // Lấy/tạo device ID
   var deviceId = localStorage.getItem('hun_device_id');

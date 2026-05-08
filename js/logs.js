@@ -47,7 +47,9 @@ function getFilteredLogs() {
   var dateTo   = document.getElementById('date-to').value;
 
   return _allLogs.filter(function(l) {
-    if (_filter !== 'all' && l.type !== _filter) return false;
+    if (_filter !== 'all') {
+      if (l.type !== _filter) return false;
+    }
 
     if (search) {
       var hay = [
@@ -80,19 +82,32 @@ function setFilter(type) {
   _filter = type;
   _page   = 1;
 
-  // Filter buttons
-  ['all','view','login_normal','login_admin','login_founder'].forEach(function(t) {
-    var id = 'f-' + (t === 'login_normal' ? 'normal' : t === 'login_admin' ? 'admin' : t === 'login_founder' ? 'founder' : t);
-    var el = document.getElementById(id);
+  // Filter buttons — id mapping mới
+  var filterIds = {
+    'all':              'f-all',
+    'view':             'f-view',
+    'login_secondary':  'f-sub',
+    'login_normal':     'f-normal',
+    'login_admin':      'f-admin',
+    'login_founder':    'f-founder',
+  };
+  Object.keys(filterIds).forEach(function(t) {
+    var el = document.getElementById(filterIds[t]);
     if (el) el.classList.toggle('active', t === type);
   });
 
   // Stat cards
-  ['sc-all','sc-normal','sc-admin','sc-founder','sc-real'].forEach(function(id) {
+  ['sc-all','sc-sub','sc-normal','sc-admin','sc-founder','sc-real'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.classList.remove('sel');
   });
-  var selMap = { all: 'sc-all', login_normal: 'sc-normal', login_admin: 'sc-admin', login_founder: 'sc-founder' };
+  var selMap = {
+    all:              'sc-all',
+    login_secondary:  'sc-sub',
+    login_normal:     'sc-normal',
+    login_admin:      'sc-admin',
+    login_founder:    'sc-founder',
+  };
   if (selMap[type]) { var el = document.getElementById(selMap[type]); if (el) el.classList.add('sel'); }
 
   renderLogs();
@@ -201,6 +216,7 @@ function renderLogs() {
   tableEl.style.display  = 'table';
   statusEl.style.display = 'none';
   renderPagination(totalPages, list.length, start, end);
+  renderUniqueLogs();
 }
 
 function renderPagination(total, count, start, end) {
@@ -227,6 +243,143 @@ function goPage(n) {
   _page = n;
   renderLogs();
   document.getElementById('log-screen').scrollTop = 0;
+}
+
+// ══════════════════════════════════════════
+// RENDER UNIQUE LOGINS TABLE
+// ══════════════════════════════════════════
+
+/**
+ * Xây dựng bảng thống kê unique: mỗi deviceId chỉ xuất hiện 1 lần,
+ * hiển thị lần đăng nhập gần nhất và số lần tổng.
+ */
+function renderUniqueLogs() {
+  var container = document.getElementById('unique-logs-section');
+  if (!container) return;
+
+  var cutoff = new Date('2026-05-05T14:44:00+07:00').getTime();
+  var SESSION_GAP = 2 * 60 * 60 * 1000;
+
+  // Lấy filter hiện tại — nếu là 'all' hoặc 'view' thì show tất cả login types
+  var typeFilter = (_filter === 'all' || _filter === 'view') ? null : _filter;
+
+  // Nhóm theo deviceId
+  var map = {};
+  _allLogs.forEach(function(l) {
+    if (l.ts < cutoff) return;
+    if (l.type === 'view') return;
+    if (typeFilter && l.type !== typeFilter) return;
+
+    var id = l.deviceId || l.ip || 'unknown';
+    if (!map[id]) {
+      map[id] = {
+        id: id,
+        firstTs: l.ts,
+        lastTs: l.ts,
+        count: 0,
+        types: {},
+        ip: l.ip || '',
+        city: l.city || '',
+        district: l.district || '',
+        region: l.region || '',
+        country: l.country || '',
+        isp: l.isp || '',
+        browser: l.browser || _detectBrowser(l.ua || ''),
+        device: l.device || _detectDevice(l.ua || ''),
+        os: l.os || _detectOS(l.ua || ''),
+        geoSrc: l.geoSrc || 0,
+        latitude: l.latitude || '',
+        longitude: l.longitude || '',
+      };
+    }
+    var entry = map[id];
+    entry.count++;
+    entry.types[l.type] = (entry.types[l.type] || 0) + 1;
+    if (l.ts < entry.firstTs) entry.firstTs = l.ts;
+    if (l.ts >= entry.lastTs) {
+      entry.lastTs = l.ts;
+      if (l.ip)       entry.ip       = l.ip;
+      if (l.city)     entry.city     = l.city;
+      if (l.district) entry.district = l.district;
+      if (l.region)   entry.region   = l.region;
+      if (l.country)  entry.country  = l.country;
+      if (l.isp)      entry.isp      = l.isp;
+      if (l.browser)  entry.browser  = l.browser;
+      if (l.device)   entry.device   = l.device;
+      if (l.os)       entry.os       = l.os;
+      if (l.geoSrc)   entry.geoSrc   = l.geoSrc;
+      if (l.latitude)  entry.latitude  = l.latitude;
+      if (l.longitude) entry.longitude = l.longitude;
+    }
+  });
+
+  var sorted = Object.values(map).sort(function(a, b) { return b.lastTs - a.lastTs; });
+
+  var totalUnique = sorted.length;
+  document.getElementById('unique-count').textContent = totalUnique + ' unique device(s)';
+
+  if (sorted.length === 0) {
+    container.querySelector('.unique-table-wrap').innerHTML =
+      '<div class="log-status">No unique login records found.</div>';
+    return;
+  }
+
+  var rows = sorted.map(function(entry) {
+    var aliasName = getAliasForId(entry.id);
+    var devIdStr = aliasName
+      ? '<span class="dev-badge dev-alias" title="Original ID: ' + esc(entry.id) + '">👤 ' + esc(aliasName) + '</span>'
+      : entry.id !== 'unknown'
+        ? '<span class="dev-badge">' + esc(entry.id) + '</span>'
+        : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
+
+    var locStr  = buildLocationStr(entry);
+    var locHtml = locStr
+      ? '📍 ' + esc(locStr) + geoSrcBadge(entry.geoSrc)
+      : '<span style="color:var(--muted);font-style:italic">No location</span>';
+
+    var coordStr = (entry.latitude && entry.longitude)
+      ? '<a href="https://maps.google.com/?q=' + entry.latitude + ',' + entry.longitude +
+        '" target="_blank" style="color:var(--accent2);font-size:8px;text-decoration:none;">🗺 map</a>'
+      : '';
+
+    var firstD = new Date(entry.firstTs);
+    var lastD  = new Date(entry.lastTs);
+    var fmt    = function(d) {
+      return d.toLocaleDateString('en-US') + ' ' +
+             d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    // Badges cho các loại login
+    var typeBadges = Object.keys(entry.types).map(function(t) {
+      return badgeHtml(t) + ' <span style="font-family:\'Space Mono\',monospace;font-size:9px;color:var(--muted);">×' + entry.types[t] + '</span>';
+    }).join(' ');
+
+    return '<tr>' +
+      '<td>' + devIdStr + '</td>' +
+      '<td>' + typeBadges + '</td>' +
+      '<td style="text-align:center;"><span style="font-family:\'Space Mono\',monospace;font-size:1.1rem;font-weight:700;color:var(--accent2);">' + entry.count + '</span></td>' +
+      '<td><div class="cell-main">' + esc(entry.browser) + '</div>' +
+           '<div class="cell-sub">' + esc(entry.device) + (entry.os ? ' · ' + esc(entry.os) : '') + '</div></td>' +
+      '<td><div class="cell-loc">' + locHtml + '</div>' +
+           '<div class="cell-ip">🌐 ' + esc(entry.ip || '–') + (coordStr ? ' &nbsp;' + coordStr : '') + '</div>' +
+           (entry.isp ? '<div class="cell-isp">' + esc(entry.isp) + '</div>' : '') + '</td>' +
+      '<td><div class="cell-sub" style="font-size:9px;">First: ' + fmt(firstD) + '</div>' +
+           '<div class="cell-sub" style="font-size:9px;">Last: '  + fmt(lastD)  + '</div></td>' +
+    '</tr>';
+  }).join('');
+
+  container.querySelector('.unique-table-wrap').innerHTML =
+    '<table class="log-table" style="min-width:700px;">' +
+      '<thead><tr>' +
+        '<th style="width:115px">Device ID</th>' +
+        '<th>Login Types</th>' +
+        '<th style="width:60px;text-align:center;">Total</th>' +
+        '<th style="width:160px">Browser · OS</th>' +
+        '<th>Location · IP</th>' +
+        '<th style="width:130px">First / Last Login</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>';
 }
 
 // ══════════════════════════════════════════
@@ -660,10 +813,12 @@ function exportCSV() {
 // ══════════════════════════════════════════
 
 function labelType(t) {
-  return t === 'view'         ? '👁 Page view'
-       : t === 'login_normal' ? '🔒 User'
-       : t === 'login_founder'? '👑 Founder'
-       : '★ Admin';
+  return t === 'view'            ? '👁 Page view'
+       : t === 'login_secondary' ? '🗝 Sub User'
+       : t === 'login_normal'    ? '🔒 Main User'
+       : t === 'login_admin'     ? '★ Admin'
+       : t === 'login_founder'   ? '👑 Founder'
+       : t;
 }
 
 function badgeHtml(type) {
@@ -671,6 +826,8 @@ function badgeHtml(type) {
     return '<span class="badge badge-view"><span class="badge-icon">👁</span>Page view</span>';
   if (type === 'login_normal')
     return '<span class="badge badge-login_normal"><span class="badge-icon">🔒</span>User</span>';
+  if (type === 'login_secondary')
+    return '<span class="badge badge-login_normal" style="border-color:rgba(44,62,122,.15);"><span class="badge-icon">🗝</span>Sub User</span>';
   if (type === 'login_founder')
     return '<span class="badge badge-login_admin" style="background:rgba(142,68,173,.1);color:var(--founder);border-color:rgba(142,68,173,.3)"><span class="badge-icon">👑</span>Founder</span>';
   return '<span class="badge badge-login_admin"><span class="badge-icon">★</span>Admin</span>';
