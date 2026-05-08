@@ -29,8 +29,8 @@ var _originalRole    = 'normal';    // role đã đăng nhập ban đầu (trư�
 // ── Session keys (dùng để xoá log trùng khi Founder đăng nhập sau) ──
 var _sessionKeys = {
   view:       null,
+  secondary:  null,
   normal:     null,
-  normalType: null,   // 'login_normal' | 'login_secondary'
   admin:      null,
   founder:    null,
 };

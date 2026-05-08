@@ -6,11 +6,6 @@
 
 // ── Alias helper ──
 
-/**
- * Tra cứu tên alias cho một deviceId.
- * @param {string} devId
- * @returns {string|null}
- */
 function getAliasForId(devId) {
   if (!devId || !_aliases) return null;
   for (var aliasName in _aliases) {
@@ -66,24 +61,14 @@ function updateProtectionUI() {
   }
 }
 
-// ── Counters & stats ──
+// ── Counters & stats (Tính toán động 100% qua logs sau mốc Cutoff) ──
 
-/**
- * Cập nhật Session Breakdown (tổng & thực từng loại đăng nhập).
- * Áp dụng cutoff để bỏ qua dữ liệu cũ trước một mốc thời gian nhất định.
- */
-/**
- * Nhóm các log theo phiên đăng nhập (cùng deviceId, trong vòng SESSION_GAP ms).
- * Trả về mảng các phiên, mỗi phiên là { id, types: Set }.
- */
 function _groupSessions(logs, cutoff) {
-  var SESSION_GAP = 2 * 60 * 60 * 1000; // 2 giờ
-  // Lọc và sắp xếp tăng dần theo thời gian
+  var SESSION_GAP = 2 * 60 * 60 * 1000;
   var relevant = logs.filter(function(l) {
     return l.ts >= cutoff && l.type !== 'view';
   }).sort(function(a, b) { return a.ts - b.ts; });
 
-  // Map: id -> [{ts, type}, ...]
   var byId = {};
   relevant.forEach(function(l) {
     var id = l.deviceId || l.ip || 'unknown';
@@ -97,10 +82,11 @@ function _groupSessions(logs, cutoff) {
     var curSession = null;
     entries.forEach(function(e) {
       if (!curSession || e.ts - curSession.lastTs > SESSION_GAP) {
-        curSession = { id: id, types: new Set(), lastTs: e.ts };
+        curSession = { id: id, types: new Set(), counts: {}, lastTs: e.ts };
         sessions.push(curSession);
       }
       curSession.types.add(e.type);
+      curSession.counts[e.type] = (curSession.counts[e.type] || 0) + 1;
       curSession.lastTs = e.ts;
     });
   });
@@ -108,66 +94,73 @@ function _groupSessions(logs, cutoff) {
 }
 
 function updateSessionBreakdown() {
+  // Được xử lý tập trung bên trong updateStatsUI để đồng bộ
+}
+
+function updateStatsUI() {
   if (!_allLogs) return;
-  var cutoff = new Date('2026-05-05T14:44:00+07:00').getTime();
 
-  // ── Bộ đếm TỔNG (mọi log riêng lẻ, theo cutoff) ──
-  var tSub = 0, tMain = 0, tAdmin = 0, tFounder = 0;
-  _allLogs.forEach(function(l) {
-    if (l.ts < cutoff) return;
-    if (l.type === 'login_secondary') tSub++;
-    if (l.type === 'login_normal')    tMain++;
-    if (l.type === 'login_admin')     tAdmin++;
-    if (l.type === 'login_founder')   tFounder++;
-  });
+  var cOuter = 0, cSec = 0, cMain = 0, cAdmin = 0, cFounder = 0;
+  var uniqueIPs = new Set();
 
-  // ── Bộ đếm THỰC (theo phiên, logic Founder reset) ──
-  var sessions = _groupSessions(_allLogs, cutoff);
-  var uSub = 0, uMain = 0, uAdmin = 0, uFounder = 0;
+  var sessions = _groupSessions(_allLogs, GLOBAL_CUTOFF);
+
+  // Tính số liệu đăng nhập triệt để theo luật gộp phiên:
+  // Nếu Founder đăng nhập trong phiên, mọi log Sub/Main/Admin trong phiên bị XÓA TRẮNG trên hệ thống đếm.
+  var uSub = 0, uMain = 0, uAdmin = 0, uFounder = 0; // Unique Sessions
+
   sessions.forEach(function(s) {
     var hasFounder = s.types.has('login_founder');
     if (hasFounder) {
       uFounder++;
+      cFounder += s.counts['login_founder'] || 0;
     } else {
-      if (s.types.has('login_secondary')) uSub++;
-      if (s.types.has('login_normal'))    uMain++;
-      if (s.types.has('login_admin'))     uAdmin++;
+      if (s.types.has('login_secondary')) { uSub++; cSec   += s.counts['login_secondary']; }
+      if (s.types.has('login_normal'))    { uMain++; cMain  += s.counts['login_normal']; }
+      if (s.types.has('login_admin'))     { uAdmin++; cAdmin += s.counts['login_admin']; }
     }
   });
 
-  // Session Breakdown — Total
-  setNum('drop-sub-t',     tSub);
-  setNum('drop-main-t',    tMain);
-  setNum('drop-admin-t',   tAdmin);
-  setNum('drop-founder-t', tFounder);
+  // Views tính riêng, quét thuần tùy theo mốc
+  _allLogs.forEach(function(l) {
+    if (l.ts < GLOBAL_CUTOFF) return;
+    if (l.type === 'view') {
+      cOuter++;
+      if (l.ip) uniqueIPs.add(l.ip);
+    }
+  });
 
-  // Session Breakdown — Unique
+  var cReal = uniqueIPs.size;
+
+  _vOuter = cOuter;
+  _vReal = cReal;
+
+  setNum('login-outer-num', cOuter);
+  setNum('num-traffic',     cOuter);
+  setNum('drop-views',      cOuter);
+  setNum('drop-unique',     cReal);
+  setNum('stat-outer',      cOuter);
+  setNum('stat-real',       cReal);
+
+  var totalAuth = cMain + cSec + cAdmin + cFounder;
+  setNum('num-auth',       totalAuth);
+  
+  // Tổng thể Auth
+  setNum('stat-sub',       cSec);
+  setNum('stat-inner',     cMain);
+  setNum('stat-admin',     cAdmin);
+  setNum('stat-founder',   cFounder);
+
+  // Session Dropdown Breakdown
+  setNum('drop-sub-t',     cSec);
+  setNum('drop-main-t',    cMain);
+  setNum('drop-admin-t',   cAdmin);
+  setNum('drop-founder-t', cFounder);
+
   setNum('drop-sub-u',     uSub);
   setNum('drop-main-u',    uMain);
   setNum('drop-admin-u',   uAdmin);
   setNum('drop-founder-u', uFounder);
-}
-
-/**
- * Cập nhật các số liệu hiển thị trên thanh nav và stat cards.
- */
-function updateStatsUI() {
-  setNum('login-outer-num', _vOuter);
-  setNum('num-traffic',     _vOuter);
-  setNum('drop-views',      _vOuter);
-  setNum('drop-unique',     _vReal);
-  setNum('stat-outer',      _vOuter);
-  setNum('stat-real',       _vReal);
-
-  var totalAuth = _vNormal + _vSec + _vAdmin + _vFounder;
-  setNum('num-auth',   totalAuth);
-  setNum('stat-sub',     _vSec);
-  setNum('stat-inner',   _vNormal);
-  setNum('stat-admin',   _vAdmin);
-  setNum('stat-founder', _vFounder);
-
-  // updateSessionBreakdown sẽ cập nhật drop-sub/main/admin/founder-t/u
-  updateSessionBreakdown();
 }
 
 // ── Notification list ──
@@ -238,35 +231,20 @@ function showToast(msg) {
   setTimeout(function() { el.classList.remove('show'); }, 2000);
 }
 
-/**
- * Gán giá trị text cho element theo ID.
- * @param {string} id
- * @param {number|string} n
- */
 function setNum(id, n) {
   var el = document.getElementById(id);
   if (el) el.textContent = n;
 }
 
-/**
- * Escape HTML để tránh XSS.
- * @param {*} s
- * @returns {string}
- */
 function esc(s) {
   return String(s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, "'");
 }
 
-/**
- * Ghép chuỗi địa điểm từ các trường của log.
- * @param {object} log
- * @returns {string}
- */
 function buildLocationStr(log) {
   var parts    = [];
   var district = (log.district || '').trim();

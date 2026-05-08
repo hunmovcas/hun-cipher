@@ -1,12 +1,6 @@
 /* ══════════════════════════════════════════
    logs.js — Màn hình Analytics & Log Table
-   Render bảng log, thống kê IP/device,
-   xoá log, thùng rác, export CSV.
    ══════════════════════════════════════════ */
-
-// ══════════════════════════════════════════
-// LOAD & FILTER
-// ══════════════════════════════════════════
 
 function loadLogs() {
   var statusEl = document.getElementById('log-status');
@@ -29,7 +23,7 @@ function loadLogs() {
     _allLogs.reverse();
     statusEl.style.display = 'none';
     _page = 1;
-    updateSessionBreakdown();
+    updateStatsUI();
     renderLogs();
     renderIpStats();
   }, function(err) {
@@ -37,16 +31,14 @@ function loadLogs() {
   });
 }
 
-/**
- * Lọc và sắp xếp log theo filter, search, date range hiện tại.
- * @returns {Array}
- */
 function getFilteredLogs() {
   var search   = (document.getElementById('log-search').value || '').toLowerCase().trim();
   var dateFrom = document.getElementById('date-from').value;
   var dateTo   = document.getElementById('date-to').value;
 
   return _allLogs.filter(function(l) {
+    if (l.ts < GLOBAL_CUTOFF) return false; // Chỉ hiển thị sau cutoff
+
     if (_filter !== 'all') {
       if (l.type !== _filter) return false;
     }
@@ -82,7 +74,6 @@ function setFilter(type) {
   _filter = type;
   _page   = 1;
 
-  // Filter buttons — id mapping mới
   var filterIds = {
     'all':              'f-all',
     'view':             'f-view',
@@ -96,7 +87,6 @@ function setFilter(type) {
     if (el) el.classList.toggle('active', t === type);
   });
 
-  // Stat cards
   ['sc-all','sc-sub','sc-normal','sc-admin','sc-founder','sc-real'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.classList.remove('sel');
@@ -128,10 +118,6 @@ function toggleSort(field) {
   });
   renderLogs();
 }
-
-// ══════════════════════════════════════════
-// RENDER LOG TABLE
-// ══════════════════════════════════════════
 
 function renderLogs() {
   var list     = getFilteredLogs();
@@ -184,7 +170,6 @@ function renderLogs() {
 
     var extra = [log.tz, log.screen].filter(Boolean).join(' · ');
 
-    // Alias display
     var aliasName = getAliasForId(log.deviceId);
     var devIdStr  = aliasName
       ? '<span class="dev-badge dev-alias" title="Original ID: ' + esc(log.deviceId) + '">👤 ' + esc(aliasName) + '</span>'
@@ -205,7 +190,7 @@ function renderLogs() {
       '<td><div class="cell-main">' + esc(browser) + '</div>' +
           '<div class="cell-sub">' + esc(device) + (os ? ' · ' + esc(os) : '') + '</div></td>' +
       '<td><div class="cell-loc">' + locHtml + postalStr + '</div>' +
-          '<div class="cell-ip">🌐 ' + ipStr + (coordStr ? ' &nbsp;' + coordStr : '') + '</div>' +
+          '<div class="cell-ip">🌐 ' + ipStr + (coordStr ? '  ' + coordStr : '') + '</div>' +
           (ispStr ? '<div class="cell-isp">' + ispStr + (log.asn ? ' · ' + esc(log.asn) : '') + '</div>' : '') +
           '</td>' +
       '<td><div class="cell-sub">' + esc(extra) + '</div></td>' +
@@ -245,51 +230,27 @@ function goPage(n) {
   document.getElementById('log-screen').scrollTop = 0;
 }
 
-// ══════════════════════════════════════════
-// RENDER UNIQUE LOGINS TABLE
-// ══════════════════════════════════════════
-
-/**
- * Xây dựng bảng thống kê unique: mỗi deviceId chỉ xuất hiện 1 lần,
- * hiển thị lần đăng nhập gần nhất và số lần tổng.
- */
 function renderUniqueLogs() {
   var container = document.getElementById('unique-logs-section');
   if (!container) return;
 
-  var cutoff = new Date('2026-05-05T14:44:00+07:00').getTime();
-  var SESSION_GAP = 2 * 60 * 60 * 1000;
-
-  // Lấy filter hiện tại — nếu là 'all' hoặc 'view' thì show tất cả login types
   var typeFilter = (_filter === 'all' || _filter === 'view') ? null : _filter;
 
-  // Nhóm theo deviceId
   var map = {};
   _allLogs.forEach(function(l) {
-    if (l.ts < cutoff) return;
+    if (l.ts < GLOBAL_CUTOFF) return; // Cutoff filter
     if (l.type === 'view') return;
     if (typeFilter && l.type !== typeFilter) return;
 
     var id = l.deviceId || l.ip || 'unknown';
     if (!map[id]) {
       map[id] = {
-        id: id,
-        firstTs: l.ts,
-        lastTs: l.ts,
-        count: 0,
-        types: {},
-        ip: l.ip || '',
-        city: l.city || '',
-        district: l.district || '',
-        region: l.region || '',
-        country: l.country || '',
-        isp: l.isp || '',
-        browser: l.browser || _detectBrowser(l.ua || ''),
-        device: l.device || _detectDevice(l.ua || ''),
-        os: l.os || _detectOS(l.ua || ''),
-        geoSrc: l.geoSrc || 0,
-        latitude: l.latitude || '',
-        longitude: l.longitude || '',
+        id: id, firstTs: l.ts, lastTs: l.ts, count: 0, types: {},
+        ip: l.ip || '', city: l.city || '', district: l.district || '',
+        region: l.region || '', country: l.country || '', isp: l.isp || '',
+        browser: l.browser || _detectBrowser(l.ua || ''), device: l.device || _detectDevice(l.ua || ''),
+        os: l.os || _detectOS(l.ua || ''), geoSrc: l.geoSrc || 0,
+        latitude: l.latitude || '', longitude: l.longitude || '',
       };
     }
     var entry = map[id];
@@ -349,7 +310,6 @@ function renderUniqueLogs() {
              d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     };
 
-    // Badges cho các loại login
     var typeBadges = Object.keys(entry.types).map(function(t) {
       return badgeHtml(t) + ' <span style="font-family:\'Space Mono\',monospace;font-size:9px;color:var(--muted);">×' + entry.types[t] + '</span>';
     }).join(' ');
@@ -361,7 +321,7 @@ function renderUniqueLogs() {
       '<td><div class="cell-main">' + esc(entry.browser) + '</div>' +
            '<div class="cell-sub">' + esc(entry.device) + (entry.os ? ' · ' + esc(entry.os) : '') + '</div></td>' +
       '<td><div class="cell-loc">' + locHtml + '</div>' +
-           '<div class="cell-ip">🌐 ' + esc(entry.ip || '–') + (coordStr ? ' &nbsp;' + coordStr : '') + '</div>' +
+           '<div class="cell-ip">🌐 ' + esc(entry.ip || '–') + (coordStr ? '  ' + coordStr : '') + '</div>' +
            (entry.isp ? '<div class="cell-isp">' + esc(entry.isp) + '</div>' : '') + '</td>' +
       '<td><div class="cell-sub" style="font-size:9px;">First: ' + fmt(firstD) + '</div>' +
            '<div class="cell-sub" style="font-size:9px;">Last: '  + fmt(lastD)  + '</div></td>' +
@@ -382,31 +342,28 @@ function renderUniqueLogs() {
     '</table>';
 }
 
-// ══════════════════════════════════════════
-// RENDER IP / DEVICE STATS
-// ══════════════════════════════════════════
-
 function setIpMode(mode) {
   _ipMode = mode;
-  ['all','normal','admin','founder'].forEach(function(m) {
+  ['all','main','sub','admin','founder'].forEach(function(m) {
     var el = document.getElementById('ipt-' + m);
     if (el) el.classList.toggle('active', m === mode);
   });
   renderIpStats();
 }
 
-/**
- * Nhóm log theo thiết bị/alias, theo typeFilter.
- * @param {'all'|'normal'|'admin'|'founder'} typeFilter
- * @returns {Object} map of device groups
- */
 function buildDeviceMap(typeFilter) {
   var map = {}, idToGroup = {}, fpToGroup = {}, groupCounter = 0;
   var logs = _allLogs.slice().sort(function(a, b) { return a.ts - b.ts; });
 
   logs.forEach(function(log) {
     if (log.type === 'view') return;
-    if (typeFilter === 'normal'  && log.type !== 'login_normal')  return;
+    if (log.ts < GLOBAL_CUTOFF) return; // Strict Cutoff
+
+    var isSub = log.type === 'login_secondary';
+    var isMain = log.type === 'login_normal';
+
+    if (typeFilter === 'sub'     && !isSub) return;
+    if (typeFilter === 'main'    && !isMain) return;
     if (typeFilter === 'admin'   && log.type !== 'login_admin')   return;
     if (typeFilter === 'founder' && log.type !== 'login_founder') return;
 
@@ -430,7 +387,7 @@ function buildDeviceMap(typeFilter) {
         isAlias: !!aliasName, aliasName: aliasName,
         id: devId || log.ip || 'Unknown Visitor', groupId: groupId,
         logKeys: [], devIds: [], ips: [],
-        total: 0, normal: 0, admin: 0, founder: 0,
+        total: 0, sub: 0, main: 0, admin: 0, founder: 0,
         lastTs: 0,
         ip: log.ip||'', city: log.city||'', district: log.district||'',
         region: log.region||'', country: log.country||'', isp: log.isp||'',
@@ -441,27 +398,27 @@ function buildDeviceMap(typeFilter) {
     }
 
     var entry = map[groupId];
-    if (log._k)                               entry.logKeys.push(log._k);
+    if (log._k)                                       entry.logKeys.push(log._k);
     if (devId && entry.devIds.indexOf(devId) === -1) entry.devIds.push(devId);
     if (log.ip && entry.ips.indexOf(log.ip)  === -1) entry.ips.push(log.ip);
 
     entry.total++;
-    if (log.type === 'login_normal')  entry.normal++;
+    if (isSub) entry.sub++;
+    if (isMain) entry.main++;
     if (log.type === 'login_admin')   entry.admin++;
     if (log.type === 'login_founder') entry.founder++;
 
-    // Cập nhật thông tin mới nhất
     if (log.ts >= entry.lastTs) {
       entry.lastTs   = log.ts;
-      if (log.ip)      entry.ip      = log.ip;
-      if (log.city)    entry.city    = log.city;
-      if (log.district)entry.district= log.district;
-      if (log.region)  entry.region  = log.region;
-      if (log.country) entry.country = log.country;
-      if (log.isp)     entry.isp     = log.isp;
-      if (log.browser) entry.browser = log.browser;
-      if (log.device)  entry.device  = log.device;
-      if (log.os)      entry.os      = log.os;
+      if (log.ip)       entry.ip       = log.ip;
+      if (log.city)     entry.city     = log.city;
+      if (log.district) entry.district = log.district;
+      if (log.region)   entry.region   = log.region;
+      if (log.country)  entry.country  = log.country;
+      if (log.isp)      entry.isp      = log.isp;
+      if (log.browser)  entry.browser  = log.browser;
+      if (log.device)   entry.device   = log.device;
+      if (log.os)       entry.os       = log.os;
     }
   });
 
@@ -473,9 +430,11 @@ function renderIpStats() {
   if (!grid) return;
 
   var COLS = [
-    { key: 'all',     label: 'All Users',  cls: 'col-all',    numCls: 'cnt-all',    barCls: 'bar-all',
+    { key: 'all',     label: 'All Users', cls: 'col-all',    numCls: 'cnt-all',    barCls: 'bar-all',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>' },
-    { key: 'normal',  label: '🔒 Users',   cls: 'col-normal', numCls: 'cnt-normal', barCls: 'bar-normal',
+    { key: 'main',    label: '🔒 Main Users',   cls: 'col-normal', numCls: 'cnt-normal', barCls: 'bar-normal',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+    { key: 'sub',     label: '🗝 Sub Users',    cls: 'col-normal', numCls: 'cnt-normal', barCls: 'bar-normal',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
     { key: 'admin',   label: '★ Admin',    cls: 'col-admin',  numCls: 'cnt-admin',  barCls: 'bar-admin',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
@@ -483,20 +442,20 @@ function renderIpStats() {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 4 8 11 2 4 5 16 19 16 22 4 16 11 12 4"/><line x1="5" y1="20" x2="19" y2="20"/></svg>' },
   ];
 
-  var showKeys     = _ipMode === 'all' ? ['all','normal','admin','founder'] : [_ipMode];
+  var showKeys     = _ipMode === 'all' ? ['all','main','sub','admin','founder'] : [_ipMode];
   var filteredCols = COLS.filter(function(c) { return showKeys.indexOf(c.key) !== -1; });
   var html = '';
 
   filteredCols.forEach(function(col) {
     var map    = buildDeviceMap(col.key);
     var sorted = Object.values(map).sort(function(a, b) {
-      var va = col.key === 'normal' ? a.normal : col.key === 'admin' ? a.admin : col.key === 'founder' ? a.founder : a.total;
-      var vb = col.key === 'normal' ? b.normal : col.key === 'admin' ? b.admin : col.key === 'founder' ? b.founder : b.total;
+      var va = col.key === 'main' ? a.main : col.key === 'sub' ? a.sub : col.key === 'admin' ? a.admin : col.key === 'founder' ? a.founder : a.total;
+      var vb = col.key === 'main' ? b.main : col.key === 'sub' ? b.sub : col.key === 'admin' ? b.admin : col.key === 'founder' ? b.founder : b.total;
       return vb - va;
     });
     var top      = sorted.slice(0, 8);
     var maxCount = top.length
-      ? (col.key === 'normal' ? top[0].normal : col.key === 'admin' ? top[0].admin : col.key === 'founder' ? top[0].founder : top[0].total)
+      ? (col.key === 'main' ? top[0].main : col.key === 'sub' ? top[0].sub : col.key === 'admin' ? top[0].admin : col.key === 'founder' ? top[0].founder : top[0].total)
       : 1;
 
     html += '<div class="ip-col-wrap">' +
@@ -508,7 +467,7 @@ function renderIpStats() {
       top.forEach(function(entry, idx) {
         var rank     = idx + 1;
         var rankCls  = rank <= 3 ? ' rank-' + rank : '';
-        var count    = col.key === 'normal' ? entry.normal : col.key === 'admin' ? entry.admin : col.key === 'founder' ? entry.founder : entry.total;
+        var count    = col.key === 'main' ? entry.main : col.key === 'sub' ? entry.sub : col.key === 'admin' ? entry.admin : col.key === 'founder' ? entry.founder : entry.total;
         var barPct   = maxCount > 0 ? Math.round(count / maxCount * 100) : 0;
         var locStr   = buildLocationStr(entry);
         var lastStr  = entry.lastTs
@@ -567,24 +526,10 @@ function renderIpStats() {
     html += '</div>';
   });
 
-  // Điều chỉnh số cột grid theo số cột đang hiển thị
-  grid.style.gridTemplateColumns = filteredCols.length === 4
-    ? 'repeat(4,1fr)'
-    : filteredCols.length === 1
-      ? '1fr'
-      : 'repeat(auto-fit, minmax(200px, 1fr))';
-
+  grid.style.gridTemplateColumns = filteredCols.length === 5 ? 'repeat(5,1fr)' : filteredCols.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))';
   grid.innerHTML = html;
 }
 
-// ══════════════════════════════════════════
-// DELETE LOGIC
-// ══════════════════════════════════════════
-
-/**
- * Xoá toàn bộ log của một IP/device (từ bảng top).
- * Deduct counter tương ứng.
- */
 function deleteDeviceLogs(keysStr, btnEl) {
   if (_isProtected) { showToast('System is protected. Action denied!'); return; }
   try { _pendingDeleteKeys = JSON.parse(keysStr); } catch(e) { return; }
@@ -603,14 +548,6 @@ function doDeleteDeviceLogs() {
   closeConfirm();
   if (!db || !_pendingDeleteKeys || !_pendingDeleteKeys.length) return;
 
-  // Đếm số lần mỗi loại cần deduct
-  var deduct = { view: 0, login_normal: 0, login_secondary: 0, login_admin: 0, login_founder: 0 };
-  _pendingDeleteKeys.forEach(function(k) {
-    var log = _allLogs.find(function(l) { return l._k === k; });
-    if (log) deduct[log.type] = (deduct[log.type] || 0) + 1;
-  });
-
-  // Animate row removal
   if (_pendingDeleteRow) {
     _pendingDeleteRow.style.opacity   = '0';
     _pendingDeleteRow.style.transform = 'scale(0.95)';
@@ -622,22 +559,11 @@ function doDeleteDeviceLogs() {
 
   db.ref().update(updates, function(err) {
     if (err) { showToast('⚠ Error deleting traces!'); return; }
-
     showToast('✓ IP completely wiped!');
-    if (deduct.view          > 0) db.ref('counters/outer').transaction(function(n)           { return Math.max(0, (n||0) - deduct.view); });
-    if (deduct.login_normal  > 0) db.ref('counters/inner_normal').transaction(function(n)   { return Math.max(0, (n||0) - deduct.login_normal); });
-    if (deduct.login_secondary > 0) db.ref('counters/inner_secondary').transaction(function(n) { return Math.max(0, (n||0) - deduct.login_secondary); });
-    if (deduct.login_admin   > 0) db.ref('counters/admin').transaction(function(n)          { return Math.max(0, (n||0) - deduct.login_admin); });
-    if (deduct.login_founder > 0) db.ref('counters/founder').transaction(function(n)        { return Math.max(0, (n||0) - deduct.login_founder); });
-    db.ref('counters/real_visitors').transaction(function(n) { return Math.max(0, (n||0) - 1); });
-
     _pendingDeleteKeys = [];
   });
 }
 
-/**
- * Xoá 1 dòng log đơn lẻ (chuyển vào trash).
- */
 function deleteSingleLog(key, type, btnEl) {
   if (_isProtected) { showToast('System is protected. Action denied!'); return; }
   _pendingSingleDelete = { key: key, type: type, row: btnEl.closest('tr') };
@@ -656,7 +582,6 @@ function doDeleteSingleLog() {
   if (!db || !_pendingSingleDelete) return;
 
   var key  = _pendingSingleDelete.key;
-  var type = _pendingSingleDelete.type;
   var row  = _pendingSingleDelete.row;
   var logObj = _allLogs.find(function(l) { return l._k === key; });
   if (!logObj) return;
@@ -671,23 +596,12 @@ function doDeleteSingleLog() {
   updates['trash/logs/' + key] = trashData;
   updates['logs/' + key]       = null;
 
-  var COUNTER_MAP = {
-    view: 'outer', login_normal: 'inner_normal', login_secondary: 'inner_secondary',
-    login_admin: 'admin', login_founder: 'founder',
-  };
-
   db.ref().update(updates, function(err) {
     if (err) { showToast('⚠ Error wiping log!'); return; }
     showToast('✓ Log moved to trash!');
-    var counterRef = COUNTER_MAP[type];
-    if (counterRef) db.ref('counters/' + counterRef).transaction(function(n) { return Math.max(0, (n||0) - 1); });
     _pendingSingleDelete = null;
   });
 }
-
-// ══════════════════════════════════════════
-// TRASH BIN
-// ══════════════════════════════════════════
 
 function openTrash() {
   if (_isProtected) { showToast('System is protected!'); return; }
@@ -703,7 +617,7 @@ function openTrash() {
 
     snap.forEach(function(c) {
       var val = c.val();
-      if (now - val.deletedAt > 86400000) { // xoá cứng sau 24h
+      if (now - val.deletedAt > 86400000) { 
         toDelete['trash/logs/' + c.key] = null;
       } else {
         items.push(Object.assign({ _k: c.key }, val));
@@ -753,21 +667,10 @@ function restoreLog(key) {
     db.ref().update(updates, function(err) {
       if (err) { showToast('⚠ Error restoring log!'); return; }
       showToast('✓ Log restored!');
-
-      var COUNTER_MAP = {
-        view: 'outer', login_normal: 'inner_normal', login_secondary: 'inner_secondary',
-        login_admin: 'admin', login_founder: 'founder',
-      };
-      var counterRef = COUNTER_MAP[type];
-      if (counterRef) db.ref('counters/' + counterRef).transaction(function(n) { return (n||0) + 1; });
       openTrash();
     });
   });
 }
-
-// ══════════════════════════════════════════
-// EXPORT CSV
-// ══════════════════════════════════════════
 
 function exportCSV() {
   var list = getFilteredLogs();
@@ -808,14 +711,10 @@ function exportCSV() {
   showToast('✓ CSV Exported!');
 }
 
-// ══════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════
-
 function labelType(t) {
   return t === 'view'            ? '👁 Page view'
-       : t === 'login_secondary' ? '🗝 Sub User'
-       : t === 'login_normal'    ? '🔒 Main User'
+       : t === 'login_secondary' ? '🗝 Sub'
+       : t === 'login_normal'    ? '🔒 Main'
        : t === 'login_admin'     ? '★ Admin'
        : t === 'login_founder'   ? '👑 Founder'
        : t;
@@ -825,9 +724,9 @@ function badgeHtml(type) {
   if (type === 'view')
     return '<span class="badge badge-view"><span class="badge-icon">👁</span>Page view</span>';
   if (type === 'login_normal')
-    return '<span class="badge badge-login_normal"><span class="badge-icon">🔒</span>User</span>';
+    return '<span class="badge badge-login_normal"><span class="badge-icon">🔒</span>Main</span>';
   if (type === 'login_secondary')
-    return '<span class="badge badge-login_normal" style="border-color:rgba(44,62,122,.15);"><span class="badge-icon">🗝</span>Sub User</span>';
+    return '<span class="badge badge-login_normal" style="border-color:rgba(44,62,122,.15);"><span class="badge-icon">🗝</span>Sub</span>';
   if (type === 'login_founder')
     return '<span class="badge badge-login_admin" style="background:rgba(142,68,173,.1);color:var(--founder);border-color:rgba(142,68,173,.3)"><span class="badge-icon">👑</span>Founder</span>';
   return '<span class="badge badge-login_admin"><span class="badge-icon">★</span>Admin</span>';

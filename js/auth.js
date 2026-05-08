@@ -40,54 +40,30 @@ async function submitSetup() {
 
 // ── Password Login ──
 
-/**
- * Tạo hash SHA-256 từ chuỗi (lowercase).
- * @param {string} val
- * @returns {Promise<string>}
- */
 async function sha256(val) {
   var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
   return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
 }
 
-/**
- * Kiểm tra xem input có gần đúng (sai 1 ký tự) với
- * bất kỳ mật khẩu hợp lệ nào không.
- * Dùng để hiện thông báo "almost there".
- * @param {string} val
- * @returns {Promise<boolean>}
- */
 async function isOneCharOff(val) {
   if (!val) return false;
-
   var charset =
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;\':",./<>?`~ ' +
     'áàảãạâấầẩẫậăắằẳẵặéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ' +
     'ÁÀẢÃẠÂẤẦẨẪẬĂẮẰẲẴẶÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ';
 
   var variations = new Set();
-
-  // Xoá 1 ký tự
+  for (var i = 0; i < val.length; i++) { variations.add(val.slice(0, i) + val.slice(i + 1)); }
   for (var i = 0; i < val.length; i++) {
-    variations.add(val.slice(0, i) + val.slice(i + 1));
+    for (var j = 0; j < charset.length; j++) { if (charset[j] !== val[i]) variations.add(val.slice(0, i) + charset[j] + val.slice(i + 1)); }
   }
-  // Thay 1 ký tự
-  for (var i = 0; i < val.length; i++) {
-    for (var j = 0; j < charset.length; j++) {
-      if (charset[j] !== val[i]) variations.add(val.slice(0, i) + charset[j] + val.slice(i + 1));
-    }
-  }
-  // Thêm 1 ký tự
   for (var i = 0; i <= val.length; i++) {
-    for (var j = 0; j < charset.length; j++) {
-      variations.add(val.slice(0, i) + charset[j] + val.slice(i));
-    }
+    for (var j = 0; j < charset.length; j++) { variations.add(val.slice(0, i) + charset[j] + val.slice(i)); }
   }
 
   var arr = Array.from(variations);
   var encoder = new TextEncoder();
 
-  // Xử lý theo batch để tránh freeze UI
   for (var i = 0; i < arr.length; i += 1000) {
     var batch = arr.slice(i, i + 1000);
     var hashes = await Promise.all(batch.map(async function(v) {
@@ -106,9 +82,6 @@ async function isOneCharOff(val) {
   return false;
 }
 
-/**
- * Xử lý sự kiện ấn "Confirm" trên màn hình đăng nhập.
- */
 async function checkPw() {
   var val = document.getElementById('pw-input').value.toLowerCase();
   if (!val) return;
@@ -120,7 +93,6 @@ async function checkPw() {
 
   var hash = await sha256(val);
 
-  // Xác định role
   if      (hash === currentHashes.founder)   { _originalRole = 'founder';   _currentLoginRole = 'founder';   _isAdmin = true;  _loggedIn = true; }
   else if (hash === currentHashes.admin)     { _originalRole = 'admin';     _currentLoginRole = 'admin';     _isAdmin = true;  _loggedIn = true; }
   else if (hash === currentHashes.secondary) { _originalRole = 'secondary'; _currentLoginRole = 'secondary'; _isAdmin = false; _loggedIn = true; }
@@ -130,7 +102,6 @@ async function checkPw() {
     btn.innerHTML = oldText;
     btn.disabled  = false;
 
-    // Fade out lock screen
     var pw = document.getElementById('pw-screen');
     pw.style.transition = 'opacity .4s';
     pw.style.opacity = '0';
@@ -157,7 +128,6 @@ async function checkPw() {
     else          applyUserModeUI();
 
   } else {
-    // Sai mật khẩu
     var isClose = await isOneCharOff(val);
     var popup   = document.getElementById('pw-popup');
     var inp     = document.getElementById('pw-input');
@@ -224,11 +194,11 @@ async function submitElevate() {
   var val  = document.getElementById('elevate-pw').value.toLowerCase();
   var hash = await sha256(val);
 
-  // Xác định role tương ứng với mật khẩu đã nhập
   var newRole = null;
-  if      (hash === currentHashes.founder) newRole = 'founder';
-  else if (hash === currentHashes.admin)   newRole = 'admin';
-  else if (hash === currentHashes.normal)  newRole = 'normal';
+  if      (hash === currentHashes.founder)   newRole = 'founder';
+  else if (hash === currentHashes.admin)     newRole = 'admin';
+  else if (hash === currentHashes.secondary) newRole = 'secondary';
+  else if (hash === currentHashes.normal)    newRole = 'normal';
 
   if (!newRole) {
     var err = document.getElementById('elevate-err');
@@ -237,7 +207,6 @@ async function submitElevate() {
     return;
   }
 
-  // Không cho phép elevate xuống hoặc sang ngang
   if (ROLE_HIERARCHY[newRole] <= ROLE_HIERARCHY[_currentLoginRole]) {
     showToast('Already at this or higher privilege level!');
     closeElevateModal();
@@ -257,12 +226,15 @@ async function submitElevate() {
       _originalRole = 'founder';
       sessionStorage.setItem('hun_known_founder', 'true');
 
-      // Xoá dấu vết session cũ (normal/admin) trước khi ghi founder
       var updates = {};
+      if (_sessionKeys.secondary) {
+        updates['logs/' + _sessionKeys.secondary] = null;
+        db.ref('counters/inner_secondary').transaction(function(n) { return Math.max(0, (n || 0) - 1); });
+        _sessionKeys.secondary = null;
+      }
       if (_sessionKeys.normal) {
         updates['logs/' + _sessionKeys.normal] = null;
-        var cType = _sessionKeys.normalType === 'login_secondary' ? 'inner_secondary' : 'inner_normal';
-        db.ref('counters/' + cType).transaction(function(n) { return Math.max(0, (n || 0) - 1); });
+        db.ref('counters/inner_normal').transaction(function(n) { return Math.max(0, (n || 0) - 1); });
         _sessionKeys.normal = null;
       }
       if (_sessionKeys.admin) {
@@ -274,7 +246,6 @@ async function submitElevate() {
 
       fbIncrement('login_founder');
     } else {
-      // admin
       if (_originalRole !== 'founder') _originalRole = 'admin';
       fbIncrement('login_admin');
     }
@@ -288,6 +259,12 @@ async function submitElevate() {
     fbIncrement('login_normal');
     applyUserModeUI();
     showToast('✓ Elevated to Main User!');
+  } else if (newRole === 'secondary') {
+    _isAdmin = false;
+    _originalRole = 'secondary';
+    fbIncrement('login_secondary');
+    applyUserModeUI();
+    showToast('✓ Elevated to Sub User!');
   }
 }
 
@@ -311,7 +288,6 @@ function switchRole(newRole) {
   } else {
     _isAdmin = false;
     applyUserModeUI();
-    // Nếu đang ở log screen, về lại main
     if (document.getElementById('log-screen').style.display === 'block') {
       navPush('main-' + _mode);
       applyNav('main-' + _mode);
@@ -324,11 +300,7 @@ function switchRole(newRole) {
 
 // ── Apply Role UI ──
 
-/**
- * Hiện đầy đủ tính năng admin/founder.
- */
 function applyAdminModeUI() {
-  // Founder vs Admin dùng class role-founder để RBAC CSS hoạt động
   if (_currentLoginRole === 'founder' || _currentLoginRole === 'admin') {
     document.body.classList.add('role-founder');
   } else {
@@ -348,14 +320,12 @@ function applyAdminModeUI() {
   var uView = document.getElementById('item-unique-view');
   if (uView) uView.style.display = 'flex';
 
-  // Elevate chỉ hiện khi chưa phải Founder
   if (_currentLoginRole !== 'founder') {
     _showCounterIcon('div-elevate', 'cnt-elevate');
   } else {
     _hideCounterIcon('div-elevate', 'cnt-elevate');
   }
 
-  // Secret message icon ẩn ở Founder/Admin
   if (_currentLoginRole !== 'founder' && _currentLoginRole !== 'admin') {
     _showCounterIcon('div-secret', 'cnt-secret');
   } else {
@@ -363,14 +333,10 @@ function applyAdminModeUI() {
   }
 
   _showCounterIcon('div-switch', 'cnt-switch');
-
   updateProfileIcon();
   fbListenNoti();
 }
 
-/**
- * Giới hạn tính năng về mức người dùng bình thường.
- */
 function applyUserModeUI() {
   document.body.classList.remove('role-founder');
 
@@ -390,7 +356,6 @@ function applyUserModeUI() {
   _showCounterIcon('div-elevate', 'cnt-elevate');
   _showCounterIcon('div-profile', 'cnt-profile');
 
-  // Switch chỉ hiện nếu đã từng là Founder trong session này
   if (sessionStorage.getItem('hun_known_founder') === 'true') {
     _showCounterIcon('div-switch', 'cnt-switch');
   } else {
@@ -405,26 +370,22 @@ function applyUserModeUI() {
 function doLogout(e) {
   if (e) e.stopPropagation();
   closeAllMenus();
-
   sessionStorage.removeItem('hun_known_founder');
-
   fbDetachAll();
 
-  // Reset state
   _loggedIn = false;
   _isAdmin  = false;
   _hist     = [];
   _hidx     = -1;
   _currentLoginRole = 'normal';
   _originalRole     = 'normal';
-  _sessionKeys = { view: null, normal: null, normalType: null, admin: null, founder: null };
+  _sessionKeys = { view: null, secondary: null, normal: null, admin: null, founder: null };
 
   document.body.classList.remove('role-founder');
   document.getElementById('main-wrap').style.display  = 'none';
   document.getElementById('log-screen').style.display = 'none';
   document.getElementById('nav-btns').style.display   = 'none';
 
-  // Ẩn tất cả counter icons
   ['div-switch','cnt-switch','div-secret','cnt-secret','div-elevate','cnt-elevate',
    'div-shield','cnt-shield','div-noti','cnt-noti','div-traffic','cnt-traffic',
    'div-auth','cnt-auth','div-profile','cnt-profile'].forEach(function(id) {
@@ -432,7 +393,6 @@ function doLogout(e) {
     if (el) el.style.display = 'none';
   });
 
-  // Fade in lock screen
   var pw = document.getElementById('pw-screen');
   pw.style.display = 'flex';
   pw.style.opacity = '0';
@@ -452,12 +412,7 @@ function openChangePw(type) {
   if (_isProtected && type !== 'founder') { showToast('System is protected!'); return; }
   _pwChangeType = type;
 
-  var labels = {
-    normal:    'Change Main Pass',
-    secondary: 'Change Sub Pass',
-    admin:     'Change Admin Pass',
-    founder:   'Change Founder Pass',
-  };
+  var labels = { normal: 'Change Main Pass', secondary: 'Change Sub Pass', admin: 'Change Admin Pass', founder: 'Change Founder Pass' };
   document.getElementById('pw-change-title').textContent = labels[type];
   document.getElementById('pw-old').value     = '';
   document.getElementById('pw-new').value     = '';
@@ -469,9 +424,7 @@ function openChangePw(type) {
   closeAllMenus();
 }
 
-function closeChangePw() {
-  document.getElementById('pw-change-overlay').classList.remove('open');
-}
+function closeChangePw() { document.getElementById('pw-change-overlay').classList.remove('open'); }
 
 async function submitChangePw() {
   if (_isProtected && _pwChangeType !== 'founder') { showToast('System is protected!'); return; }
@@ -485,8 +438,6 @@ async function submitChangePw() {
   if (newPw !== confirmPw)            { errEl.textContent = 'New passwords do not match';  errEl.style.display = 'block'; return; }
 
   var oldHash = await sha256(oldPw);
-
-  // Kiểm tra quyền: founder hash được phép đổi tất cả
   var isAuthorized =
     oldHash === currentHashes.founder ||
     (oldHash === currentHashes.admin && _pwChangeType !== 'founder') ||
@@ -511,11 +462,7 @@ async function submitChangePw() {
       closeChangePw();
       showToast('✓ Password updated');
       var ipStr = window._myIP || 'Unknown';
-      db.ref('notifications').push({
-        text:  '🔑 Password changed: ' + _pwChangeType + ' | IP: ' + ipStr,
-        ts:    Date.now(),
-        read:  false,
-      });
+      db.ref('notifications').push({ text: '🔑 Password changed: ' + _pwChangeType + ' | IP: ' + ipStr, ts: Date.now(), read: false });
     }
   });
 }
@@ -530,9 +477,7 @@ function openShieldModal() {
   setTimeout(function() { document.getElementById('shield-pw').focus(); }, 50);
 }
 
-function closeShieldModal() {
-  document.getElementById('shield-overlay').classList.remove('open');
-}
+function closeShieldModal() { document.getElementById('shield-overlay').classList.remove('open'); }
 
 async function submitToggleShield() {
   var val  = document.getElementById('shield-pw').value.toLowerCase();
@@ -553,12 +498,10 @@ async function submitToggleShield() {
 }
 
 // ── Private helpers ──
-
 function _showCounterIcon(divId, cntId) {
   var d = document.getElementById(divId); if (d) d.style.display = 'block';
   var c = document.getElementById(cntId); if (c) c.style.display = 'flex';
 }
-
 function _hideCounterIcon(divId, cntId) {
   var d = document.getElementById(divId); if (d) d.style.display = 'none';
   var c = document.getElementById(cntId); if (c) c.style.display = 'none';

@@ -120,7 +120,7 @@
       <span class="cnum" id="num-auth">·</span>
       <div id="auth-dropdown" class="dropdown-menu" style="min-width:250px;">
         <div class="adm-section">
-          <div class="adm-section-label">Session Breakdown <span style="color:var(--muted);font-size:8px;letter-spacing:0;">Total | Unique</span></div>
+          <div class="adm-section-label">Session Breakdown</div>
           <!-- Sub -->
           <div class="adm-item" style="cursor:default; display:flex; justify-content:space-between;" title="Sub Pass">
             <span>🗝 Sub</span>
@@ -531,7 +531,7 @@
     <!-- Stats Cards -->
     <div class="log-stats" id="log-stats-grid">
       <div class="stat-card clickable allow-protected" id="sc-all"     onclick="setFilter('all')">          <div class="stat-num red"    id="stat-outer">–</div><div class="stat-label">👁 Total Views</div></div>
-      <div class="stat-card allow-protected"           id="sc-real">                                         <div class="stat-num green"  id="stat-real">–</div><div class="stat-label" style="color:#27ae60; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div></div>
+      <div class="stat-card allow-protected"             id="sc-real">                                       <div class="stat-num green"  id="stat-real">–</div><div class="stat-label" style="color:#27ae60; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div></div>
       <div class="stat-card clickable allow-protected" id="sc-sub"     onclick="setFilter('login_secondary')"><div class="stat-num blue"   id="stat-sub">–</div><div class="stat-label">🗝 Sub</div></div>
       <div class="stat-card clickable allow-protected" id="sc-normal"  onclick="setFilter('login_normal')">  <div class="stat-num blue"   id="stat-inner">–</div><div class="stat-label">🔒 Main</div></div>
       <div class="stat-card clickable allow-protected" id="sc-admin"   onclick="setFilter('login_admin')">  <div class="stat-num orange" id="stat-admin">–</div><div class="stat-label">★ Admin</div></div>
@@ -595,7 +595,8 @@
         <div class="ip-stats-title">Unique Devices (Fingerprinted)</div>
         <div class="ip-mode-tabs">
           <button class="ip-mode-tab active allow-protected" onclick="setIpMode('all')"     id="ipt-all">All</button>
-          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('normal')"  id="ipt-normal">🔒 Users</button>
+          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('main')"    id="ipt-main">🔒 Main</button>
+          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('sub')"     id="ipt-sub">🗝 Sub</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('admin')"   id="ipt-admin">★ Admin</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('founder')" id="ipt-founder">👑 Founder</button>
         </div>

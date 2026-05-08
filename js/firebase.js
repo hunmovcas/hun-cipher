@@ -177,13 +177,11 @@ function fbIncrement(type) {
 
   function pushLog(data) {
     db.ref('logs').push(data).then(function(snap) {
-      if      (type === 'view')                            _sessionKeys.view = snap.key;
-      else if (type === 'login_normal' || type === 'login_secondary') {
-        _sessionKeys.normal     = snap.key;
-        _sessionKeys.normalType = type;
-      }
-      else if (type === 'login_admin')   _sessionKeys.admin   = snap.key;
-      else if (type === 'login_founder') _sessionKeys.founder = snap.key;
+      if      (type === 'view')            _sessionKeys.view = snap.key;
+      else if (type === 'login_secondary') _sessionKeys.secondary = snap.key;
+      else if (type === 'login_normal')    _sessionKeys.normal = snap.key;
+      else if (type === 'login_admin')     _sessionKeys.admin = snap.key;
+      else if (type === 'login_founder')   _sessionKeys.founder = snap.key;
     });
   }
 

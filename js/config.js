@@ -14,6 +14,9 @@ const FIREBASE_CONFIG = {
   appId:             '1:1049763241075:web:b5696c5bb26366f3ee9e06',
 };
 
+// ── Thời gian Cutoff gốc (05/05/2026 14:44:00) ──
+const GLOBAL_CUTOFF = new Date('2026-05-05T14:44:00+07:00').getTime();
+
 // ── Nội dung mặc định (fallback khi Firebase chưa có dữ liệu) ──
 
 const DEFAULT_HINTS = {
