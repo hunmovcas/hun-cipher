@@ -1,0 +1,16 @@
+/* ══════════════════════════════════════════
+   ANIMATIONS & TRANSITIONS
+   ══════════════════════════════════════════ */
+
+@keyframes spin         { to { transform: rotate(360deg); } }
+@keyframes nav-spin     { 100% { transform: rotate(360deg); } }
+@keyframes popAlert     { 0% { opacity: 0; transform: translateY(8px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes popCongrats  { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes sparkle      { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.2); } }
+@keyframes shakeDeny    { 0%, 85% { transform: rotate(0) scale(1); } 88% { transform: rotate(-10deg) scale(1.15); } 92% { transform: rotate(10deg) scale(1.15); } 96% { transform: rotate(-10deg) scale(1.15); } 100% { transform: rotate(0) scale(1); } }
+@keyframes pulse-dot    { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.8); } }
+
+.spin      { display: inline-block; animation: spin 1s linear infinite; }
+.spin-anim { animation: nav-spin 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+#congrats-overlay .dialog-box { animation: popCongrats 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }

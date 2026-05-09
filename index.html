@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Secret Cipher</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/screens.css">
-<link rel="stylesheet" href="css/analytics.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secret Cipher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/screens.css">
 </head>
 <body>
 
@@ -17,24 +17,24 @@
 <div id="nav-btns">
   <button class="nav-btn" id="btn-undo" onclick="navUndo()" disabled title="Go back (Alt+←)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
   <button class="nav-btn" id="btn-redo" onclick="navRedo()" disabled title="Go forward (Alt+→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg></button>
-  <button class="nav-btn" id="btn-reload" onclick="softReload()" title="Soft Reload (Refresh)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 2.13-5.87L9 8"/></svg></button>
+  <button class="nav-btn" id="btn-reload" onclick="softReload()" title="Soft Reload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 2.13-5.87L9 8"/></svg></button>
 </div>
 
 <!-- ── COMPACT COUNTERS RIGHT & MENUS ── -->
 <div id="counters">
   <div class="cnt-row">
 
-    <!-- Switch Account Founder 🎭 -->
+    <!-- Switch Role -->
     <div class="cnt-div" id="div-switch" style="display:none;"></div>
     <div class="cnt" id="cnt-switch" title="Switch Role" onclick="toggleSwitchMenu(event)" style="display:none;">
-      <span style="font-size:12.5px; cursor:pointer;">🎭</span>
-      <div id="switch-dropdown" class="dropdown-menu" style="text-align: center; width: max-content; min-width: 200px;">
-        <div style="font-family: 'Space Mono', monospace; font-size: 11px; font-weight: bold; letter-spacing: 4px; color: var(--muted); margin-bottom: 20px;">SWITCH ROLE</div>
-        <div style="display: flex; justify-content: center; gap: 18px; align-items: center;">
-          <span class="switch-icon" onclick="switchRole('normal')" title="Main Pass">🔒</span>
+      <span style="font-size:12.5px;cursor:pointer;">🎭</span>
+      <div id="switch-dropdown" class="dropdown-menu" style="text-align:center;width:max-content;min-width:200px;">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:bold;letter-spacing:4px;color:var(--muted);margin-bottom:20px;">SWITCH ROLE</div>
+        <div style="display:flex;justify-content:center;gap:18px;align-items:center;">
+          <span class="switch-icon" onclick="switchRole('normal')"    title="Main Pass">🔒</span>
           <span class="switch-icon" onclick="switchRole('secondary')" title="Sub Pass">🗝</span>
-          <span class="switch-icon" style="color: var(--orange);" onclick="switchRole('admin')" title="Admin">★</span>
-          <span class="switch-icon" onclick="switchRole('founder')" title="Founder">👑</span>
+          <span class="switch-icon" style="color:var(--orange);" onclick="switchRole('admin')" title="Admin">★</span>
+          <span class="switch-icon" onclick="switchRole('founder')"   title="Founder">👑</span>
         </div>
       </div>
     </div>
@@ -60,7 +60,7 @@
       </svg>
     </div>
 
-    <!-- Noti -->
+    <!-- Notifications -->
     <div class="cnt-div" id="div-noti"></div>
     <div class="cnt" id="cnt-noti" title="System Notifications" onclick="toggleNoti(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -84,14 +84,14 @@
           <div class="adm-section-label">Traffic Overview</div>
           <div class="adm-item" style="cursor:default" title="Total Views">👁 <strong id="drop-views" style="margin-left:auto">0</strong></div>
           <div class="adm-item" id="item-unique-view" style="cursor:default" title="Unique Visitors">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> 
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
             <strong id="drop-unique" style="margin-left:auto">0</strong>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Active Auth -->
+    <!-- Active Auth / Session Breakdown -->
     <div class="cnt-div" id="div-auth"></div>
     <div class="cnt" id="cnt-auth" title="Active Logins" onclick="toggleAuthMenu(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -99,43 +99,39 @@
       <div id="auth-dropdown" class="dropdown-menu">
         <div class="adm-section">
           <div class="adm-section-label">Session Breakdown</div>
-          <!-- ORDER: Sub -> Main -> Admin -> Founder (to be extended with Head/Manager/Co-Founder) -->
-          <div class="adm-item" style="cursor:default" title="Sub Pass">🗝 <strong id="drop-sub" style="margin-left:auto">0</strong></div>
-          <div class="adm-item" style="cursor:default" title="Main Pass">🔒 <strong id="drop-main" style="margin-left:auto">0</strong></div>
-          <div class="adm-item" style="cursor:default" title="Admin">★ <strong id="drop-admin" style="margin-left:auto">0</strong></div>
+          <div class="adm-item" style="cursor:default" title="Main Pass">🔒 <strong id="drop-main"    style="margin-left:auto">0</strong></div>
+          <div class="adm-item" style="cursor:default" title="Sub Pass">🗝  <strong id="drop-sub"     style="margin-left:auto">0</strong></div>
+          <div class="adm-item" style="cursor:default" title="Admin">★      <strong id="drop-admin"   style="margin-left:auto">0</strong></div>
           <div class="adm-item founder-only" style="cursor:default" title="Founder">👑 <strong id="drop-founder" style="margin-left:auto">0</strong></div>
         </div>
       </div>
     </div>
 
-    <!-- MAIN PROFILE MENU -->
+    <!-- Profile Menu -->
     <div class="cnt-div" id="div-profile" style="display:block"></div>
     <div class="cnt" id="cnt-profile" title="System Menu" onclick="toggleProfileMenu(event)">
-      <svg id="icon-prof-normal" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <svg id="icon-prof-admin" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      <svg id="icon-prof-normal"  style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <svg id="icon-prof-admin"   style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
       <svg id="icon-prof-founder" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polygon points="12 4 8 11 2 4 5 16 19 16 22 4 16 11 12 4"></polygon><line x1="5" y1="20" x2="19" y2="20"></line></svg>
-      
+
       <div id="profile-dropdown" class="dropdown-menu">
-        
-        <!-- Basic User -->
+        <!-- Normal user -->
         <div class="adm-section normal-only">
           <button class="adm-item edit" onclick="openChangePw('normal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Main Pass</button>
           <button class="adm-item edit" onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Sub Pass</button>
         </div>
-
         <!-- Admin & Founder -->
         <div class="adm-section protected-only" style="display:none">
           <div class="adm-section-label">System Logs</div>
           <button class="adm-item allow-protected" onclick="admGoLog(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> Traffic & Analytics</button>
           <button class="adm-item danger" onclick="openBlockManager()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg> Blocked IPs</button>
         </div>
-
+        <!-- Admin only security -->
         <div class="adm-section admin-only" style="display:none">
           <div class="adm-section-label">Security</div>
           <button class="adm-item danger" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Admin Pass</button>
         </div>
-
-        <!-- Founder: Appearance -->
+        <!-- Founder appearance -->
         <div class="adm-section founder-only">
           <div class="adm-section-label">Appearance</div>
           <button class="adm-item edit" onclick="openChangeTitle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit Title</button>
@@ -143,39 +139,36 @@
           <button class="adm-item edit" onclick="openChangeNotes()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Edit Notes</button>
           <button class="adm-item edit" onclick="openChangePopup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Edit Popups</button>
         </div>
-        
-        <!-- Founder: Global Security -->
+        <!-- Founder global security -->
         <div class="adm-section founder-only">
           <div class="adm-section-label">Global Security</div>
-          <button class="adm-item edit" onclick="openChangeSecret()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> Edit Secret Messages</button>
-          <button class="adm-item edit" onclick="openChangePw('normal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Main Pass</button>
-          <button class="adm-item edit" onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Sub Pass</button>
+          <button class="adm-item edit"   onclick="openChangeSecret()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> Edit Secret Messages</button>
+          <button class="adm-item edit"   onclick="openChangePw('normal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Main Pass</button>
+          <button class="adm-item edit"   onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Sub Pass</button>
           <button class="adm-item danger" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Admin Pass</button>
           <button class="adm-item success" onclick="openChangeHints()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Edit Hints</button>
         </div>
-        
-        <!-- Founder: Modify Data -->
+        <!-- Founder modify data -->
         <div class="adm-section founder-only">
           <div class="adm-section-label">Modify Data</div>
           <button class="adm-item edit"    onclick="admAdjustCounter(event,'outer')">Adjust 👁</button>
           <button class="adm-item success" onclick="admAdjustCounter(event,'real_visitors')">Adjust 👤</button>
+          <button class="adm-item edit"    onclick="admAdjustCounter(event,'inner_normal')">Adjust 🔑</button>
           <button class="adm-item edit"    onclick="admAdjustCounter(event,'inner_secondary')">Adjust 🗝</button>
-          <button class="adm-item edit"    onclick="admAdjustCounter(event,'inner_normal')">Adjust 🔒</button>
           <button class="adm-item edit"    onclick="admAdjustCounter(event,'admin')">Adjust ★</button>
           <button class="adm-item founder" onclick="admAdjustCounter(event,'founder')">Adjust 👑</button>
         </div>
-        
-        <!-- Founder: Reset Data -->
+        <!-- Founder reset data -->
         <div class="adm-section founder-only">
           <div class="adm-section-label">Reset Data</div>
-          <button class="adm-item danger" onclick="admClearCounter(event,'outer')"          title="Reset Total Views">Reset 👁</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'real_visitors')"  title="Reset Unique Visitors">Reset 👤</button>
+          <button class="adm-item danger" onclick="admClearCounter(event,'outer')"           title="Reset Total Views">Reset 👁</button>
+          <button class="adm-item danger" onclick="admClearCounter(event,'real_visitors')"   title="Reset Unique Visitors">Reset 👤</button>
+          <button class="adm-item danger" onclick="admClearCounter(event,'inner_normal')"    title="Reset Main Pass">Reset 🔑</button>
           <button class="adm-item danger" onclick="admClearCounter(event,'inner_secondary')" title="Reset Sub Pass">Reset 🗝</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'inner_normal')"   title="Reset Main Pass">Reset 🔒</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'admin')"          title="Reset Admin Pass">Reset ★</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'founder')"        title="Reset Founder Pass">Reset 👑</button>
+          <button class="adm-item danger" onclick="admClearCounter(event,'admin')"           title="Reset Admin Pass">Reset ★</button>
+          <button class="adm-item danger" onclick="admClearCounter(event,'founder')"         title="Reset Founder Pass">Reset 👑</button>
         </div>
-
+        <!-- Logout -->
         <div class="adm-section">
           <button class="adm-item allow-protected" onclick="doLogout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Log Out</button>
         </div>
@@ -185,118 +178,9 @@
   </div>
 </div>
 
-<!-- ── DIALOGS ── -->
-<!-- All dialog HTML is kept here for DOM accessibility; logic lives in js/modules/dialogs.js -->
-
-<!-- Elevate Privilege -->
-<div class="dialog-overlay" id="elevate-overlay">
-  <div class="dialog-box">
-    <h3 id="elevate-title">Elevate Privilege</h3>
-    <p id="elevate-desc" style="margin-bottom: 16px;">Authenticate as Admin or Founder.</p>
-    <p id="elevate-err" style="color:var(--accent); display:none; font-weight:bold; margin-bottom: 10px;">Incorrect password!</p>
-    <div class="form-group" style="margin-bottom: 24px;">
-      <input type="password" id="elevate-pw" class="input-field" placeholder="Admin or Founder Password..." autocomplete="off">
-    </div>
-    <div class="dialog-actions" style="margin-top: 0;">
-      <button class="btn-dialog-yes btn-save" onclick="submitElevate()">Confirm</button>
-      <button class="btn-dialog-no" onclick="closeElevateModal()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- System Protection -->
-<div class="dialog-overlay" id="shield-overlay">
-  <div class="dialog-box">
-    <h3>System Protection</h3>
-    <p style="margin-bottom: 12px;">Status: <strong id="shield-status-text" style="color: var(--muted);">DISABLED</strong></p>
-    <p id="shield-err" style="color:var(--accent); display:none; font-weight:bold; margin-bottom: 10px;">Incorrect Founder password!</p>
-    <div class="form-group" style="margin-bottom: 24px;">
-      <input type="password" id="shield-pw" class="input-field allow-protected" placeholder="Founder Password..." autocomplete="off">
-    </div>
-    <div class="dialog-actions" style="flex-wrap: wrap; flex-direction: column; gap: 8px; margin-top: 0;">
-      <button class="btn-dialog-yes btn-save allow-protected" onclick="submitToggleShield()" id="btn-toggle-shield" style="width: 100%;">Enable Protection</button>
-      <button class="btn-dialog-yes allow-protected" style="background: var(--accent2); border-color: var(--accent2); width: 100%;" onclick="openChangePw('founder')">Change Founder Pass</button>
-      <button class="btn-dialog-no allow-protected" style="width: 100%; margin-top: 4px;" onclick="closeShieldModal()">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Trash Modal -->
-<div class="dialog-overlay" id="trash-overlay">
-  <div class="dialog-box" style="max-width: 600px; width: 95%; padding: 24px;">
-    <h3>Trash Bin 🗑️</h3>
-    <p style="font-size: 11px; margin-bottom: 16px;">Logs are kept here for 24 hours before permanent deletion.</p>
-    <div id="trash-list" style="max-height: 300px; overflow-y: auto; text-align: left; font-family: 'Space Mono', monospace; font-size: 10px; border: 1px solid var(--border); padding: 8px;">Loading...</div>
-    <div class="dialog-actions">
-      <button class="btn-dialog-no" onclick="closeTrash()">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Admin Deny -->
-<div class="dialog-overlay" id="admin-deny-overlay">
-  <div class="dialog-box deny-box">
-    <div class="deny-header">
-      <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-      Access Denied
-    </div>
-    <div class="deny-body">
-      <div class="deny-icon">🚷</div>
-      <p style="font-weight: 900; color: var(--ink); font-size: 1.1rem; margin-bottom: 6px; font-family:'Nunito',sans-serif;">RESTRICTED FEATURE</p>
-      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 24px;">Please elevate to <strong>Founder</strong> to unlock this functionality.</p>
-      <div class="dialog-actions">
-        <button class="btn-dialog-yes allow-protected" style="background: var(--orange); border-color: var(--orange); width: 100%; box-shadow: 4px 4px 0 rgba(180,83,9,0.3);" onclick="closeAdminDenyModal()">I Understand</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Blocked IPs -->
-<div class="dialog-overlay" id="block-overlay">
-  <div class="dialog-box" style="max-width: 450px; width: 95%; padding: 28px 24px 24px;">
-    <h3>Blocked IPs 🚫</h3>
-    <p style="margin-bottom:12px">List of currently blocked IP addresses.</p>
-    <div id="block-list" style="max-height: 250px; overflow-y: auto; text-align: left; margin-bottom: 20px; font-family: 'Space Mono', monospace; font-size: 11px;"></div>
-    <div class="dialog-actions">
-      <button class="btn-dialog-no allow-protected" onclick="closeBlockManager()">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Config Dialogs -->
-<div class="dialog-overlay" id="welcome-change-overlay"><div class="dialog-box"><h3>Edit Banner</h3><div class="form-group"><input type="text" id="welcome-input" class="input-field" placeholder="🎏 ✿ WELCOME TO MY PAGE ✿ 🎏"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeWelcome()">Save</button><button class="btn-dialog-no" onclick="closeChangeWelcome()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="title-change-overlay"><div class="dialog-box" style="max-width: 440px;"><h3>Edit Title</h3><div class="form-group"><label>Browser Tab Name</label><input type="text" id="tab-title-input" class="input-field" placeholder="The Secret Cipher"></div><div class="form-group"><label>Main Title</label><input type="text" id="main-title-input" class="input-field" placeholder="The <em>Secret</em><br>Cipher"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeTitle()">Save</button><button class="btn-dialog-no" onclick="closeChangeTitle()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="notes-change-overlay"><div class="dialog-box" style="max-width: 440px;"><h3>Edit Notes</h3><div class="form-group"><label>Tagline (Below title)</label><textarea id="note-tagline-input" class="input-field" style="min-height:50px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;"></textarea></div><div class="form-group"><label>Footer (Bottom of page)</label><textarea id="note-footer-input" class="input-field" style="min-height:70px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeNotes()">Save</button><button class="btn-dialog-no" onclick="closeChangeNotes()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="popup-change-overlay"><div class="dialog-box" style="max-width: 440px;"><h3>Edit Popups</h3><div class="form-group"><label>On completely wrong input</label><textarea id="popup-wrong-input" class="input-field" style="min-height:70px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;"></textarea></div><div class="form-group"><label>On close input (1 character off)</label><textarea id="popup-close-input" class="input-field" style="min-height:70px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangePopup()">Save</button><button class="btn-dialog-no" onclick="closeChangePopup()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="pw-change-overlay"><div class="dialog-box"><h3 id="pw-change-title">Change password</h3><p id="pw-change-err" style="color: var(--accent); display:none; margin-bottom: 10px; font-weight:bold;"></p><div class="form-group"><label>Current password</label><input type="password" id="pw-old" class="input-field allow-protected" placeholder="Enter current password..."></div><div class="form-group"><label>New password</label><input type="password" id="pw-new" class="input-field allow-protected" placeholder="Enter new password..."></div><div class="form-group"><label>Confirm new password</label><input type="password" id="pw-confirm" class="input-field allow-protected" placeholder="Confirm your new password..."></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save allow-protected" onclick="submitChangePw()">Save</button><button class="btn-dialog-no allow-protected" onclick="closeChangePw()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="hint-change-overlay"><div class="dialog-box" style="max-width: 440px;"><h3>Edit Hints</h3><div class="form-group"><label>Hint 1 (For Main Pass)</label><textarea id="hint1-input" class="input-field" style="min-height:70px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;"></textarea></div><div class="form-group"><label>Hint 2 (For Sub Pass)</label><textarea id="hint2-input" class="input-field" style="min-height:70px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeHints()">Save</button><button class="btn-dialog-no" onclick="closeChangeHints()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="secret-change-overlay"><div class="dialog-box" style="max-width: 440px;"><h3>Edit Secret Messages</h3><div class="form-group"><label>Main Message</label><textarea id="secret-normal-input" class="input-field" style="min-height:70px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;" placeholder="Enter message..."></textarea></div><div class="form-group"><label>Sub Message</label><textarea id="secret-secondary-input" class="input-field" style="min-height:70px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;" placeholder="Enter message..."></textarea></div><div class="form-group"><label>Admin Message</label><textarea id="secret-admin-input" class="input-field" style="min-height:70px; font-size:12px; font-family:'Nunito', sans-serif; resize:vertical;" placeholder="Enter message..."></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeSecret()">Save</button><button class="btn-dialog-no" onclick="closeChangeSecret()">Cancel</button></div></div></div>
-
-<!-- Secret / Congrats Displays -->
-<div class="dialog-overlay" id="secret-display-overlay"><div class="dialog-box"><h3 style="color: #e84393;">💌 Secret Message</h3><p>Copy this and follow the instructions!</p><div class="output-box allow-protected" id="secret-display-text" style="min-height: 60px; margin-bottom: 16px; font-weight: bold; cursor: pointer; text-align: center;"></div><div class="dialog-actions"><button class="btn-dialog-yes allow-protected" id="btn-secret-copy" style="background: #e84393; border-color: #e84393;" onclick="copySecretDisplay()">Copy</button><button class="btn-dialog-no allow-protected" onclick="closeSecretDisplay()">Close</button></div></div></div>
-<div class="dialog-overlay" id="admin-secret-overlay"><div class="dialog-box"><h3>💖 Admin Note 💖</h3><div id="admin-secret-content"></div><div class="dialog-actions"><button class="btn-dialog-no allow-protected" onclick="closeAdminSecretDisplay()">Close</button></div></div></div>
-<div class="dialog-overlay" id="congrats-overlay"><div class="dialog-box" style="border-color: #e84393; box-shadow: 6px 6px 0 rgba(232, 67, 147, 0.2);"><div style="font-size: 3rem; margin-bottom: 10px;">🎉💖🎉</div><h3 style="color: #e84393;">Amazing!</h3><p>You've successfully decoded the hidden message:</p><div id="congrats-msg" style="font-size: 1.1rem; font-weight: 900; color: var(--accent2); padding: 16px; background: rgba(44,62,122,.05); border: 2px dashed var(--accent2); margin-bottom: 20px; white-space: pre-wrap; word-break: break-word;"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save allow-protected" style="background: #e84393; border-color: #e84393;" onclick="closeCongrats()">Close</button></div></div></div>
-
-<!-- Confirm / Adjust -->
-<div class="dialog-overlay" id="confirm-overlay"><div class="dialog-box"><h3 id="confirm-title">Confirm Deletion?</h3><p id="confirm-msg">This action <strong>cannot be undone</strong>.</p><div class="dialog-actions"><button class="btn-dialog-yes" id="confirm-yes">Confirm</button><button class="btn-dialog-no" onclick="closeConfirm()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="adjust-overlay"><div class="dialog-box"><h3 id="adjust-title">Adjust Counter</h3><input type="number" id="adjust-input" min="0"><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="doAdjustCounter()">Save</button><button class="btn-dialog-no" onclick="closeAdjust()">Cancel</button></div></div></div>
-
-<!-- Initial Setup Screen -->
-<div id="setup-screen" style="display:none; position:fixed; inset:0; z-index:99999; background:var(--bg); align-items:center; justify-content:center; flex-direction:column; padding:20px;">
-  <div class="dialog-box" style="max-width: 450px; width: 100%;">
-    <h3 style="color:var(--accent);">Initialize Security 🔒</h3>
-    <p style="margin-bottom: 20px;">No passwords set. Please initialize the system.<br><span style="font-size:11px; color:var(--muted);">(Only SHA-256 hashes are saved, not raw passwords)</span></p>
-    <div class="form-group"><input type="password" id="setup-founder" class="input-field" placeholder="Founder Password..."></div>
-    <div class="form-group"><input type="password" id="setup-admin"   class="input-field" placeholder="Admin Password..."></div>
-    <div class="form-group"><input type="password" id="setup-normal"  class="input-field" placeholder="Main Password (User)..."></div>
-    <div class="form-group"><input type="password" id="setup-secondary" class="input-field" placeholder="Sub Password (User)..."></div>
-    <button class="btn-dialog-yes btn-save" style="width:100%; margin-top:10px;" onclick="submitSetup()">Save & Initialize</button>
-  </div>
-</div>
-
-<!-- ── LOCK SCREEN (Page AC) ── -->
+<!-- ── LOCK SCREEN ── -->
 <div id="pw-screen">
-  <div id="login-view-count" style="position: absolute; top: 16px; right: 20px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; font-weight: bold;">
+  <div id="login-view-count" style="position:absolute;top:16px;right:20px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:bold;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
     <strong id="login-outer-num">0</strong>
   </div>
@@ -312,10 +196,10 @@
         <h2>Enter Password</h2>
         <p class="pw-sub">This site is strictly private</p>
         <div class="pw-wrap">
-            <input type="password" id="pw-input" maxlength="30" placeholder="••••••" autocomplete="off">
-            <button id="pw-eye" onclick="toggleEye()" tabindex="-1">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            </button>
+          <input type="password" id="pw-input" maxlength="30" placeholder="••••••" autocomplete="off">
+          <button id="pw-eye" onclick="toggleEye()" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
         </div>
         <div class="pw-err" id="pw-err">Incorrect password</div>
         <button class="btn btn-main btn-pw allow-protected" onclick="checkPw()">Confirm →</button>
@@ -325,42 +209,38 @@
   </div>
 </div>
 
-<!-- ── ANALYTICS SCREEN (Page Sun - Admin) ── -->
+<!-- ── TRAFFIC ANALYTICS SCREEN ── -->
 <div id="log-screen">
   <div class="log-wrap">
     <div class="log-header">
       <div class="log-title">📊 Traffic <em>Analytics</em></div>
       <div class="log-header-right">
         <div class="realtime-label"><span class="realtime-dot"></span>Realtime</div>
-        <button class="btn-refresh allow-protected" onclick="openTrash()" title="View Trash" style="color: var(--accent); border-color: rgba(192,57,43,0.3); background: rgba(192,57,43,0.05);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg> Trash</button>
+        <button class="btn-refresh allow-protected" onclick="openTrash()" title="View Trash" style="color:var(--accent);border-color:rgba(192,57,43,0.3);background:rgba(192,57,43,0.05);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg> Trash</button>
         <button class="btn-export allow-protected" onclick="exportCSV()" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
         <button class="btn-refresh allow-protected" onclick="loadLogs()" title="Reload Data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Reload</button>
       </div>
     </div>
-    <!-- Stats grid: View -> Sub -> Main -> Admin -> Founder -->
     <div class="log-stats" id="log-stats-grid">
-      <div class="stat-card clickable allow-protected" id="sc-all"    onclick="setFilter('all')"><div class="stat-num red"   id="stat-outer">–</div><div class="stat-label">👁 Total Views</div></div>
-      <div class="stat-card allow-protected"           id="sc-real">  <div class="stat-num green" id="stat-real">–</div><div class="stat-label" style="color:#27ae60;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div></div>
-      <div class="stat-card clickable allow-protected" id="sc-sub"    onclick="setFilter('login_secondary')"><div class="stat-num blue" id="stat-sub">–</div><div class="stat-label">🗝 Sub</div></div>
-      <div class="stat-card clickable allow-protected" id="sc-normal" onclick="setFilter('login_normal')"><div class="stat-num blue" id="stat-inner">–</div><div class="stat-label">🔒 Main</div></div>
-      <div class="stat-card clickable allow-protected" id="sc-admin"  onclick="setFilter('login_admin')"><div class="stat-num orange" id="stat-admin">–</div><div class="stat-label">★ Admin</div></div>
+      <div class="stat-card clickable allow-protected" id="sc-all"     onclick="setFilter('all')">         <div class="stat-num red"    id="stat-outer">–</div>  <div class="stat-label">👁 Total Views</div></div>
+      <div class="stat-card allow-protected"           id="sc-real">                                        <div class="stat-num green"  id="stat-real">–</div>   <div class="stat-label" style="color:#27ae60;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div></div>
+      <div class="stat-card clickable allow-protected" id="sc-normal"  onclick="setFilter('login_normal')"><div class="stat-num blue"   id="stat-inner">–</div>  <div class="stat-label">🔒 Users</div></div>
+      <div class="stat-card clickable allow-protected" id="sc-admin"   onclick="setFilter('login_admin')"> <div class="stat-num orange" id="stat-admin">–</div>  <div class="stat-label">★ Admin</div></div>
       <div class="stat-card clickable allow-protected" id="sc-founder" onclick="setFilter('login_founder')"><div class="stat-num" style="color:var(--founder);" id="stat-founder">–</div><div class="stat-label">👑 Founder</div></div>
     </div>
-    <!-- Filters: All / View / Sub / Main / Admin / Founder -->
     <div class="log-filters">
-      <button class="filter-btn active allow-protected" onclick="setFilter('all')"            id="f-all">All</button>
-      <button class="filter-btn allow-protected"        onclick="setFilter('view')"           id="f-view">👁 Page view</button>
-      <button class="filter-btn allow-protected"        onclick="setFilter('login_secondary')" id="f-sub">🗝 Sub</button>
-      <button class="filter-btn allow-protected"        onclick="setFilter('login_normal')"   id="f-normal">🔒 Main</button>
-      <button class="filter-btn allow-protected"        onclick="setFilter('login_admin')"    id="f-admin">★ Admin</button>
-      <button class="filter-btn allow-protected"        onclick="setFilter('login_founder')"  id="f-founder">👑 Founder</button>
+      <button class="filter-btn active allow-protected" onclick="setFilter('all')"          id="f-all">All</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('view')"         id="f-view">👁 Page view</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('login_normal')" id="f-normal">🔒 Users</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('login_admin')"  id="f-admin">★ Admin</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('login_founder')"id="f-founder">👑 Founder</button>
       <span class="log-count" id="log-count"></span>
     </div>
     <div class="log-search-row">
       <input type="text" id="log-search" class="allow-protected" placeholder="Filter by ID, IP, city..." oninput="renderLogs()">
       <div class="log-date-group">
         <label>From</label><input type="date" class="date-inp allow-protected" id="date-from" onchange="renderLogs()">
-        <label>to</label><input type="date" class="date-inp allow-protected" id="date-to" onchange="renderLogs()">
+        <label>to</label>  <input type="date" class="date-inp allow-protected" id="date-to"   onchange="renderLogs()">
       </div>
     </div>
     <div class="log-table-wrap">
@@ -373,21 +253,18 @@
           <th style="width:160px" class="sortable allow-protected" id="th-br" onclick="toggleSort('br')">Browser · OS <span class="sort-arrow"></span></th>
           <th>Location · IP · ISP</th>
           <th style="width:110px">Misc</th>
-          <th style="width:40px; text-align:center;">Act</th>
+          <th style="width:40px;text-align:center;">Act</th>
         </tr></thead>
         <tbody id="log-body"></tbody>
       </table>
     </div>
     <div class="log-pagination allow-protected" id="log-pagination"></div>
-
-    <!-- Unique Devices Section -->
     <div class="ip-stats-section" id="ip-stats-section">
       <div class="ip-stats-header">
         <div class="ip-stats-title">Unique Devices (Fingerprinted)</div>
         <div class="ip-mode-tabs">
           <button class="ip-mode-tab active allow-protected" onclick="setIpMode('all')"     id="ipt-all">All</button>
-          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('sub')"     id="ipt-sub">🗝 Sub</button>
-          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('normal')"  id="ipt-normal">🔒 Main</button>
+          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('normal')"  id="ipt-normal">🔒 Users</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('admin')"   id="ipt-admin">★ Admin</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('founder')" id="ipt-founder">👑 Founder</button>
         </div>
@@ -397,7 +274,7 @@
   </div>
 </div>
 
-<!-- ── MAIN APP PAGE (Page Sun - Cipher) ── -->
+<!-- ── MAIN APP PAGE ── -->
 <div class="wrap" id="main-wrap">
   <header>
     <div><span class="stamp">Private Cipher</span></div>
@@ -427,28 +304,62 @@
   <footer><p id="main-footer">Encrypted for the masses, <span>decrypted by one</span></p></footer>
 </div>
 
+<!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
+
+<!-- ── FIREBASE ERROR ── -->
 <div id="fb-err" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;font-family:monospace;font-size:12px;padding:10px 16px;text-align:center;letter-spacing:.5px;">⚠ Cannot connect to Firebase — check your network or disable VPN/adblock and reload.</div>
+
+<!-- ── DIALOGS ── -->
+<div class="dialog-overlay" id="elevate-overlay"><div class="dialog-box"><h3 id="elevate-title">Elevate Privilege</h3><p id="elevate-desc" style="margin-bottom:16px;">Authenticate as Admin or Founder.</p><p id="elevate-err" style="color:var(--accent);display:none;font-weight:bold;margin-bottom:10px;">Incorrect password!</p><div class="form-group" style="margin-bottom:24px;"><input type="password" id="elevate-pw" class="input-field" placeholder="Admin or Founder Password..." autocomplete="off"></div><div class="dialog-actions" style="margin-top:0;"><button class="btn-dialog-yes btn-save" onclick="submitElevate()">Confirm</button><button class="btn-dialog-no" onclick="closeElevateModal()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="shield-overlay"><div class="dialog-box"><h3>System Protection</h3><p style="margin-bottom:12px;">Status: <strong id="shield-status-text" style="color:var(--muted);">DISABLED</strong></p><p id="shield-err" style="color:var(--accent);display:none;font-weight:bold;margin-bottom:10px;">Incorrect Founder password!</p><div class="form-group" style="margin-bottom:24px;"><input type="password" id="shield-pw" class="input-field allow-protected" placeholder="Founder Password..." autocomplete="off"></div><div class="dialog-actions" style="flex-wrap:wrap;flex-direction:column;gap:8px;margin-top:0;"><button class="btn-dialog-yes btn-save allow-protected" onclick="submitToggleShield()" id="btn-toggle-shield" style="width:100%;">Enable Protection</button><button class="btn-dialog-yes allow-protected" style="background:var(--accent2);border-color:var(--accent2);width:100%;" onclick="openChangePw('founder')">Change Founder Pass</button><button class="btn-dialog-no allow-protected" style="width:100%;margin-top:4px;" onclick="closeShieldModal()">Close</button></div></div></div>
+<div class="dialog-overlay" id="trash-overlay"><div class="dialog-box" style="max-width:600px;width:95%;padding:24px;"><h3>Trash Bin 🗑️</h3><p style="font-size:11px;margin-bottom:16px;">Logs are kept here for 24 hours before permanent deletion.</p><div id="trash-list" style="max-height:300px;overflow-y:auto;text-align:left;font-family:'Space Mono',monospace;font-size:10px;border:1px solid var(--border);padding:8px;">Loading...</div><div class="dialog-actions"><button class="btn-dialog-no" onclick="closeTrash()">Close</button></div></div></div>
+<div class="dialog-overlay" id="admin-deny-overlay"><div class="dialog-box deny-box"><div class="deny-header"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Access Denied</div><div class="deny-body"><div class="deny-icon">🚷</div><p style="font-weight:900;color:var(--ink);font-size:1.1rem;margin-bottom:6px;font-family:'Nunito',sans-serif;">RESTRICTED FEATURE</p><p style="color:var(--muted);font-size:0.9rem;margin-bottom:24px;">Please elevate to <strong>Founder</strong> to unlock this functionality.</p><div class="dialog-actions"><button class="btn-dialog-yes allow-protected" style="background:var(--orange);border-color:var(--orange);width:100%;box-shadow:4px 4px 0 rgba(180,83,9,0.3);" onclick="closeAdminDenyModal()">I Understand</button></div></div></div></div>
+<div class="dialog-overlay" id="block-overlay"><div class="dialog-box" style="max-width:450px;width:95%;padding:28px 24px 24px;"><h3>Blocked IPs 🚫</h3><p style="margin-bottom:12px">List of currently blocked IP addresses.</p><div id="block-list" style="max-height:250px;overflow-y:auto;text-align:left;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:11px;"></div><div class="dialog-actions"><button class="btn-dialog-no allow-protected" onclick="closeBlockManager()">Close</button></div></div></div>
+<div class="dialog-overlay" id="confirm-overlay"><div class="dialog-box"><h3 id="confirm-title">Confirm?</h3><p id="confirm-msg">This action <strong>cannot be undone</strong>.</p><div class="dialog-actions"><button class="btn-dialog-yes" id="confirm-yes">Confirm</button><button class="btn-dialog-no" onclick="closeConfirm()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="adjust-overlay"><div class="dialog-box"><h3 id="adjust-title">Adjust Counter</h3><input type="number" id="adjust-input" min="0"><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="doAdjustCounter()">Save</button><button class="btn-dialog-no" onclick="closeAdjust()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="welcome-change-overlay"><div class="dialog-box"><h3>Edit Banner</h3><div class="form-group"><input type="text" id="welcome-input" class="input-field" placeholder="🎏 ✿ WELCOME TO MY PAGE ✿ 🎏"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeWelcome()">Save</button><button class="btn-dialog-no" onclick="closeChangeWelcome()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="title-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Title</h3><div class="form-group"><label>Browser Tab Name</label><input type="text" id="tab-title-input" class="input-field" placeholder="The Secret Cipher"></div><div class="form-group"><label>Main Title</label><input type="text" id="main-title-input" class="input-field" placeholder="The Secret Cipher"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeTitle()">Save</button><button class="btn-dialog-no" onclick="closeChangeTitle()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="notes-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Notes</h3><div class="form-group"><label>Tagline (Below title)</label><textarea id="note-tagline-input" class="input-field" style="min-height:50px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="form-group"><label>Footer (Bottom of page)</label><textarea id="note-footer-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeNotes()">Save</button><button class="btn-dialog-no" onclick="closeChangeNotes()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="popup-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Popups</h3><div class="form-group"><label>On completely wrong input</label><textarea id="popup-wrong-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="form-group"><label>On close input (1 character off)</label><textarea id="popup-close-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangePopup()">Save</button><button class="btn-dialog-no" onclick="closeChangePopup()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="pw-change-overlay"><div class="dialog-box"><h3 id="pw-change-title">Change password</h3><p id="pw-change-err" style="color:var(--accent);display:none;margin-bottom:10px;font-weight:bold;"></p><div class="form-group"><label>Current password</label><input type="password" id="pw-old" class="input-field allow-protected" placeholder="Enter current password..."></div><div class="form-group"><label>New password</label><input type="password" id="pw-new" class="input-field allow-protected" placeholder="Enter new password..."></div><div class="form-group"><label>Confirm new password</label><input type="password" id="pw-confirm" class="input-field allow-protected" placeholder="Confirm your new password..."></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save allow-protected" onclick="submitChangePw()">Save</button><button class="btn-dialog-no allow-protected" onclick="closeChangePw()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="hint-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Hints</h3><div class="form-group"><label>Hint 1 (For Main Pass)</label><textarea id="hint1-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="form-group"><label>Hint 2 (For Sub Pass)</label><textarea id="hint2-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeHints()">Save</button><button class="btn-dialog-no" onclick="closeChangeHints()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="secret-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Secret Messages</h3><div class="form-group"><label>Main Message</label><textarea id="secret-normal-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;" placeholder="Enter message..."></textarea></div><div class="form-group"><label>Sub Message</label><textarea id="secret-secondary-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;" placeholder="Enter message..."></textarea></div><div class="form-group"><label>Admin Message</label><textarea id="secret-admin-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;" placeholder="Enter message..."></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeSecret()">Save</button><button class="btn-dialog-no" onclick="closeChangeSecret()">Cancel</button></div></div></div>
+<div class="dialog-overlay" id="secret-display-overlay"><div class="dialog-box"><h3 style="color:#e84393;">💌 Secret Message</h3><p>Copy this and follow the instructions!</p><div class="output-box allow-protected" id="secret-display-text" style="min-height:60px;margin-bottom:16px;font-weight:bold;cursor:pointer;text-align:center;"></div><div class="dialog-actions"><button class="btn-dialog-yes allow-protected" id="btn-secret-copy" style="background:#e84393;border-color:#e84393;" onclick="copySecretDisplay()">Copy</button><button class="btn-dialog-no allow-protected" onclick="closeSecretDisplay()">Close</button></div></div></div>
+<div class="dialog-overlay" id="admin-secret-overlay"><div class="dialog-box"><h3>💖 Admin Note 💖</h3><div id="admin-secret-content"></div><div class="dialog-actions"><button class="btn-dialog-no allow-protected" onclick="closeAdminSecretDisplay()">Close</button></div></div></div>
+<div class="dialog-overlay" id="congrats-overlay"><div class="dialog-box" style="border-color:#e84393;box-shadow:6px 6px 0 rgba(232,67,147,0.2);"><div style="font-size:3rem;margin-bottom:10px;">🎉💖🎉</div><h3 style="color:#e84393;">Amazing!</h3><p>You've successfully decoded the hidden message:</p><div id="congrats-msg" style="font-size:1.1rem;font-weight:900;color:var(--accent2);padding:16px;background:rgba(44,62,122,.05);border:2px dashed var(--accent2);margin-bottom:20px;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save allow-protected" style="background:#e84393;border-color:#e84393;" onclick="closeCongrats()">Close</button></div></div></div>
+
+<!-- ── INITIAL SETUP SCREEN ── -->
+<div id="setup-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;padding:20px;">
+  <div class="dialog-box" style="max-width:450px;width:100%;">
+    <h3 style="color:var(--accent);">Initialize Security 🔒</h3>
+    <p style="margin-bottom:20px;">No passwords set. Please initialize the system.<br><span style="font-size:11px;color:var(--muted);">(The source code only saves SHA-256 hashes, not raw passwords)</span></p>
+    <div class="form-group"><input type="password" id="setup-founder"   class="input-field" placeholder="Founder Password..."></div>
+    <div class="form-group"><input type="password" id="setup-admin"     class="input-field" placeholder="Admin Password..."></div>
+    <div class="form-group"><input type="password" id="setup-normal"    class="input-field" placeholder="Main Password (User)..."></div>
+    <div class="form-group"><input type="password" id="setup-secondary" class="input-field" placeholder="Sub Password (User)..."></div>
+    <button class="btn-dialog-yes btn-save" style="width:100%;margin-top:10px;" onclick="submitSetup()">Save & Initialize</button>
+  </div>
+</div>
 
 <!-- ── FIREBASE SDK ── -->
 <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-app-compat.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-database-compat.min.js"></script>
 
-<!-- ── APP MODULES (load order matters) ── -->
-<script src="js/core/config.js"></script>
-<script src="js/core/state.js"></script>
-<script src="js/core/firebase.js"></script>
-<script src="js/core/cipher.js"></script>
-<script src="js/modules/auth.js"></script>
-<script src="js/modules/counters.js"></script>
-<script src="js/modules/logs.js"></script>
-<script src="js/modules/analytics.js"></script>
-<script src="js/modules/notifications.js"></script>
-<script src="js/modules/dialogs.js"></script>
-<script src="js/modules/ipmanager.js"></script>
-<script src="js/ui/nav.js"></script>
-<script src="js/ui/menus.js"></script>
-<script src="js/ui/render.js"></script>
+<!-- ── APP SCRIPTS (load order matters) ── -->
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/geo.js"></script>
+<script src="js/cipher.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/menus.js"></script>
+<script src="js/roles.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/logs.js"></script>
+<script src="js/firebase.js"></script>
 <script src="js/app.js"></script>
+
 </body>
 </html>

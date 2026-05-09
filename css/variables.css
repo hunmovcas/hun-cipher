@@ -1,0 +1,28 @@
+/* ══════════════════════════════════════════
+   RESET & CSS VARIABLES
+   ══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #f5f0e8;
+  --ink:     #1a1a2e;
+  --card:    #fffdf7;
+  --border:  #d4c9b0;
+  --accent:  #c0392b;
+  --accent2: #2c3e7a;
+  --orange:  #b45309;
+  --founder: #8e44ad;
+  --muted:   #8a7f6e;
+  --secure:  #27ae60;
+}
+
+/* ── RBAC UI OPTIMIZATION ── */
+body:not(.role-founder) .founder-only { display: none !important; }
+body.role-founder .admin-only         { display: none !important; }
+
+/* ── PROTECTED MODE ── */
+body.is-protected .adm-item:not(.allow-protected) { opacity: 0.35; pointer-events: none; filter: grayscale(1); }
+body.is-protected .btn-del-ip,
+body.is-protected .btn-block-ip       { display: none !important; }
+#shield-status-icon                   { transition: color 0.3s; }
+body.is-protected #shield-status-icon { color: var(--secure); }
