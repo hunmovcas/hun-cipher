@@ -7,6 +7,20 @@ function initFirebase() {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
 
+    // ── AUTO-MIGRATION DỮ LIỆU CŨ ──
+    // Quét kiểm tra xem mảng offsets mới đã tồn tại chưa
+    db.ref('settings/counter_offsets').once('value', function(snap) {
+      if (!snap.exists()) {
+        // Nếu chưa tồn tại (chạy lần đầu sau update), tiến hành copy toàn bộ dữ liệu từ counters cũ
+        db.ref('counters').once('value', function(oldSnap) {
+          if (oldSnap.exists()) {
+            db.ref('settings/counter_offsets').set(oldSnap.val());
+            console.log("Migration Successful: Legacy counters saved as offsets.");
+          }
+        });
+      }
+    });
+
     db.ref('settings/passwords_v3').on('value', function(snap) {
       if (snap.exists() && snap.val().founder) {
         currentHashes.normal    = snap.val().normal;
@@ -95,14 +109,10 @@ function initFirebase() {
 /* ── INCREMENT COUNTERS & PUSH LOG ── */
 function fbIncrement(type) {
   if (!db) return;
-  var keyMap = { view: 'outer', login_admin: 'admin', login_founder: 'founder' };
 
   if (type === 'view') {
     if (_sessionLogged) return;
     _sessionLogged = true;
-    if (localStorage.getItem('hun_is_admin') !== 'true') {
-      db.ref('counters/real_visitors').transaction(function(n) { return (n||0) + 1; });
-    }
   }
 
   var deviceId = localStorage.getItem('hun_device_id');
@@ -111,17 +121,9 @@ function fbIncrement(type) {
     localStorage.setItem('hun_device_id', deviceId);
   }
 
-  if (type === 'login_normal' || type === 'login_secondary') {
-    var subKey = type === 'login_normal' ? 'inner_normal' : 'inner_secondary';
-    db.ref('counters/' + subKey).transaction(function(n) { return (n||0) + 1; });
-  } else {
-    db.ref('counters/' + keyMap[type]).transaction(function(n) { return (n||0) + 1; });
-  }
-
-  var logType = (type === 'login_secondary') ? 'login_normal' : type;
   var ua = navigator.userAgent;
   var logData = {
-    type: logType, ts: Date.now(), ua: ua,
+    type: type, ts: Date.now(), ua: ua,
     browser: _detectBrowser(ua), device: _detectDevice(ua), os: _detectOS(ua),
     lang: navigator.language || '',
     tz: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
@@ -131,10 +133,11 @@ function fbIncrement(type) {
 
   function pushData(data) {
     db.ref('logs').push(data).then(function(snap) {
-      if (type === 'view')                                       _sessionKeys.view       = snap.key;
-      else if (type === 'login_normal' || type === 'login_secondary') { _sessionKeys.normal = snap.key; _sessionKeys.normalType = type; }
-      else if (type === 'login_admin')                           _sessionKeys.admin      = snap.key;
-      else if (type === 'login_founder')                         _sessionKeys.founder    = snap.key;
+      if (type === 'view')                           _sessionKeys.view      = snap.key;
+      else if (type === 'login_normal')              _sessionKeys.normal    = snap.key;
+      else if (type === 'login_secondary')           _sessionKeys.secondary = snap.key;
+      else if (type === 'login_admin')               _sessionKeys.admin     = snap.key;
+      else if (type === 'login_founder')             _sessionKeys.founder   = snap.key;
     });
   }
 
@@ -143,26 +146,79 @@ function fbIncrement(type) {
     .catch(function()   { logData.geoSrc = 0; pushData(logData); });
 }
 
+/* ── APPLY COMPUTED COUNTS ── */
+function applyCounts() {
+  _vOuter   = Math.max(0, _rawCounts.outer + (_offsets.outer || 0));
+  _vReal    = Math.max(0, _rawCounts.real_visitors + (_offsets.real_visitors || 0));
+  _vNormal  = Math.max(0, _rawCounts.inner_normal + (_offsets.inner_normal || 0));
+  _vSec     = Math.max(0, _rawCounts.inner_secondary + (_offsets.inner_secondary || 0));
+  _vAdmin   = Math.max(0, _rawCounts.admin + (_offsets.admin || 0));
+  _vFounder = Math.max(0, _rawCounts.founder + (_offsets.founder || 0));
+  updateStatsUI();
+}
+
 /* ── LISTEN: outer only (before login) ── */
 function fbListenOuter() {
   if (!db) return;
-  db.ref('counters/outer').on('value', function(s) { _vOuter = s.val()||0; updateStatsUI(); });
+  db.ref('logs').orderByChild('type').equalTo('view').on('value', function(snap) {
+    var cOut = 0;
+    snap.forEach(function(c) {
+      if (c.val().ts >= _CUTOFF_TS) cOut++;
+    });
+    _rawCounts.outer = cOut;
+    applyCounts();
+  });
+  db.ref('settings/counter_offsets').on('value', function(snap) {
+    if (snap.exists()) _offsets = snap.val();
+    applyCounts();
+  });
 }
 
 /* ── LISTEN: all counters + logs (after login) ── */
 function fbListenAll() {
   if (!db) return;
-  db.ref('counters/outer').on('value',          function(s) { _vOuter   = s.val()||0; updateStatsUI(); });
-  db.ref('counters/inner_normal').on('value',   function(s) { _vNormal  = s.val()||0; updateStatsUI(); });
-  db.ref('counters/inner_secondary').on('value',function(s) { _vSec     = s.val()||0; updateStatsUI(); });
-  db.ref('counters/admin').on('value',          function(s) { _vAdmin   = s.val()||0; updateStatsUI(); });
-  db.ref('counters/founder').on('value',        function(s) { _vFounder = s.val()||0; updateStatsUI(); });
-  db.ref('counters/real_visitors').on('value',  function(s) { _vReal    = s.val()||0; updateStatsUI(); });
+  
+  db.ref('logs').off(); // Clear any previous listeners to prevent overlap
+  db.ref('settings/counter_offsets').off();
+
+  db.ref('settings/counter_offsets').on('value', function(s) {
+    if (s.exists()) _offsets = s.val();
+    applyCounts();
+  });
 
   db.ref('logs').on('value', function(snap) {
     var list = [];
-    snap.forEach(function(c) { list.push(Object.assign({ _k: c.key }, c.val())); });
+    var cOut = 0, cNorm = 0, cSec = 0, cAdm = 0, cFou = 0;
+    var uniqueDevs = new Set();
+    
+    snap.forEach(function(c) {
+      var val = c.val();
+      list.push(Object.assign({ _k: c.key }, val));
+      
+      // Calculate dynamic counters exactly post-cutoff
+      if (val.ts >= _CUTOFF_TS) {
+        if (val.type === 'view') {
+          cOut++;
+          if (val.deviceId) uniqueDevs.add(val.deviceId);
+          else if (val.ip) uniqueDevs.add(val.ip);
+        }
+        else if (val.type === 'login_normal') cNorm++;
+        else if (val.type === 'login_secondary') cSec++;
+        else if (val.type === 'login_admin') cAdm++;
+        else if (val.type === 'login_founder') cFou++;
+      }
+    });
+
     _allLogs = list.reverse();
+    _rawCounts.outer = cOut;
+    _rawCounts.real_visitors = uniqueDevs.size;
+    _rawCounts.inner_normal = cNorm;
+    _rawCounts.inner_secondary = cSec;
+    _rawCounts.admin = cAdm;
+    _rawCounts.founder = cFou;
+
+    applyCounts();
+
     var logScreen = document.getElementById('log-screen');
     if (logScreen && logScreen.style.display === 'block') {
       renderLogs();

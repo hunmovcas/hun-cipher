@@ -48,7 +48,7 @@
 .log-title em { font-style: normal; color: var(--orange); }
 .log-header-right { display: flex; align-items: center; gap: 10px; }
 
-.log-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+.log-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
 .stat-card { background: var(--card); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 16px 20px; text-align: center; cursor: default; transition: transform .15s, box-shadow .15s; }
 .stat-card:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
 .stat-num { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; line-height: 1; }
@@ -103,5 +103,5 @@
 .realtime-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #27ae60; margin-right: 5px; animation: pulse-dot 2s ease-in-out infinite; }
 .realtime-label { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(39,174,96,.7); letter-spacing: .5px; display: flex; align-items: center; }
 
-@media (max-width: 800px) { .log-stats { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) { .log-stats { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 500px) { .log-stats { grid-template-columns: repeat(2, 1fr); } .log-date-group { display: none; } }

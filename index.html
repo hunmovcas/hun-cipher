@@ -31,8 +31,8 @@
       <div id="switch-dropdown" class="dropdown-menu" style="text-align:center;width:max-content;min-width:200px;">
         <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:bold;letter-spacing:4px;color:var(--muted);margin-bottom:20px;">SWITCH ROLE</div>
         <div style="display:flex;justify-content:center;gap:18px;align-items:center;">
-          <span class="switch-icon" onclick="switchRole('normal')"    title="Main Pass">🔒</span>
           <span class="switch-icon" onclick="switchRole('secondary')" title="Sub Pass">🗝</span>
+          <span class="switch-icon" onclick="switchRole('normal')"    title="Main Pass">🔒</span>
           <span class="switch-icon" style="color:var(--orange);" onclick="switchRole('admin')" title="Admin">★</span>
           <span class="switch-icon" onclick="switchRole('founder')"   title="Founder">👑</span>
         </div>
@@ -99,8 +99,8 @@
       <div id="auth-dropdown" class="dropdown-menu">
         <div class="adm-section">
           <div class="adm-section-label">Session Breakdown</div>
-          <div class="adm-item" style="cursor:default" title="Main Pass">🔒 <strong id="drop-main"    style="margin-left:auto">0</strong></div>
           <div class="adm-item" style="cursor:default" title="Sub Pass">🗝  <strong id="drop-sub"     style="margin-left:auto">0</strong></div>
+          <div class="adm-item" style="cursor:default" title="Main Pass">🔒 <strong id="drop-main"    style="margin-left:auto">0</strong></div>
           <div class="adm-item" style="cursor:default" title="Admin">★      <strong id="drop-admin"   style="margin-left:auto">0</strong></div>
           <div class="adm-item founder-only" style="cursor:default" title="Founder">👑 <strong id="drop-founder" style="margin-left:auto">0</strong></div>
         </div>
@@ -153,8 +153,8 @@
           <div class="adm-section-label">Modify Data</div>
           <button class="adm-item edit"    onclick="admAdjustCounter(event,'outer')">Adjust 👁</button>
           <button class="adm-item success" onclick="admAdjustCounter(event,'real_visitors')">Adjust 👤</button>
-          <button class="adm-item edit"    onclick="admAdjustCounter(event,'inner_normal')">Adjust 🔑</button>
           <button class="adm-item edit"    onclick="admAdjustCounter(event,'inner_secondary')">Adjust 🗝</button>
+          <button class="adm-item edit"    onclick="admAdjustCounter(event,'inner_normal')">Adjust 🔑</button>
           <button class="adm-item edit"    onclick="admAdjustCounter(event,'admin')">Adjust ★</button>
           <button class="adm-item founder" onclick="admAdjustCounter(event,'founder')">Adjust 👑</button>
         </div>
@@ -163,8 +163,8 @@
           <div class="adm-section-label">Reset Data</div>
           <button class="adm-item danger" onclick="admClearCounter(event,'outer')"           title="Reset Total Views">Reset 👁</button>
           <button class="adm-item danger" onclick="admClearCounter(event,'real_visitors')"   title="Reset Unique Visitors">Reset 👤</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'inner_normal')"    title="Reset Main Pass">Reset 🔑</button>
           <button class="adm-item danger" onclick="admClearCounter(event,'inner_secondary')" title="Reset Sub Pass">Reset 🗝</button>
+          <button class="adm-item danger" onclick="admClearCounter(event,'inner_normal')"    title="Reset Main Pass">Reset 🔑</button>
           <button class="adm-item danger" onclick="admClearCounter(event,'admin')"           title="Reset Admin Pass">Reset ★</button>
           <button class="adm-item danger" onclick="admClearCounter(event,'founder')"         title="Reset Founder Pass">Reset 👑</button>
         </div>
@@ -223,15 +223,17 @@
     </div>
     <div class="log-stats" id="log-stats-grid">
       <div class="stat-card clickable allow-protected" id="sc-all"     onclick="setFilter('all')">         <div class="stat-num red"    id="stat-outer">–</div>  <div class="stat-label">👁 Total Views</div></div>
-      <div class="stat-card allow-protected"           id="sc-real">                                        <div class="stat-num green"  id="stat-real">–</div>   <div class="stat-label" style="color:#27ae60;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div></div>
-      <div class="stat-card clickable allow-protected" id="sc-normal"  onclick="setFilter('login_normal')"><div class="stat-num blue"   id="stat-inner">–</div>  <div class="stat-label">🔒 Users</div></div>
+      <div class="stat-card allow-protected"           id="sc-real">                                       <div class="stat-num green"  id="stat-real">–</div>   <div class="stat-label" style="color:#27ae60;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div></div>
+      <div class="stat-card clickable allow-protected" id="sc-sec"     onclick="setFilter('login_secondary')"><div class="stat-num blue"   id="stat-sec">–</div>    <div class="stat-label">🗝 Sub</div></div>
+      <div class="stat-card clickable allow-protected" id="sc-normal"  onclick="setFilter('login_normal')"><div class="stat-num blue"   id="stat-inner">–</div>  <div class="stat-label">🔒 Main</div></div>
       <div class="stat-card clickable allow-protected" id="sc-admin"   onclick="setFilter('login_admin')"> <div class="stat-num orange" id="stat-admin">–</div>  <div class="stat-label">★ Admin</div></div>
       <div class="stat-card clickable allow-protected" id="sc-founder" onclick="setFilter('login_founder')"><div class="stat-num" style="color:var(--founder);" id="stat-founder">–</div><div class="stat-label">👑 Founder</div></div>
     </div>
     <div class="log-filters">
       <button class="filter-btn active allow-protected" onclick="setFilter('all')"          id="f-all">All</button>
       <button class="filter-btn allow-protected"        onclick="setFilter('view')"         id="f-view">👁 Page view</button>
-      <button class="filter-btn allow-protected"        onclick="setFilter('login_normal')" id="f-normal">🔒 Users</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('login_secondary')" id="f-sec">🗝 Sub</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('login_normal')" id="f-normal">🔒 Main</button>
       <button class="filter-btn allow-protected"        onclick="setFilter('login_admin')"  id="f-admin">★ Admin</button>
       <button class="filter-btn allow-protected"        onclick="setFilter('login_founder')"id="f-founder">👑 Founder</button>
       <span class="log-count" id="log-count"></span>
@@ -264,7 +266,8 @@
         <div class="ip-stats-title">Unique Devices (Fingerprinted)</div>
         <div class="ip-mode-tabs">
           <button class="ip-mode-tab active allow-protected" onclick="setIpMode('all')"     id="ipt-all">All</button>
-          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('normal')"  id="ipt-normal">🔒 Users</button>
+          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('sec')"     id="ipt-sec">🗝 Sub</button>
+          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('normal')"  id="ipt-normal">🔒 Main</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('admin')"   id="ipt-admin">★ Admin</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('founder')" id="ipt-founder">👑 Founder</button>
         </div>

@@ -11,7 +11,10 @@ function loadLogs() {
   statusEl.style.display = 'block'; tableEl.style.display = 'none';
   db.ref('logs').orderByChild('ts').once('value', function(snap) {
     _allLogs = [];
-    snap.forEach(function(c) { _allLogs.push(Object.assign({ _k: c.key }, c.val())); });
+    snap.forEach(function(c) {
+      var val = c.val();
+      if (val.ts >= _CUTOFF_TS) _allLogs.push(Object.assign({ _k: c.key }, val));
+    });
     _allLogs.reverse();
     statusEl.style.display = 'none';
     _page = 1;
@@ -59,27 +62,28 @@ function geoSrcBadge(src) {
 }
 
 function badgeHtml(type) {
-  if (type === 'view')         return '<span class="badge badge-view"><span class="badge-icon">👁</span>Page view</span>';
-  if (type === 'login_normal') return '<span class="badge badge-login_normal"><span class="badge-icon">🔒</span>User</span>';
-  if (type === 'login_founder')return '<span class="badge badge-login_admin" style="background:rgba(142,68,173,.1);color:var(--founder);border-color:rgba(142,68,173,.3)"><span class="badge-icon">👑</span>Founder</span>';
+  if (type === 'view')            return '<span class="badge badge-view"><span class="badge-icon">👁</span>Page view</span>';
+  if (type === 'login_secondary') return '<span class="badge badge-login_normal" style="background:rgba(44,62,122,.05);color:var(--accent2);border-color:rgba(44,62,122,.2)"><span class="badge-icon">🗝</span>Sub</span>';
+  if (type === 'login_normal')    return '<span class="badge badge-login_normal"><span class="badge-icon">🔒</span>Main</span>';
+  if (type === 'login_founder')   return '<span class="badge badge-login_admin" style="background:rgba(142,68,173,.1);color:var(--founder);border-color:rgba(142,68,173,.3)"><span class="badge-icon">👑</span>Founder</span>';
   return '<span class="badge badge-login_admin"><span class="badge-icon">★</span>Admin</span>';
 }
 
 function labelType(t) {
-  return t==='view' ? '👁 Page view' : t==='login_normal' ? '🔒 User' : t==='login_founder' ? '👑 Founder' : '★ Admin';
+  return t==='view' ? '👁 Page view' : t==='login_secondary' ? '🗝 Sub' : t==='login_normal' ? '🔒 Main' : t==='login_founder' ? '👑 Founder' : '★ Admin';
 }
 
 function setFilter(type) {
   _filter = type; _page = 1;
-  ['all','view','login_normal','login_admin','login_founder'].forEach(function(t) {
-    var id = 'f-' + (t==='login_normal'?'normal':t==='login_admin'?'admin':t==='login_founder'?'founder':t);
+  ['all','view','login_secondary','login_normal','login_admin','login_founder'].forEach(function(t) {
+    var id = 'f-' + (t==='login_normal'?'normal':t==='login_secondary'?'sec':t==='login_admin'?'admin':t==='login_founder'?'founder':t);
     var el = document.getElementById(id);
     if (el) el.classList.toggle('active', t === type);
   });
-  ['sc-all','sc-normal','sc-admin','sc-founder','sc-real'].forEach(function(id) {
+  ['sc-all','sc-sec','sc-normal','sc-admin','sc-founder','sc-real'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.classList.remove('sel');
   });
-  var map = { all:'sc-all', login_normal:'sc-normal', login_admin:'sc-admin', login_founder:'sc-founder' };
+  var map = { all:'sc-all', login_secondary:'sc-sec', login_normal:'sc-normal', login_admin:'sc-admin', login_founder:'sc-founder' };
   if (map[type]) { var el = document.getElementById(map[type]); if (el) el.classList.add('sel'); }
   renderLogs();
 }
@@ -164,11 +168,10 @@ function doDeleteSingleLog() {
   if (row) { row.style.opacity = '0'; setTimeout(function() { row.remove(); }, 300); }
   var trashData = Object.assign({}, logObj); delete trashData._k; trashData.deletedAt = Date.now();
   var updates = {}; updates['trash/logs/' + key] = trashData; updates['logs/' + key] = null;
-  var cMap = { view:'outer', login_normal:'inner_normal', login_secondary:'inner_secondary', login_admin:'admin', login_founder:'founder' };
+  
   db.ref().update(updates, function(err) {
     if (err) { showToast('⚠ Error wiping log!'); return; }
     showToast('✓ Log moved to trash!');
-    var ref = cMap[type]; if (ref) db.ref('counters/' + ref).transaction(function(n) { return Math.max(0, (n||0) - 1); });
     _pendingSingleDelete = null;
   });
 }
@@ -187,11 +190,7 @@ function doDeleteDeviceLogs() {
   if (_isProtected) { showToast('System is protected!'); return; }
   closeConfirm();
   if (!db || !_pendingDeleteKeys || !_pendingDeleteKeys.length) return;
-  var deduct = { view:0, login_normal:0, login_secondary:0, login_admin:0, login_founder:0 };
-  _pendingDeleteKeys.forEach(function(k) {
-    var log = _allLogs.find(function(l) { return l._k === k; });
-    if (log) deduct[log.type] = (deduct[log.type] || 0) + 1;
-  });
+  
   if (_pendingDeleteRow) {
     _pendingDeleteRow.style.opacity = '0'; _pendingDeleteRow.style.transform = 'scale(0.95)';
     setTimeout(function() { if (_pendingDeleteRow) _pendingDeleteRow.remove(); }, 300);
@@ -201,12 +200,6 @@ function doDeleteDeviceLogs() {
   db.ref().update(updates, function(err) {
     if (err) { showToast('⚠ Error deleting traces!'); return; }
     showToast('✓ IP completely wiped!');
-    if (deduct.view > 0)            db.ref('counters/outer').transaction(function(n)             { return Math.max(0,(n||0)-deduct.view); });
-    if (deduct.login_normal > 0)    db.ref('counters/inner_normal').transaction(function(n)      { return Math.max(0,(n||0)-deduct.login_normal); });
-    if (deduct.login_secondary > 0) db.ref('counters/inner_secondary').transaction(function(n)   { return Math.max(0,(n||0)-deduct.login_secondary); });
-    if (deduct.login_admin > 0)     db.ref('counters/admin').transaction(function(n)             { return Math.max(0,(n||0)-deduct.login_admin); });
-    if (deduct.login_founder > 0)   db.ref('counters/founder').transaction(function(n)           { return Math.max(0,(n||0)-deduct.login_founder); });
-    db.ref('counters/real_visitors').transaction(function(n) { return Math.max(0,(n||0)-1); });
     _pendingDeleteKeys = [];
   });
 }
@@ -251,8 +244,6 @@ function restoreLog(key) {
     db.ref().update(updates, function(err) {
       if (err) { showToast('⚠ Error restoring log!'); return; }
       showToast('✓ Log restored!');
-      var cMap = { view:'outer', login_normal:'inner_normal', login_secondary:'inner_secondary', login_admin:'admin', login_founder:'founder' };
-      var ref = cMap[type]; if (ref) db.ref('counters/' + ref).transaction(function(n) { return (n||0) + 1; });
       openTrash();
     });
   });
@@ -261,7 +252,7 @@ function restoreLog(key) {
 /* ── DEVICE FINGERPRINT STATS ── */
 function setIpMode(mode) {
   _ipMode = mode;
-  ['all','normal','admin','founder'].forEach(function(m) {
+  ['all','normal','sec','admin','founder'].forEach(function(m) {
     var el = document.getElementById('ipt-'+m); if (el) el.classList.toggle('active', m === mode);
   });
   renderIpStats();
@@ -272,21 +263,23 @@ function buildDeviceMap(typeFilter) {
   var logs = _allLogs.slice().sort(function(a,b) { return a.ts - b.ts; });
   logs.forEach(function(log) {
     if (log.type === 'view') return;
-    if (typeFilter === 'normal'  && log.type !== 'login_normal')   return;
-    if (typeFilter === 'admin'   && log.type !== 'login_admin')    return;
-    if (typeFilter === 'founder' && log.type !== 'login_founder')  return;
+    if (typeFilter === 'sec'     && log.type !== 'login_secondary') return;
+    if (typeFilter === 'normal'  && log.type !== 'login_normal')    return;
+    if (typeFilter === 'admin'   && log.type !== 'login_admin')     return;
+    if (typeFilter === 'founder' && log.type !== 'login_founder')   return;
     var devId = log.deviceId || '', fp = (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
     var groupId = null;
     if (devId && idToGroup[devId]) groupId = idToGroup[devId];
     else if (fpToGroup[fp]) groupId = fpToGroup[fp];
     else { groupCounter++; groupId = 'G' + groupCounter; }
     if (devId) idToGroup[devId] = groupId; fpToGroup[fp] = groupId;
-    if (!map[groupId]) map[groupId] = { id: devId||log.ip||'Unknown Visitor', groupId: groupId, logKeys: [], devIds: [], ips: [], total:0, normal:0, admin:0, founder:0, lastTs:0, ip:log.ip||'', city:log.city||'', district:log.district||'', region:log.region||'', country:log.country||'', isp:log.isp||'', browser:log.browser||_detectBrowser(log.ua||''), device:log.device||_detectDevice(log.ua||''), os:log.os||_detectOS(log.ua||'') };
+    if (!map[groupId]) map[groupId] = { id: devId||log.ip||'Unknown Visitor', groupId: groupId, logKeys: [], devIds: [], ips: [], total:0, sec:0, normal:0, admin:0, founder:0, lastTs:0, ip:log.ip||'', city:log.city||'', district:log.district||'', region:log.region||'', country:log.country||'', isp:log.isp||'', browser:log.browser||_detectBrowser(log.ua||''), device:log.device||_detectDevice(log.ua||''), os:log.os||_detectOS(log.ua||'') };
     var entry = map[groupId];
     if (log._k) entry.logKeys.push(log._k);
     if (devId && entry.devIds.indexOf(devId) === -1) entry.devIds.push(devId);
     if (log.ip && entry.ips.indexOf(log.ip) === -1)  entry.ips.push(log.ip);
     entry.total++;
+    if (log.type === 'login_secondary') entry.sec++;
     if (log.type === 'login_normal')  entry.normal++;
     if (log.type === 'login_admin')   entry.admin++;
     if (log.type === 'login_founder') entry.founder++;
@@ -304,17 +297,18 @@ function renderIpStats() {
   var grid = document.getElementById('ip-stats-grid'); if (!grid) return;
   var cols = [
     { key:'all',     label:'All Users',  cls:'col-all',     numCls:'cnt-all',    barCls:'bar-all',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>' },
-    { key:'normal',  label:'🔒 Users',   cls:'col-normal',  numCls:'cnt-normal', barCls:'bar-normal', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+    { key:'sec',     label:'🗝 Sub',     cls:'col-normal',  numCls:'cnt-normal', barCls:'bar-normal', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+    { key:'normal',  label:'🔒 Main',    cls:'col-normal',  numCls:'cnt-normal', barCls:'bar-normal', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
     { key:'admin',   label:'★ Admin',    cls:'col-admin',   numCls:'cnt-admin',  barCls:'bar-admin',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
     { key:'founder', label:'👑 Founder', cls:'col-founder', numCls:'cnt-admin',  barCls:'bar-founder',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 4 8 11 2 4 5 16 19 16 22 4 16 11 12 4"></polygon><line x1="5" y1="20" x2="19" y2="20"></line></svg>' }
   ];
-  var showKeys = _ipMode === 'all' ? ['all','normal','admin','founder'] : [_ipMode];
+  var showKeys = _ipMode === 'all' ? ['all','sec','normal','admin','founder'] : [_ipMode];
   var filteredCols = cols.filter(function(c) { return showKeys.indexOf(c.key) !== -1; });
   var html = '';
 
   filteredCols.forEach(function(col) {
     var map = buildDeviceMap(col.key);
-    var cnt = function(e) { return col.key==='normal'?e.normal:col.key==='admin'?e.admin:col.key==='founder'?e.founder:e.total; };
+    var cnt = function(e) { return col.key==='sec'?e.sec:col.key==='normal'?e.normal:col.key==='admin'?e.admin:col.key==='founder'?e.founder:e.total; };
     var sorted = Object.values(map).sort(function(a,b) { return cnt(b) - cnt(a); });
     var top = sorted.slice(0, 8), maxCount = top.length ? cnt(top[0]) : 1;
     html += '<div class="ip-col-wrap"><div class="ip-col-head '+col.cls+'">'+col.icon+' '+esc(col.label)+'</div>';
@@ -342,7 +336,7 @@ function renderIpStats() {
     html += '</div>';
   });
 
-  grid.style.gridTemplateColumns = filteredCols.length===4?'repeat(4,1fr)':(filteredCols.length===1?'1fr':'repeat(auto-fit,minmax(200px,1fr))');
+  grid.style.gridTemplateColumns = filteredCols.length===5?'repeat(5,1fr)':(filteredCols.length===1?'1fr':'repeat(auto-fit,minmax(200px,1fr))');
   grid.innerHTML = html;
 }
 

@@ -142,13 +142,63 @@ function updateStatsUI() {
 
   var totalAuth = _vNormal + _vSec + _vAdmin + _vFounder;
   setNum('num-auth',    totalAuth);
-  setNum('drop-main',   _vNormal);
+  
+  // Update Dropdown Session Breakdown
   setNum('drop-sub',    _vSec);
+  setNum('drop-main',   _vNormal);
   setNum('drop-admin',  _vAdmin);
   setNum('drop-founder',_vFounder);
-  setNum('stat-inner',  _vNormal + _vSec);
+  
+  // Update UI Stats Bar
+  setNum('stat-sec',    _vSec);
+  setNum('stat-inner',  _vNormal);
   setNum('stat-admin',  _vAdmin);
   setNum('stat-founder',_vFounder);
+}
+
+/* ── ADJUST/RESET VIA OFFSETS ── */
+function admAdjustCounter(e, key) {
+  e.stopPropagation(); closeAllMenus();
+  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
+  _pendingAdjustKey = key;
+  var lbls = { outer: '👁', inner_normal: '🔑', inner_secondary: '🗝', admin: '★', founder: '👑', real_visitors: '👤' };
+  document.getElementById('adjust-title').textContent = 'Adjust ' + lbls[key];
+  var val = { outer: _vOuter, real_visitors: _vReal, inner_normal: _vNormal, inner_secondary: _vSec, admin: _vAdmin, founder: _vFounder }[key] || 0;
+  var inp = document.getElementById('adjust-input');
+  inp.value = val;
+  document.getElementById('adjust-overlay').classList.add('open');
+  setTimeout(function() { inp.focus(); inp.select(); }, 50);
+}
+
+function admClearCounter(e, key) {
+  e.stopPropagation(); closeAllMenus();
+  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
+  _pendingClearKey = key;
+  var lbls = { outer: '👁', inner_normal: '🔑', inner_secondary: '🗝', admin: '★', founder: '👑', real_visitors: '👤' };
+  document.getElementById('confirm-title').textContent = 'Reset ' + lbls[key] + '?';
+  document.getElementById('confirm-msg').innerHTML = 'This action will reset the visual counter to 0 without deleting actual log records.';
+  document.getElementById('confirm-yes').onclick = function() { doResetCounter(_pendingClearKey); };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function doAdjustCounter() {
+  var val = parseInt(document.getElementById('adjust-input').value) || 0;
+  if (val < 0) val = 0;
+  var key = _pendingAdjustKey;
+  closeAdjust();
+  if (!db || !key) return;
+
+  var computed = _rawCounts[key] || 0;
+  var newOffset = val - computed;
+  db.ref('settings/counter_offsets/' + key).set(newOffset, function() { showToast('✓ Updated successfully!'); });
+}
+
+function doResetCounter(key) {
+  closeConfirm();
+  if (!db || !key) return;
+  
+  var computed = _rawCounts[key] || 0;
+  db.ref('settings/counter_offsets/' + key).set(-computed, function() { showToast('✓ Counter reset!'); });
 }
 
 /* ── internal show/hide helpers ── */

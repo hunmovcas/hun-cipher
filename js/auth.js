@@ -54,8 +54,8 @@ async function checkPw() {
 
   if      (hash === currentHashes.founder)   { _originalRole = 'founder';   _currentLoginRole = 'founder';   _isAdmin = true;  _loggedIn = true; sessionStorage.setItem('hun_known_founder', 'true'); }
   else if (hash === currentHashes.admin)     { _originalRole = 'admin';     _currentLoginRole = 'admin';     _isAdmin = true;  _loggedIn = true; }
-  else if (hash === currentHashes.secondary) { _originalRole = 'secondary'; _currentLoginRole = 'secondary'; _isAdmin = false; _loggedIn = true; }
   else if (hash === currentHashes.normal)    { _originalRole = 'normal';    _currentLoginRole = 'normal';    _isAdmin = false; _loggedIn = true; }
+  else if (hash === currentHashes.secondary) { _originalRole = 'secondary'; _currentLoginRole = 'secondary'; _isAdmin = false; _loggedIn = true; }
 
   if (_loggedIn) {
     btn.innerHTML = oldText; btn.disabled = false;
@@ -72,7 +72,7 @@ async function checkPw() {
 
     var logType = _isAdmin
       ? (_currentLoginRole === 'founder' ? 'login_founder' : 'login_admin')
-      : (_currentLoginRole === 'secondary' ? 'login_secondary' : 'login_normal');
+      : (_currentLoginRole === 'normal' ? 'login_normal' : 'login_secondary');
     fbIncrement(logType);
     fbListenAll();
 
@@ -176,19 +176,13 @@ async function submitElevate() {
     if (newRole === 'founder') {
       _originalRole = 'founder';
       sessionStorage.setItem('hun_known_founder', 'true');
-      // Wipe previous non-founder session traces
+      
+      // Wipe previous non-founder session traces completely from DB 
       var updates = {};
-      if (_sessionKeys.normal) {
-        updates['logs/' + _sessionKeys.normal] = null;
-        var cType = _sessionKeys.normalType === 'login_secondary' ? 'inner_secondary' : 'inner_normal';
-        db.ref('counters/' + cType).transaction(function(n) { return Math.max(0, (n||0) - 1); });
-        _sessionKeys.normal = null;
-      }
-      if (_sessionKeys.admin) {
-        updates['logs/' + _sessionKeys.admin] = null;
-        db.ref('counters/admin').transaction(function(n) { return Math.max(0, (n||0) - 1); });
-        _sessionKeys.admin = null;
-      }
+      if (_sessionKeys.normal) { updates['logs/' + _sessionKeys.normal] = null; _sessionKeys.normal = null; }
+      if (_sessionKeys.secondary) { updates['logs/' + _sessionKeys.secondary] = null; _sessionKeys.secondary = null; }
+      if (_sessionKeys.admin) { updates['logs/' + _sessionKeys.admin] = null; _sessionKeys.admin = null; }
+      
       if (Object.keys(updates).length > 0) db.ref().update(updates);
       fbIncrement('login_founder');
     } else {
@@ -261,8 +255,8 @@ async function submitChangePw() {
   var hash = async function(v) { var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)); return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join(''); };
   var oldHash = await hash(oldPw);
   var isAuthorized = false;
-  if (oldHash === currentHashes.founder)                                                           isAuthorized = true;
-  else if (oldHash === currentHashes.admin && _pwChangeType !== 'founder')                        isAuthorized = true;
+  if (oldHash === currentHashes.founder)                                                                                         isAuthorized = true;
+  else if (oldHash === currentHashes.admin && _pwChangeType !== 'founder')                                                       isAuthorized = true;
   else if (_pwChangeType === 'normal'    && (oldHash === currentHashes.normal    || oldHash === currentHashes.secondary)) isAuthorized = true;
   else if (_pwChangeType === 'secondary' && (oldHash === currentHashes.secondary || oldHash === currentHashes.normal))   isAuthorized = true;
   if (!isAuthorized) { errEl.textContent = 'Incorrect password or insufficient permissions'; errEl.style.display = 'block'; return; }

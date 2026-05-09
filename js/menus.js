@@ -49,19 +49,14 @@ function doLogout(e) {
   sessionStorage.removeItem('hun_known_founder');
 
   if (db) {
-    db.ref('counters/outer').off();
-    db.ref('counters/inner_normal').off();
-    db.ref('counters/inner_secondary').off();
-    db.ref('counters/admin').off();
-    db.ref('counters/founder').off();
-    db.ref('counters/real_visitors').off();
+    db.ref('settings/counter_offsets').off();
     db.ref('logs').off();
     db.ref('notifications').off();
   }
 
   _loggedIn = false; _isAdmin = false; _hist = []; _hidx = -1;
   _currentLoginRole = 'normal'; _originalRole = 'normal';
-  _sessionKeys = { view: null, normal: null, normalType: null, admin: null, founder: null };
+  _sessionKeys = { view: null, normal: null, secondary: null, admin: null, founder: null };
 
   document.body.classList.remove('role-founder');
   document.getElementById('main-wrap').style.display   = 'none';
