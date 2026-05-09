@@ -18,6 +18,18 @@ function initFirebase() {
       }
     });
 
+    // Lắng nghe dữ liệu nhóm định danh Identities
+    db.ref('settings/identities').on('value', function(snap) {
+      _identities = snap.val() || {};
+      if (document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
+        if (typeof renderLogs === 'function') {
+          renderLogs();
+          renderUniqueLogs();
+          renderIpStats();
+        }
+      }
+    });
+
     db.ref('settings/passwords_v3').on('value', function(snap) {
       if (snap.exists() && snap.val().founder) {
         currentHashes.normal    = snap.val().normal;
@@ -151,12 +163,12 @@ function applyCounts() {
   _vSec      = Math.max(0, _rawCounts.inner_secondary + (_offsets.inner_secondary || 0));
   _vAdmin    = Math.max(0, _rawCounts.admin + (_offsets.admin || 0));
   _vFounder  = Math.max(0, _rawCounts.founder + (_offsets.founder || 0));
-  
+ 
   _vUNormal  = Math.max(0, (_rawCounts.unique_normal || 0) + (_offsets.unique_normal || 0));
   _vUSec     = Math.max(0, (_rawCounts.unique_secondary || 0) + (_offsets.unique_secondary || 0));
   _vUAdmin   = Math.max(0, (_rawCounts.unique_admin || 0) + (_offsets.unique_admin || 0));
   _vUFounder = Math.max(0, (_rawCounts.unique_founder || 0) + (_offsets.unique_founder || 0));
-  
+ 
   updateStatsUI();
 }
 
@@ -187,7 +199,7 @@ function fbListenOuter() {
 /* ── LISTEN: all counters + logs (after login) ── */
 function fbListenAll() {
   if (!db) return;
-  
+ 
   db.ref('logs').off();
   db.ref('settings/counter_offsets').off();
 
@@ -200,11 +212,11 @@ function fbListenAll() {
     var list = [];
     var cOut = 0, cNorm = 0, cSec = 0, cAdm = 0, cFou = 0;
     var uniqueDevs = new Set(), uNorm = new Set(), uSec = new Set(), uAdm = new Set(), uFou = new Set();
-    
+   
     snap.forEach(function(c) {
       var val = c.val();
       list.push(Object.assign({ _k: c.key }, val));
-      
+     
       var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip||'')+'|'+(val.device||'')+'|'+(val.os||'')+'|'+(val.browser||'')+'|'+(val.screen||'');
 
       if (val.ts >= _UNIQUE_CUTOFF_TS) {
@@ -226,14 +238,14 @@ function fbListenAll() {
 
     _allLogs = list.reverse();
     computeUniqueLogs();
-    
+   
     // Total Counts
     _rawCounts.outer = cOut;
     _rawCounts.inner_normal = cNorm;
     _rawCounts.inner_secondary = cSec;
     _rawCounts.admin = cAdm;
     _rawCounts.founder = cFou;
-    
+   
     // Unique Counts
     _rawCounts.real_visitors = uniqueDevs.size;
     _rawCounts.unique_normal = uNorm.size;

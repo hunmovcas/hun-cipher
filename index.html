@@ -163,6 +163,9 @@
           <div class="adm-section-label">System Logs</div>
           <button class="adm-item allow-protected" onclick="admGoLog(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> Traffic & Analytics</button>
           <button class="adm-item danger" onclick="openBlockManager()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg> Blocked IPs</button>
+          <div style="margin-top:12px;"></div>
+          <div class="adm-section-label">Identities</div>
+          <button class="adm-item success allow-protected" onclick="openIdentityManager()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Manage Identities</button>
         </div>
         <!-- Admin only security -->
         <div class="adm-section admin-only" style="display:none">
@@ -298,7 +301,7 @@
       <span class="log-count" id="log-count"></span>
     </div>
     <div class="log-search-row">
-      <input type="text" id="log-search" class="allow-protected" placeholder="Filter by ID, IP, city..." oninput="renderLogs()">
+      <input type="text" id="log-search" class="allow-protected" placeholder="Filter by ID, Name, IP, city..." oninput="renderLogs()">
       <div class="log-date-group">
         <label>From</label><input type="date" class="date-inp allow-protected" id="date-from" onchange="renderLogs()">
         <label>to</label>  <input type="date" class="date-inp allow-protected" id="date-to"   onchange="renderLogs()">
@@ -310,7 +313,7 @@
         <thead><tr>
           <th style="width:110px">Type</th>
           <th style="width:145px" class="sortable sort-desc allow-protected" id="th-ts" onclick="toggleSort('ts')">Timestamp <span class="sort-arrow"></span></th>
-          <th style="width:115px">ID</th>
+          <th style="width:115px">Identity</th>
           <th style="width:160px" class="sortable allow-protected" id="th-br" onclick="toggleSort('br')">Browser · OS <span class="sort-arrow"></span></th>
           <th>Location · IP · ISP</th>
           <th style="width:110px">Misc</th>
@@ -335,7 +338,7 @@
       <span class="log-count" id="log-count-u"></span>
     </div>
     <div class="log-search-row">
-      <input type="text" id="log-search-u" class="allow-protected" placeholder="Filter by ID, IP, city..." oninput="renderUniqueLogs()">
+      <input type="text" id="log-search-u" class="allow-protected" placeholder="Filter by ID, Name, IP, city..." oninput="renderUniqueLogs()">
       <div class="log-date-group">
         <label>From</label><input type="date" class="date-inp allow-protected" id="date-from-u" onchange="renderUniqueLogs()">
         <label>to</label>  <input type="date" class="date-inp allow-protected" id="date-to-u"   onchange="renderUniqueLogs()">
@@ -347,7 +350,7 @@
         <thead style="background:#27ae60;"><tr>
           <th style="width:110px; background:#27ae60;">Type</th>
           <th style="width:145px; background:#27ae60;" class="sortable sort-desc allow-protected" id="thu-ts" onclick="toggleSortU('ts')">Timestamp <span class="sort-arrow"></span></th>
-          <th style="width:115px; background:#27ae60;">ID</th>
+          <th style="width:115px; background:#27ae60;">Identity</th>
           <th style="width:160px; background:#27ae60;" class="sortable allow-protected" id="thu-br" onclick="toggleSortU('br')">Browser · OS <span class="sort-arrow"></span></th>
           <th style="background:#27ae60;">Location · IP · ISP</th>
           <th style="width:110px; background:#27ae60;">Misc</th>
@@ -430,6 +433,57 @@
 <div class="dialog-overlay" id="secret-display-overlay"><div class="dialog-box"><h3 style="color:#e84393;">💌 Secret Message</h3><p>Copy this and follow the instructions!</p><div class="output-box allow-protected" id="secret-display-text" style="min-height:60px;margin-bottom:16px;font-weight:bold;cursor:pointer;text-align:center;"></div><div class="dialog-actions"><button class="btn-dialog-yes allow-protected" id="btn-secret-copy" style="background:#e84393;border-color:#e84393;" onclick="copySecretDisplay()">Copy</button><button class="btn-dialog-no allow-protected" onclick="closeSecretDisplay()">Close</button></div></div></div>
 <div class="dialog-overlay" id="admin-secret-overlay"><div class="dialog-box"><h3>💖 Admin Note 💖</h3><div id="admin-secret-content"></div><div class="dialog-actions"><button class="btn-dialog-no allow-protected" onclick="closeAdminSecretDisplay()">Close</button></div></div></div>
 <div class="dialog-overlay" id="congrats-overlay"><div class="dialog-box" style="border-color:#e84393;box-shadow:6px 6px 0 rgba(232,67,147,0.2);"><div style="font-size:3rem;margin-bottom:10px;">🎉💖🎉</div><h3 style="color:#e84393;">Amazing!</h3><p>You've successfully decoded the hidden message:</p><div id="congrats-msg" style="font-size:1.1rem;font-weight:900;color:var(--accent2);padding:16px;background:rgba(44,62,122,.05);border:2px dashed var(--accent2);margin-bottom:20px;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save allow-protected" style="background:#e84393;border-color:#e84393;" onclick="closeCongrats()">Close</button></div></div></div>
+
+<!-- ── IDENTITY OVERLAYS ── -->
+<div class="dialog-overlay" id="identity-manager-overlay">
+  <div class="dialog-box" style="max-width:550px;width:95%;padding:30px;">
+    <h3 style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.4rem;margin-bottom:8px;color:var(--ink);">Identity Management</h3>
+    <p style="margin-bottom:24px;font-size:13px;color:var(--muted);">Combine multiple Device IDs into a single unified profile.</p>
+
+    <div style="text-align:left;">
+      <div class="form-group" style="margin-bottom:16px;">
+        <label style="font-weight:800;font-size:12px;color:var(--ink);margin-bottom:8px;display:block;">PROFILE NAME</label>
+        <input type="text" id="id-profile-name" class="input-field" placeholder="E.g., John Doe" style="padding:10px 12px;font-size:13px;">
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label style="font-weight:800;font-size:12px;color:var(--ink);margin-bottom:8px;display:block;">LINKED DEVICE IDS</label>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <select id="id-dev-select" class="input-field" style="flex:1;padding:8px 10px;font-size:12px;cursor:pointer;" onchange="handleSelectDevId(event)"></select>
+          <input type="text" id="id-dev-input" class="input-field" style="flex:1;padding:8px 10px;font-size:12px;" placeholder="Or type manually & Enter..." onkeydown="handleDevInputKey(event)">
+        </div>
+        <div id="id-tags-wrap" style="min-height:38px;padding:8px;border:1px dashed var(--border);border-radius:6px;background:rgba(0,0,0,0.02);display:flex;flex-wrap:wrap;align-items:center;"></div>
+      </div>
+      
+      <div style="display:flex; justify-content:center; margin-bottom:24px;">
+        <button class="btn-dialog-yes btn-save allow-protected" style="padding:8px 24px;font-size:13px;font-weight:bold;letter-spacing:0.5px;border-radius:6px;" onclick="saveIdentity()">Save Profile</button>
+      </div>
+
+      <div style="border-top:1px dashed var(--border);padding-top:20px;">
+        <label style="font-weight:800;font-size:12px;color:var(--ink);margin-bottom:12px;display:block;">ACTIVE PROFILES</label>
+        <div id="id-active-profiles" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+    </div>
+
+    <div class="dialog-actions" style="margin-top:24px; justify-content:center;">
+      <button class="btn-dialog-no allow-protected" style="padding:8px 32px;font-size:13px;border-radius:6px;" onclick="closeIdentityManager()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="identity-link-overlay">
+  <div class="dialog-box" style="max-width:420px;width:95%;padding:30px;">
+    <h3 style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.4rem;margin-bottom:8px;color:var(--ink);">Link Identity</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px;">Assign <strong id="link-id-display" style="color:var(--accent2);background:rgba(44,62,122,0.1);padding:2px 6px;border-radius:4px;"></strong> to an existing profile.</p>
+    <div class="form-group" style="text-align:left;margin-bottom:30px;">
+      <label style="font-weight:800;font-size:12px;color:var(--ink);margin-bottom:8px;display:block;">SELECT PROFILE</label>
+      <select id="link-profile-select" class="input-field" style="background:var(--bg);color:var(--ink);cursor:pointer;padding:12px;font-size:14px;border-radius:6px;"></select>
+    </div>
+    <div class="dialog-actions" style="display:flex; justify-content:center; gap:12px; margin-top:0;">
+      <button class="btn-dialog-yes btn-save allow-protected" style="padding:8px 24px;font-size:13px;border-radius:6px;" onclick="submitLinkIdentity()">Link Profile</button>
+      <button class="btn-dialog-no allow-protected" style="padding:8px 24px;font-size:13px;border-radius:6px;" onclick="closeLinkIdentity()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── INITIAL SETUP SCREEN ── -->
 <div id="setup-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;padding:20px;">

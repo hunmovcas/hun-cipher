@@ -2,6 +2,15 @@
    LOGS — loadLogs, renderLogs, renderIpStats, trash, delete, export
    ══════════════════════════════════════════ */
 
+/* ── HELPER IDENTITY ── */
+function getIdentityName(devId) {
+  if (!devId) return devId;
+  for (var name in _identities) {
+    if (_identities[name].indexOf(devId) !== -1) return name;
+  }
+  return devId;
+}
+
 /* ── COMPUTE UNIQUE LOGS ── */
 function computeUniqueLogs() {
   var seen = {};
@@ -48,7 +57,8 @@ function getFilteredLogs() {
   return _allLogs.filter(function(l) {
     if (_filter !== 'all' && l.type !== _filter) return false;
     if (search) {
-      var hay = [l.deviceId||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'',
+      var idName = l.deviceId ? getIdentityName(l.deviceId) : '';
+      var hay = [l.deviceId||'', idName||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'',
                  l.isp||'', l.browser||'', l.device||'', l.os||'', l.ua||'', l.tz||'', l.lang||'',
                  l.screen||'', labelType(l.type)].join(' ').toLowerCase();
       if (hay.indexOf(search) === -1) return false;
@@ -70,7 +80,8 @@ function getFilteredUniqueLogs() {
   return _uniqueLogs.filter(function(l) {
     if (_filterU !== 'all' && l.type !== _filterU) return false;
     if (search) {
-      var hay = [l.deviceId||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'',
+      var idName = l.deviceId ? getIdentityName(l.deviceId) : '';
+      var hay = [l.deviceId||'', idName||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'',
                  l.isp||'', l.browser||'', l.device||'', l.os||'', l.ua||'', l.tz||'', l.lang||'',
                  l.screen||'', labelType(l.type)].join(' ').toLowerCase();
       if (hay.indexOf(search) === -1) return false;
@@ -169,7 +180,16 @@ function generateRowHtml(log) {
   var ipStr = log.ip ? esc(log.ip) : '–', ispStr = log.isp ? esc(log.isp) : '';
   var coordStr = (log.latitude && log.longitude) ? '<a href="https://maps.google.com/?q='+log.latitude+','+log.longitude+'" target="_blank" style="color:var(--accent2);font-size:8px;text-decoration:none;" title="View map">🗺 '+String(log.latitude).slice(0,8)+','+String(log.longitude).slice(0,8)+'</a>' : '';
   var extra = [log.tz, log.screen].filter(Boolean).join(' · ');
-  var devIdStr = log.deviceId ? '<span class="dev-badge">' + esc(log.deviceId) + '</span>' : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
+  
+  // Xử lý Identity ID
+  var mappedName = log.deviceId ? getIdentityName(log.deviceId) : null;
+  var isIden = mappedName && mappedName !== log.deviceId;
+  var devIdStr = log.deviceId ? 
+    '<span class="dev-badge" style="' + (isIden ? 'background:rgba(39,174,96,0.1);color:#27ae60;border-color:rgba(39,174,96,0.3);' : '') + '">' + 
+    (isIden ? '👤 ' : '') + esc(mappedName) + '</span>' + 
+    ' <span style="cursor:pointer;font-size:10px;opacity:0.6;vertical-align:middle;margin-left:4px;" onclick="openLinkIdentity(\''+esc(log.deviceId)+'\')" title="Link to Profile">🔗</span>'
+    : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
+    
   var delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log" onclick="deleteSingleLog(\''+log._k+'\', \''+log.type+'\', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
   return '<tr><td>' + badgeHtml(log.type) + '</td><td><span style="color:var(--ink)">' + esc(dstr) + '</span></td><td>' + devIdStr + '</td><td><div class="cell-main">' + esc(browser) + '</div><div class="cell-sub">' + esc(device) + (os?' · '+esc(os):'') + '</div></td><td><div class="cell-loc">' + locHtml + postalStr + '</div><div class="cell-ip">🌐 ' + ipStr + (coordStr?' &nbsp;'+coordStr:'') + '</div>' + (ispStr?'<div class="cell-isp">'+ispStr+(log.asn?' · '+esc(log.asn):'')+'</div>':'') + '</td><td><div class="cell-sub">' + esc(extra) + '</div></td><td style="vertical-align:middle;">' + delBtn + '</td></tr>';
 }
@@ -252,7 +272,7 @@ function doDeleteSingleLog() {
   if (row) { row.style.opacity = '0'; setTimeout(function() { row.remove(); }, 300); }
   var trashData = Object.assign({}, logObj); delete trashData._k; trashData.deletedAt = Date.now();
   var updates = {}; updates['trash/logs/' + key] = trashData; updates['logs/' + key] = null;
-  
+ 
   db.ref().update(updates, function(err) {
     if (err) { showToast('⚠ Error wiping log!'); return; }
     showToast('✓ Log moved to trash!');
@@ -274,7 +294,7 @@ function doDeleteDeviceLogs() {
   if (_isProtected) { showToast('System is protected!'); return; }
   closeConfirm();
   if (!db || !_pendingDeleteKeys || !_pendingDeleteKeys.length) return;
-  
+ 
   if (_pendingDeleteRow) {
     _pendingDeleteRow.style.opacity = '0'; _pendingDeleteRow.style.transform = 'scale(0.95)';
     setTimeout(function() { if (_pendingDeleteRow) _pendingDeleteRow.remove(); }, 300);
@@ -343,22 +363,34 @@ function setIpMode(mode) {
 }
 
 function buildDeviceMap(typeFilter) {
-  var map = {}, idToGroup = {}, fpToGroup = {}, groupCounter = 0;
+  var map = {}, idToGroup = {}, fpToGroup = {}, profileToGroup = {}, groupCounter = 0;
   var logs = _allLogs.slice().sort(function(a,b) { return a.ts - b.ts; });
+  
   logs.forEach(function(log) {
     if (log.type === 'view') return;
     if (typeFilter === 'sec'     && log.type !== 'login_secondary') return;
     if (typeFilter === 'normal'  && log.type !== 'login_normal')    return;
     if (typeFilter === 'admin'   && log.type !== 'login_admin')     return;
     if (typeFilter === 'founder' && log.type !== 'login_founder')   return;
+    
     var devId = log.deviceId || '', fp = (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
+    var profileName = devId ? getIdentityName(devId) : null;
+    var isIden = profileName && profileName !== devId;
     var groupId = null;
-    if (devId && idToGroup[devId]) groupId = idToGroup[devId];
-    else if (fpToGroup[fp]) groupId = fpToGroup[fp];
+    
+    if (isIden) {
+      if (!profileToGroup[profileName]) { groupCounter++; profileToGroup[profileName] = 'G' + groupCounter; }
+      groupId = profileToGroup[profileName];
+    } else if (devId && idToGroup[devId]) { groupId = idToGroup[devId]; }
+    else if (fpToGroup[fp]) { groupId = fpToGroup[fp]; }
     else { groupCounter++; groupId = 'G' + groupCounter; }
+    
     if (devId) idToGroup[devId] = groupId; fpToGroup[fp] = groupId;
-    if (!map[groupId]) map[groupId] = { id: devId||log.ip||'Unknown Visitor', groupId: groupId, logKeys: [], devIds: [], ips: [], total:0, sec:0, normal:0, admin:0, founder:0, lastTs:0, ip:log.ip||'', city:log.city||'', district:log.district||'', region:log.region||'', country:log.country||'', isp:log.isp||'', browser:log.browser||_detectBrowser(log.ua||''), device:log.device||_detectDevice(log.ua||''), os:log.os||_detectOS(log.ua||'') };
+    
+    if (!map[groupId]) map[groupId] = { profile: (isIden ? profileName : null), id: devId||log.ip||'Unknown Visitor', groupId: groupId, logKeys: [], devIds: [], ips: [], total:0, sec:0, normal:0, admin:0, founder:0, lastTs:0, ip:log.ip||'', city:log.city||'', district:log.district||'', region:log.region||'', country:log.country||'', isp:log.isp||'', browser:log.browser||_detectBrowser(log.ua||''), device:log.device||_detectDevice(log.ua||''), os:log.os||_detectOS(log.ua||'') };
     var entry = map[groupId];
+    if (isIden && !entry.profile) entry.profile = profileName;
+
     if (log._k) entry.logKeys.push(log._k);
     if (devId && entry.devIds.indexOf(devId) === -1) entry.devIds.push(devId);
     if (log.ip && entry.ips.indexOf(log.ip) === -1)  entry.ips.push(log.ip);
@@ -401,9 +433,19 @@ function renderIpStats() {
       var rank = idx+1, rankCls = rank<=3?' rank-'+rank:'', count = cnt(entry), barPct = maxCount>0?Math.round(count/maxCount*100):0;
       var locStr = buildLocationStr(entry), accessInfo = [entry.browser, entry.device, entry.os].filter(Boolean).join(' · ');
       var lastStr = entry.lastTs ? new Date(entry.lastTs).toLocaleDateString('en-US')+' '+new Date(entry.lastTs).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '';
-      html += '<div class="ip-row"><div class="ip-rank'+rankCls+'">#'+rank+'</div><div class="ip-info">';
+      
       var ipDisplay = entry.ips.length>0 ? entry.ips[0]+(entry.ips.length>1?' (+'+(entry.ips.length-1)+')':'') : 'Unknown IP';
-      html += '<div class="ip-addr">🌐 '+esc(ipDisplay)+'</div>';
+      var profileTitle = entry.profile ? '<div style="font-weight:900;color:#27ae60;font-size:14px;margin-bottom:4px;display:flex;align-items:center;gap:4px;">👤 ' + esc(entry.profile) + ' <span style="cursor:pointer;font-size:12px;opacity:0.6;" onclick="openLinkIdentity(\''+(entry.devIds[0]||'')+'\')" title="Link to Profile">🔗</span></div>' : '';
+
+      html += '<div class="ip-row"><div class="ip-rank'+rankCls+'">#'+rank+'</div><div class="ip-info">';
+      if (profileTitle) html += profileTitle;
+      
+      html += '<div class="ip-addr" style="display:flex;align-items:center;gap:4px;">🌐 '+esc(ipDisplay);
+      if (!entry.profile && entry.devIds.length > 0) {
+        html += ' <span style="cursor:pointer;font-size:12px;opacity:0.6;" onclick="openLinkIdentity(\''+esc(entry.devIds[0])+'\')" title="Link to Profile">🔗</span>';
+      }
+      html += '</div>';
+      
       if (entry.devIds && entry.devIds.length>0) html += '<div style="margin-top:4px;margin-bottom:2px;">'+entry.devIds.map(function(id){ return '<span class="dev-badge" style="margin-right:4px;font-size:8px;">'+esc(id)+'</span>'; }).join('')+'</div>';
       if (locStr) html += '<div class="ip-location">📍 '+esc(locStr)+'</div>';
       if (accessInfo) html += '<div class="ip-isp">'+esc(accessInfo)+'</div>';
@@ -427,12 +469,14 @@ function renderIpStats() {
 /* ── CSV EXPORT ── */
 function exportCSV() {
   var list = getFilteredLogs();
-  var rows = [['Type','Timestamp','Device ID','IP Address','District','City','Region','Country','Postal Code','Coordinates','ISP','ASN','Browser','Device','OS','Timezone','Language','Screen','Geo Source']];
+  var rows = [['Type','Timestamp','Profile Name','Device ID','IP Address','District','City','Region','Country','Postal Code','Coordinates','ISP','ASN','Browser','Device','OS','Timezone','Language','Screen','Geo Source']];
   var srcMap = {1:'ipinfo.io', 2:'freeipapi.com', 3:'ipwho.is', 4:'cloudflare-trace', 5:'geojs.io', 6:'ipapi.co'};
   list.forEach(function(l) {
     var d = new Date(l.ts), dstr = d.toLocaleDateString('en-US') + ' ' + d.toLocaleTimeString('en-US');
     var coord = (l.latitude && l.longitude) ? l.latitude+','+l.longitude : '';
-    rows.push([labelType(l.type), dstr, l.deviceId||'', l.ip||'', l.district||'', l.city||'', l.region||'', l.country||'', l.postal||'', coord, l.isp||'', l.asn||'', l.browser||_detectBrowser(l.ua||''), l.device||_detectDevice(l.ua||''), l.os||_detectOS(l.ua||''), l.tz||'', l.lang||'', l.screen||'', srcMap[l.geoSrc]||'']);
+    var profile = l.deviceId ? getIdentityName(l.deviceId) : '';
+    profile = (profile === l.deviceId) ? '' : profile; 
+    rows.push([labelType(l.type), dstr, profile, l.deviceId||'', l.ip||'', l.district||'', l.city||'', l.region||'', l.country||'', l.postal||'', coord, l.isp||'', l.asn||'', l.browser||_detectBrowser(l.ua||''), l.device||_detectDevice(l.ua||''), l.os||_detectOS(l.ua||''), l.tz||'', l.lang||'', l.screen||'', srcMap[l.geoSrc]||'']);
   });
   var csv = rows.map(function(r) { return r.map(function(c) { return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
   var blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});

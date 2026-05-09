@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════
-   UI — render helpers, dialogs, toast, secret
+   UI — render helpers, dialogs, toast, secret, identity
    ══════════════════════════════════════════ */
 
 /* ── RENDER HELPERS ── */
@@ -81,6 +81,215 @@ function closeConfirm() {
 function closeAdjust() {
   _pendingAdjustKey = null;
   document.getElementById('adjust-overlay').classList.remove('open');
+}
+
+/* ── IDENTITY MANAGEMENT ── */
+var _editingProfile = null;
+var _tempIds = [];
+
+function openIdentityManager() {
+  if (_isProtected) { showToast('System is protected!'); return; }
+  closeAllMenus();
+  document.getElementById('identity-manager-overlay').classList.add('open');
+  resetIdentityForm();
+  populateUnassignedIds();
+  renderIdentityList();
+}
+function closeIdentityManager() {
+  document.getElementById('identity-manager-overlay').classList.remove('open');
+}
+
+function populateUnassignedIds() {
+  var allIds = new Set();
+  _allLogs.forEach(function(l) { if (l.deviceId) allIds.add(l.deviceId); });
+  
+  var assignedIds = new Set();
+  Object.values(_identities).forEach(function(arr) { 
+    arr.forEach(function(id) { assignedIds.add(id); });
+  });
+
+  var available = Array.from(allIds).filter(function(id) { return !assignedIds.has(id); });
+  var sel = document.getElementById('id-dev-select');
+  if (!sel) return;
+  
+  sel.innerHTML = '<option value="">-- Quick pick unassigned ID --</option>' +
+                  available.map(function(id) { return '<option value="'+esc(id)+'">'+esc(id)+'</option>'; }).join('');
+}
+
+function resetIdentityForm() {
+  _editingProfile = null;
+  _tempIds = [];
+  document.getElementById('id-profile-name').value = '';
+  document.getElementById('id-profile-name').disabled = false;
+  document.getElementById('id-dev-input').value = '';
+  var sel = document.getElementById('id-dev-select');
+  if (sel) sel.value = '';
+  renderTempIds();
+}
+
+function renderTempIds() {
+  var wrap = document.getElementById('id-tags-wrap');
+  if (_tempIds.length === 0) {
+    wrap.innerHTML = '<span style="color:var(--muted);font-size:12px;font-style:italic;">No IDs added yet...</span>';
+    return;
+  }
+  wrap.innerHTML = _tempIds.map(function(id, i) {
+    return '<span class="dev-badge" style="display:inline-flex;align-items:center;background:rgba(44,62,122,0.1);color:var(--accent2);border:1px solid rgba(44,62,122,0.2);padding:4px 8px;border-radius:4px;font-size:12px;font-weight:bold;margin-right:6px;margin-bottom:6px;">' + 
+           esc(id) + 
+           ' <span style="cursor:pointer;margin-left:6px;color:#e74c3c;font-size:14px;line-height:1;" onclick="removeTempId('+i+')" title="Remove">×</span></span>';
+  }).join('');
+}
+
+function handleSelectDevId(e) {
+  var val = e.target.value;
+  if (val && _tempIds.indexOf(val) === -1) {
+    _tempIds.push(val);
+    e.target.value = ''; 
+    renderTempIds();
+  }
+}
+
+function handleDevInputKey(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    var val = e.target.value.trim();
+    if (val && _tempIds.indexOf(val) === -1) {
+      _tempIds.push(val);
+      e.target.value = '';
+      renderTempIds();
+    }
+  }
+}
+
+function removeTempId(idx) {
+  _tempIds.splice(idx, 1);
+  renderTempIds();
+}
+
+function saveIdentity() {
+  if (_isProtected) { showToast('System is protected!'); return; }
+  var name = document.getElementById('id-profile-name').value.trim();
+  if (!name) { showToast('Profile name required!'); return; }
+  if (_tempIds.length === 0) { showToast('At least one Device ID required!'); return; }
+
+  if (db) {
+    var updates = {};
+    updates['settings/identities/' + name] = _tempIds;
+    db.ref().update(updates, function(err) {
+      if (!err) {
+        showToast('✓ Profile saved!');
+        _identities[name] = _tempIds.slice(); // Cập nhật local ngay lập tức
+        resetIdentityForm();
+        populateUnassignedIds();
+        renderIdentityList();
+        // Trigger render bảng log
+        if (typeof renderLogs === 'function') { renderLogs(); renderUniqueLogs(); renderIpStats(); }
+      } else {
+        showToast('⚠ Error saving profile');
+      }
+    });
+  }
+}
+
+function editIdentity(name) {
+  _editingProfile = name;
+  _tempIds = (_identities[name] || []).slice();
+  document.getElementById('id-profile-name').value = name;
+  document.getElementById('id-profile-name').disabled = true;
+  renderTempIds();
+}
+
+function removeIdentity(name) {
+  if (_isProtected) { showToast('System is protected!'); return; }
+  if (confirm('Delete profile "'+name+'"? Log records will revert to original IDs.')) {
+    if (db) {
+      db.ref('settings/identities/' + name).remove(function(err) {
+        if (!err) {
+          showToast('✓ Profile deleted');
+          delete _identities[name]; // Cập nhật local ngay lập tức
+          populateUnassignedIds();
+          renderIdentityList();
+          if (typeof renderLogs === 'function') { renderLogs(); renderUniqueLogs(); renderIpStats(); }
+          if (_editingProfile === name) resetIdentityForm();
+        }
+      });
+    }
+  }
+}
+
+function renderIdentityList() {
+  var listEl = document.getElementById('id-active-profiles');
+  if (!listEl) return;
+  var keys = Object.keys(_identities);
+  if (keys.length === 0) {
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border-radius:6px;border:1px dashed var(--border);">No active profiles yet.</div>';
+    return;
+  }
+  listEl.innerHTML = keys.map(function(k) {
+    var ids = _identities[k];
+    var tags = ids.map(function(id) { 
+      return '<span style="display:inline-block;background:rgba(44,62,122,0.08);color:var(--accent2);padding:3px 6px;border-radius:4px;margin:3px 6px 3px 0;font-size:11px;border:1px solid rgba(44,62,122,0.15);">'+esc(id)+'</span>'; 
+    }).join('');
+    
+    return '<div style="padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.02);">' +
+           '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">' +
+           '<div style="font-weight:800;color:var(--ink);font-size:14px;display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(k) + '</div>' +
+           '<div style="display:flex;gap:6px;"><button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;background:rgba(44,62,122,0.05);color:var(--accent2);font-weight:bold;cursor:pointer;" onclick="editIdentity(\''+esc(k)+'\')">Edit</button>' +
+           '<button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;color:#e74c3c;background:rgba(231,76,60,0.05);font-weight:bold;cursor:pointer;" onclick="removeIdentity(\''+esc(k)+'\')">Delete</button></div>' +
+           '</div>' +
+           '<div style="font-family:\'Space Mono\',monospace;margin-top:6px;">' + tags + '</div>' +
+           '</div>';
+  }).join('');
+}
+
+/* ── QUICK LINK IDENTITY ── */
+var _pendingLinkId = null;
+function openLinkIdentity(devId) {
+  if (_isProtected) { showToast('System is protected!'); return; }
+  _pendingLinkId = devId;
+  document.getElementById('link-id-display').textContent = devId;
+  var select = document.getElementById('link-profile-select');
+  var keys = Object.keys(_identities);
+  if (keys.length === 0) {
+    select.innerHTML = '<option value="">-- No profiles exist --</option>';
+    select.disabled = true;
+  } else {
+    select.innerHTML = '<option value="">-- Select Profile --</option>' + keys.map(function(k) {
+      return '<option value="'+esc(k)+'">'+esc(k)+'</option>';
+    }).join('');
+    select.disabled = false;
+  }
+  document.getElementById('identity-link-overlay').classList.add('open');
+}
+function closeLinkIdentity() {
+  document.getElementById('identity-link-overlay').classList.remove('open');
+}
+function submitLinkIdentity() {
+  var sel = document.getElementById('link-profile-select');
+  var profileName = sel.value;
+  if (!profileName || !_pendingLinkId) return;
+  var ids = (_identities[profileName] || []).slice();
+  if (ids.indexOf(_pendingLinkId) === -1) {
+    ids.push(_pendingLinkId);
+    if (db) {
+      db.ref('settings/identities/' + profileName).set(ids, function(err) {
+        if (!err) {
+          showToast('✓ ID linked to ' + profileName);
+          _identities[profileName] = ids.slice(); // Cập nhật local
+          closeLinkIdentity();
+          // Cập nhật giao diện lập tức
+          if (document.getElementById('identity-manager-overlay').classList.contains('open')) {
+            populateUnassignedIds();
+            renderIdentityList();
+          }
+          if (typeof renderLogs === 'function') { renderLogs(); renderUniqueLogs(); renderIpStats(); }
+        }
+      });
+    }
+  } else {
+    showToast('ID already in this profile');
+    closeLinkIdentity();
+  }
 }
 
 /* ── CONFIG DIALOGS ── */

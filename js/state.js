@@ -29,18 +29,19 @@ var _offsets   = { outer: 0, real_visitors: 0, inner_normal: 0, inner_secondary:
 var _vOuter = 0, _vReal = 0, _vNormal = 0, _vSec = 0, _vAdmin = 0, _vFounder = 0;
 var _vUNormal = 0, _vUSec = 0, _vUAdmin = 0, _vUFounder = 0;
 
-// Logs
+// Logs & Identities
 var _allLogs = [];
 var _uniqueLogs = [];
+var _identities = {}; // Stores mappings of ProfileName -> [DeviceIDs]
 
 // Notifications
 var _allNoti = [];
 
 // Pending action state
-var _pendingClearKey    = null;
-var _pendingAdjustKey   = null;
-var _pendingDeleteKeys  = [];
-var _pendingDeleteRow   = null;
+var _pendingClearKey     = null;
+var _pendingAdjustKey    = null;
+var _pendingDeleteKeys   = [];
+var _pendingDeleteRow    = null;
 var _pendingSingleDelete = null;
 
 // Log screen pagination / filter / sort (Total)
