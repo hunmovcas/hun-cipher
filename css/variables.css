@@ -11,6 +11,9 @@
   --accent:  #c0392b;
   --accent2: #2c3e7a;
   --orange:  #b45309;
+  --head:      #6c5ce7; /* Indigo */
+  --manager:   #00b894; /* Teal */
+  --cofounder: #0984e3; /* Blue */
   --founder: #8e44ad;
   --muted:   #8a7f6e;
   --secure:  #27ae60;
@@ -18,7 +21,7 @@
 
 /* ── RBAC UI OPTIMIZATION ── */
 body:not(.role-founder) .founder-only { display: none !important; }
-body.role-founder .admin-only         { display: none !important; }
+body:not(.role-admin) .admin-only { display: none !important; }
 
 /* ── PROTECTED MODE ── */
 body.is-protected .adm-item:not(.allow-protected) { opacity: 0.35; pointer-events: none; filter: grayscale(1); }

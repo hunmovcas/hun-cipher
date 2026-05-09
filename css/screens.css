@@ -48,20 +48,22 @@
 .log-title em { font-style: normal; color: var(--orange); }
 .log-header-right { display: flex; align-items: center; gap: 10px; }
 
-.log-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
-.stat-card { background: var(--card); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 16px 20px; text-align: center; cursor: default; transition: transform .15s, box-shadow .15s; }
-.stat-card:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
-.stat-num { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; line-height: 1; }
+/* Bảng thống kê (Chia đều 4 cột / 2 hàng) - Cải thiện UI thoáng và hiện đại hơn */
+.log-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: var(--card); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 20px 12px; text-align: center; cursor: default; transition: transform .15s, box-shadow .15s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.stat-card:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
+.stat-num { font-family: 'Space Mono', monospace; font-size: 1.7rem; font-weight: 700; line-height: 1; letter-spacing: -0.5px; }
 .stat-num.red    { color: var(--accent); }
 .stat-num.blue   { color: var(--accent2); }
 .stat-num.orange { color: var(--orange); }
 .stat-num.green  { color: #27ae60; }
-.stat-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.stat-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; color: var(--muted); margin-top: 10px; white-space: nowrap; }
+.stat-label svg { margin-bottom: -2px; opacity: 0.9; }
 .stat-card.clickable { cursor: pointer; }
 .stat-card.clickable.sel { outline: 2px solid var(--ink); outline-offset: 2px; }
 
-.log-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
-.filter-btn { padding: 6px 14px; border: 2px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .15s; }
+.log-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.filter-btn { padding: 6px 12px; border: 2px solid var(--border); background: var(--card); color: var(--muted); font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1px; cursor: pointer; transition: all .15s; }
 .filter-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); }
 .filter-btn:hover:not(.active) { border-color: var(--ink); color: var(--ink); }
 .log-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; }
@@ -103,5 +105,5 @@
 .realtime-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #27ae60; margin-right: 5px; animation: pulse-dot 2s ease-in-out infinite; }
 .realtime-label { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(39,174,96,.7); letter-spacing: .5px; display: flex; align-items: center; }
 
-@media (max-width: 900px) { .log-stats { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 500px) { .log-stats { grid-template-columns: repeat(2, 1fr); } .log-date-group { display: none; } }
+@media (max-width: 768px) { .log-stats { grid-template-columns: repeat(4, 1fr); gap: 12px; } .stat-card { padding: 14px 6px; } }
+@media (max-width: 500px) { .log-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; } .log-date-group { display: none; } }

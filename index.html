@@ -32,13 +32,16 @@
     <div class="cnt-div" id="div-switch" style="display:none;"></div>
     <div class="cnt" id="cnt-switch" title="Switch Role" onclick="toggleSwitchMenu(event)" style="display:none;">
       <span style="font-size:12.5px;cursor:pointer;">🎭</span>
-      <div id="switch-dropdown" class="dropdown-menu" style="text-align:center;width:max-content;min-width:200px;">
+      <div id="switch-dropdown" class="dropdown-menu" style="text-align:center;width:max-content;min-width:260px;padding:24px 10px!important;">
         <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:bold;letter-spacing:4px;color:var(--muted);margin-bottom:20px;">SWITCH ROLE</div>
-        <div style="display:flex;justify-content:center;gap:18px;align-items:center;">
+        <div style="display:flex;justify-content:center;gap:16px;align-items:center;flex-wrap:wrap;">
           <span class="switch-icon" onclick="switchRole('secondary')" title="Sub Pass">🗝</span>
           <span class="switch-icon" onclick="switchRole('normal')"    title="Main Pass">🔒</span>
           <span class="switch-icon" style="color:var(--orange);" onclick="switchRole('admin')" title="Admin">★</span>
-          <span class="switch-icon" onclick="switchRole('founder')"   title="Founder">👑</span>
+          <span class="switch-icon" style="color:var(--head);" onclick="switchRole('head')" title="Head">⚜️</span>
+          <span class="switch-icon" style="color:var(--manager);" onclick="switchRole('manager')" title="Manager">🔱</span>
+          <span class="switch-icon" style="color:var(--cofounder);" onclick="switchRole('cofounder')" title="Co-Founder">💎</span>
+          <span class="switch-icon" style="color:var(--founder);" onclick="switchRole('founder')" title="Founder">👑</span>
         </div>
       </div>
     </div>
@@ -64,7 +67,7 @@
       </svg>
     </div>
 
-    <!-- Notifications -->
+    <!-- Notifications (Only Founder sees this) -->
     <div class="cnt-div" id="div-noti"></div>
     <div class="cnt" id="cnt-noti" title="System Notifications" onclick="toggleNoti(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -83,19 +86,22 @@
     <div class="cnt" id="cnt-traffic" title="Traffic Statistics" onclick="toggleTrafficMenu(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       <span class="cnum" id="num-traffic">·</span>
-      <div id="traffic-dropdown" class="dropdown-menu">
+      <div id="traffic-dropdown" class="dropdown-menu" style="min-width: 180px; padding-bottom: 8px;">
         <div class="adm-section">
-          <div class="adm-section-label">Traffic Overview</div>
-          <div class="adm-item" style="cursor:default">
-            <span style="font-weight:900; color:var(--ink);">👁 Views</span>
-            <span class="stat-adj" onclick="admAdjustCounter(event, 'outer')" id="drop-views" style="margin-left:auto; font-family:'Space Mono',monospace; color:var(--ink);">0</span>
+          <div class="adm-section-label" style="margin-bottom: 4px;">Traffic Overview</div>
+          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+            <span style="font-size:14px; width:24px; text-align:left; display:inline-block;" title="Total Views">👁</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'outer')" id="drop-views" style="font-weight:bold; color:var(--ink);">0</span>
+            </div>
           </div>
-          <div class="adm-item" id="item-unique-view" style="cursor:default">
-            <span style="font-weight:900; color:#27ae60; display:flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-              Unique
+          <div class="adm-item" id="item-unique-view" style="cursor:default; padding: 6px 20px;">
+            <span style="display:inline-block; width:24px; text-align:left;" title="Unique Views">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:text-bottom"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
             </span>
-            <span class="stat-adj" onclick="admAdjustCounter(event, 'real_visitors')" id="drop-unique" style="margin-left:auto; font-family:'Space Mono',monospace; color:#27ae60; font-weight:bold;">0</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'real_visitors')" id="drop-unique" style="font-weight:bold; color:#27ae60;">0</span>
+            </div>
           </div>
         </div>
       </div>
@@ -106,41 +112,76 @@
     <div class="cnt" id="cnt-auth" title="Active Logins" onclick="toggleAuthMenu(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
       <span class="cnum" id="num-auth">·</span>
-      <div id="auth-dropdown" class="dropdown-menu">
+      
+      <!-- DROPDOWN ĐƯỢC CHUẨN HÓA CĂN LỀ HAI BÊN (GIỐNG ẢNH MẪU) -->
+      <div id="auth-dropdown" class="dropdown-menu" style="min-width: 220px; padding-bottom: 8px;">
         <div class="adm-section">
-          <div class="adm-section-label">Session Breakdown</div>
-          <div class="adm-item" style="cursor:default">
-            <span style="font-size:14px;" title="Main Pass">🔒</span>
-            <div style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_normal')" id="drop-main" style="color:var(--ink);">0</span>
-              <span style="color:var(--border); margin:0 6px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_normal')" id="drop-main-u" style="color:#27ae60; font-weight:bold;">0</span>
+          <div class="adm-section-label" style="margin-bottom: 4px;">Session Breakdown</div>
+
+          <!-- Mẫu cấu trúc: Icon bám lề trái, Dãy số (gồm Số 1 | Số 2) dạt hẳn sang lề phải -->
+          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+            <span style="font-size:14px; width:24px; text-align:left; display:inline-block;" title="Sub Pass">🗝</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_secondary')" id="drop-sub" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
+              <span style="color:var(--border); margin:0 12px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_secondary')" id="drop-sub-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
             </div>
           </div>
-          <div class="adm-item" style="cursor:default">
-            <span style="font-size:14px;" title="Sub Pass">🗝</span>
-            <div style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_secondary')" id="drop-sub" style="color:var(--ink);">0</span>
-              <span style="color:var(--border); margin:0 6px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_secondary')" id="drop-sub-u" style="color:#27ae60; font-weight:bold;">0</span>
+          
+          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+            <span style="font-size:14px; width:24px; text-align:left; display:inline-block;" title="Main Pass">🔒</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_normal')" id="drop-main" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
+              <span style="color:var(--border); margin:0 12px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_normal')" id="drop-main-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
             </div>
           </div>
-          <div class="adm-item" style="cursor:default">
-            <span style="font-size:14px;" title="Admin">★</span>
-            <div style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'admin')" id="drop-admin" style="color:var(--ink);">0</span>
-              <span style="color:var(--border); margin:0 6px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_admin')" id="drop-admin-u" style="color:#27ae60; font-weight:bold;">0</span>
+          
+          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+            <span style="font-size:14px; width:24px; text-align:left; display:inline-block;" title="Admin">★</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'admin')" id="drop-admin" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
+              <span style="color:var(--border); margin:0 12px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_admin')" id="drop-admin-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
             </div>
           </div>
-          <div class="adm-item founder-only" style="cursor:default">
-            <span style="font-size:14px;" title="Founder">👑</span>
-            <div style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'founder')" id="drop-founder" style="color:var(--ink);">0</span>
-              <span style="color:var(--border); margin:0 6px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_founder')" id="drop-founder-u" style="color:#27ae60; font-weight:bold;">0</span>
+          
+          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+            <span style="font-size:14px; width:24px; text-align:left; display:inline-block;" title="Head">⚜️</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'head')" id="drop-head" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
+              <span style="color:var(--border); margin:0 12px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_head')" id="drop-head-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
             </div>
           </div>
+          
+          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+            <span style="font-size:14px; width:24px; text-align:left; display:inline-block;" title="Manager">🔱</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'manager')" id="drop-manager" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
+              <span style="color:var(--border); margin:0 12px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_manager')" id="drop-manager-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+            </div>
+          </div>
+          
+          <div class="adm-item founder-only" style="cursor:default; padding: 6px 20px;">
+            <span style="font-size:14px; width:24px; text-align:left; display:inline-block;" title="Co-Founder">💎</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'cofounder')" id="drop-cofounder" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
+              <span style="color:var(--border); margin:0 12px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_cofounder')" id="drop-cofounder-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+            </div>
+          </div>
+          
+          <div class="adm-item founder-only" style="cursor:default; padding: 6px 20px;">
+            <span style="font-size:14px; width:24px; text-align:left; display:inline-block;" title="Founder">👑</span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'founder')" id="drop-founder" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
+              <span style="color:var(--border); margin:0 12px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_founder')" id="drop-founder-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -260,6 +301,15 @@
       <div class="stat-card clickable allow-protected" id="sc-admin" onclick="setFilter('login_admin')">
         <div class="stat-num orange" id="stat-admin">–</div> <div class="stat-label">★ Admin</div>
       </div>
+      <div class="stat-card clickable allow-protected" id="sc-head" onclick="setFilter('login_head')">
+        <div class="stat-num" style="color:var(--head);" id="stat-head">–</div> <div class="stat-label">⚜️ Head</div>
+      </div>
+      <div class="stat-card clickable allow-protected" id="sc-manager" onclick="setFilter('login_manager')">
+        <div class="stat-num" style="color:var(--manager);" id="stat-manager">–</div> <div class="stat-label">🔱 Manager</div>
+      </div>
+      <div class="stat-card clickable allow-protected" id="sc-cofounder" onclick="setFilter('login_cofounder')">
+        <div class="stat-num" style="color:var(--cofounder);" id="stat-cofounder">–</div> <div class="stat-label">💎 Co-Founder</div>
+      </div>
       <div class="stat-card clickable allow-protected" id="sc-founder" onclick="setFilter('login_founder')">
         <div class="stat-num" style="color:var(--founder);" id="stat-founder">–</div> <div class="stat-label">👑 Founder</div>
       </div>
@@ -283,6 +333,15 @@
         <div class="stat-num orange" id="stat-u-admin">–</div> <div class="stat-label">★ Admin Unique</div>
       </div>
       <div class="stat-card allow-protected">
+        <div class="stat-num" style="color:var(--head);" id="stat-u-head">–</div> <div class="stat-label">⚜️ Head Unique</div>
+      </div>
+      <div class="stat-card allow-protected">
+        <div class="stat-num" style="color:var(--manager);" id="stat-u-manager">–</div> <div class="stat-label">🔱 Manager Unique</div>
+      </div>
+      <div class="stat-card allow-protected">
+        <div class="stat-num" style="color:var(--cofounder);" id="stat-u-cofounder">–</div> <div class="stat-label">💎 Co-Founder Unique</div>
+      </div>
+      <div class="stat-card allow-protected">
         <div class="stat-num" style="color:var(--founder);" id="stat-u-founder">–</div> <div class="stat-label">👑 Founder Unique</div>
       </div>
     </div>
@@ -297,6 +356,9 @@
       <button class="filter-btn allow-protected"        onclick="setFilter('login_secondary')" id="f-sec">🗝 Sub</button>
       <button class="filter-btn allow-protected"        onclick="setFilter('login_normal')" id="f-normal">🔒 Main</button>
       <button class="filter-btn allow-protected"        onclick="setFilter('login_admin')"  id="f-admin">★ Admin</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('login_head')"   id="f-head">⚜️ Head</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('login_manager')"id="f-manager">🔱 Manager</button>
+      <button class="filter-btn allow-protected"        onclick="setFilter('login_cofounder')" id="f-cofounder">💎 Co-Founder</button>
       <button class="filter-btn allow-protected"        onclick="setFilter('login_founder')"id="f-founder">👑 Founder</button>
       <span class="log-count" id="log-count"></span>
     </div>
@@ -334,6 +396,9 @@
       <button class="filter-btn allow-protected"        onclick="setFilterU('login_secondary')" id="fu-sec">🗝 Sub</button>
       <button class="filter-btn allow-protected"        onclick="setFilterU('login_normal')" id="fu-normal">🔒 Main</button>
       <button class="filter-btn allow-protected"        onclick="setFilterU('login_admin')"  id="fu-admin">★ Admin</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterU('login_head')"   id="fu-head">⚜️ Head</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterU('login_manager')"id="fu-manager">🔱 Manager</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterU('login_cofounder')" id="fu-cofounder">💎 Co-Founder</button>
       <button class="filter-btn allow-protected"        onclick="setFilterU('login_founder')"id="fu-founder">👑 Founder</button>
       <span class="log-count" id="log-count-u"></span>
     </div>
@@ -370,6 +435,9 @@
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('sec')"     id="ipt-sec">🗝 Sub</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('normal')"  id="ipt-normal">🔒 Main</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('admin')"   id="ipt-admin">★ Admin</button>
+          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('head')"    id="ipt-head">⚜️ Head</button>
+          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('manager')" id="ipt-manager">🔱 Manager</button>
+          <button class="ip-mode-tab allow-protected"        onclick="setIpMode('cofounder')" id="ipt-cofounder">💎 Co-Founder</button>
           <button class="ip-mode-tab allow-protected"        onclick="setIpMode('founder')" id="ipt-founder">👑 Founder</button>
         </div>
       </div>
@@ -454,8 +522,9 @@
         <div id="id-tags-wrap" style="min-height:38px;padding:8px;border:1px dashed var(--border);border-radius:6px;background:rgba(0,0,0,0.02);display:flex;flex-wrap:wrap;align-items:center;"></div>
       </div>
       
-      <div style="display:flex; justify-content:center; margin-bottom:24px;">
-        <button class="btn-dialog-yes btn-save allow-protected" style="padding:8px 24px;font-size:13px;font-weight:bold;letter-spacing:0.5px;border-radius:6px;" onclick="saveIdentity()">Save Profile</button>
+      <div style="display:flex; justify-content:center; gap: 10px; margin-bottom:24px;">
+        <button id="btn-id-save" class="btn-dialog-yes btn-save allow-protected" style="padding:8px 24px;font-size:13px;font-weight:bold;letter-spacing:0.5px;border-radius:6px;" onclick="saveIdentity()">Save Profile</button>
+        <button id="btn-id-cancel" class="btn-dialog-no allow-protected" style="display:none; padding:8px 24px;font-size:13px;border-radius:6px;" onclick="resetIdentityForm()">Cancel</button>
       </div>
 
       <div style="border-top:1px dashed var(--border);padding-top:20px;">

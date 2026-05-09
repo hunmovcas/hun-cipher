@@ -44,7 +44,8 @@ function renderWelcome() {
 function showSecretCipher() {
   var msg = currentSecretMsgs[_currentLoginRole] || '';
   if (!msg) { showToast('No secret message set!'); return; }
-  if (_currentLoginRole === 'admin' || _currentLoginRole === 'founder') {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv >= 3) {
     document.getElementById('admin-secret-content').textContent = msg;
     document.getElementById('admin-secret-overlay').classList.add('open');
   } else {
@@ -84,11 +85,12 @@ function closeAdjust() {
 }
 
 /* ── IDENTITY MANAGEMENT ── */
-var _editingProfile = null;
+var _editingProfileId = null;
 var _tempIds = [];
 
 function openIdentityManager() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   closeAllMenus();
   document.getElementById('identity-manager-overlay').classList.add('open');
   resetIdentityForm();
@@ -104,8 +106,9 @@ function populateUnassignedIds() {
   _allLogs.forEach(function(l) { if (l.deviceId) allIds.add(l.deviceId); });
   
   var assignedIds = new Set();
-  Object.values(_identities).forEach(function(arr) { 
-    arr.forEach(function(id) { assignedIds.add(id); });
+  Object.values(_identities).forEach(function(profile) { 
+    var idsArray = (profile && profile.ids) ? profile.ids : (Array.isArray(profile) ? profile : []);
+    idsArray.forEach(function(id) { assignedIds.add(id); });
   });
 
   var available = Array.from(allIds).filter(function(id) { return !assignedIds.has(id); });
@@ -117,14 +120,18 @@ function populateUnassignedIds() {
 }
 
 function resetIdentityForm() {
-  _editingProfile = null;
+  _editingProfileId = null;
   _tempIds = [];
   document.getElementById('id-profile-name').value = '';
-  document.getElementById('id-profile-name').disabled = false;
+  // Chỉ Founder mới được tùy ý sửa tên Alias
+  document.getElementById('id-profile-name').disabled = (_currentLoginRole !== 'founder');
   document.getElementById('id-dev-input').value = '';
   var sel = document.getElementById('id-dev-select');
   if (sel) sel.value = '';
   renderTempIds();
+  
+  document.getElementById('btn-id-save').textContent = 'Save Profile';
+  document.getElementById('btn-id-cancel').style.display = 'none';
 }
 
 function renderTempIds() {
@@ -135,7 +142,7 @@ function renderTempIds() {
   }
   wrap.innerHTML = _tempIds.map(function(id, i) {
     return '<span class="dev-badge" style="display:inline-flex;align-items:center;background:rgba(44,62,122,0.1);color:var(--accent2);border:1px solid rgba(44,62,122,0.2);padding:4px 8px;border-radius:4px;font-size:12px;font-weight:bold;margin-right:6px;margin-bottom:6px;">' + 
-           esc(id) + 
+           esc(String(id)) + 
            ' <span style="cursor:pointer;margin-left:6px;color:#e74c3c;font-size:14px;line-height:1;" onclick="removeTempId('+i+')" title="Remove">×</span></span>';
   }).join('');
 }
@@ -167,22 +174,28 @@ function removeTempId(idx) {
 }
 
 function saveIdentity() {
-  if (_isProtected) { showToast('System is protected!'); return; }
-  var name = document.getElementById('id-profile-name').value.trim();
-  if (!name) { showToast('Profile name required!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
+  
+  var nameInput = document.getElementById('id-profile-name').value.trim();
+  // Nếu không phải Founder (bị disable ô Name), nameInput sẽ dùng giá trị placeholder (ID gốc)
+  var idToSave = _editingProfileId || ('id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5));
+  var finalName = nameInput || idToSave; 
+  
   if (_tempIds.length === 0) { showToast('At least one Device ID required!'); return; }
+
+  var dataToSave = { name: finalName, ids: _tempIds };
 
   if (db) {
     var updates = {};
-    updates['settings/identities/' + name] = _tempIds;
+    updates['settings/identities/' + idToSave] = dataToSave;
     db.ref().update(updates, function(err) {
       if (!err) {
         showToast('✓ Profile saved!');
-        _identities[name] = _tempIds.slice(); // Cập nhật local ngay lập tức
+        _identities[idToSave] = { name: finalName, ids: _tempIds.slice() }; 
         resetIdentityForm();
         populateUnassignedIds();
         renderIdentityList();
-        // Trigger render bảng log
         if (typeof renderLogs === 'function') { renderLogs(); renderUniqueLogs(); renderIpStats(); }
       } else {
         showToast('⚠ Error saving profile');
@@ -191,26 +204,42 @@ function saveIdentity() {
   }
 }
 
-function editIdentity(name) {
-  _editingProfile = name;
-  _tempIds = (_identities[name] || []).slice();
-  document.getElementById('id-profile-name').value = name;
-  document.getElementById('id-profile-name').disabled = true;
+function editIdentity(key) {
+  var profile = _identities[key];
+  if (!profile) return;
+  _editingProfileId = key;
+  
+  var pName = profile.name || key;
+  // Các role khác Founder không được sửa Alias (Tên)
+  if (_currentLoginRole === 'founder') {
+    document.getElementById('id-profile-name').value = pName;
+    document.getElementById('id-profile-name').disabled = false;
+  } else {
+    document.getElementById('id-profile-name').value = key; // Chỉ hiện ID Gốc
+    document.getElementById('id-profile-name').disabled = true;
+  }
+  
+  _tempIds = Array.isArray(profile.ids) ? profile.ids.slice() : (Array.isArray(profile) ? profile.slice() : []);
   renderTempIds();
+  
+  document.getElementById('btn-id-save').textContent = 'Update Profile';
+  document.getElementById('btn-id-cancel').style.display = 'inline-block';
 }
 
-function removeIdentity(name) {
-  if (_isProtected) { showToast('System is protected!'); return; }
-  if (confirm('Delete profile "'+name+'"? Log records will revert to original IDs.')) {
+function removeIdentity(key, displayName) {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
+  var confirmMsg = (_currentLoginRole === 'founder') ? 'Delete profile "'+displayName+'"?' : 'Delete identity grouping "'+key+'"?';
+  if (confirm(confirmMsg + ' Log records will revert to original IDs.')) {
     if (db) {
-      db.ref('settings/identities/' + name).remove(function(err) {
+      db.ref('settings/identities/' + key).remove(function(err) {
         if (!err) {
           showToast('✓ Profile deleted');
-          delete _identities[name]; // Cập nhật local ngay lập tức
+          delete _identities[key]; 
           populateUnassignedIds();
           renderIdentityList();
           if (typeof renderLogs === 'function') { renderLogs(); renderUniqueLogs(); renderIpStats(); }
-          if (_editingProfile === name) resetIdentityForm();
+          if (_editingProfileId === key) resetIdentityForm();
         }
       });
     }
@@ -226,16 +255,20 @@ function renderIdentityList() {
     return;
   }
   listEl.innerHTML = keys.map(function(k) {
-    var ids = _identities[k];
+    var profile = _identities[k];
+    // Rule: Chỉ hiển thị tên Alias đối với Founder, còn lại show ID/Key.
+    var displayName = (_currentLoginRole === 'founder' && profile.name) ? profile.name : k;
+    
+    var ids = Array.isArray(profile.ids) ? profile.ids : (Array.isArray(profile) ? profile : []);
     var tags = ids.map(function(id) { 
-      return '<span style="display:inline-block;background:rgba(44,62,122,0.08);color:var(--accent2);padding:3px 6px;border-radius:4px;margin:3px 6px 3px 0;font-size:11px;border:1px solid rgba(44,62,122,0.15);">'+esc(id)+'</span>'; 
+      return '<span style="display:inline-block;background:rgba(44,62,122,0.08);color:var(--accent2);padding:3px 6px;border-radius:4px;margin:3px 6px 3px 0;font-size:11px;border:1px solid rgba(44,62,122,0.15);">'+esc(String(id))+'</span>'; 
     }).join('');
     
     return '<div style="padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.02);">' +
            '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">' +
-           '<div style="font-weight:800;color:var(--ink);font-size:14px;display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(k) + '</div>' +
-           '<div style="display:flex;gap:6px;"><button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;background:rgba(44,62,122,0.05);color:var(--accent2);font-weight:bold;cursor:pointer;" onclick="editIdentity(\''+esc(k)+'\')">Edit</button>' +
-           '<button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;color:#e74c3c;background:rgba(231,76,60,0.05);font-weight:bold;cursor:pointer;" onclick="removeIdentity(\''+esc(k)+'\')">Delete</button></div>' +
+           '<div style="font-weight:800;color:var(--ink);font-size:14px;display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(String(displayName)) + '</div>' +
+           '<div style="display:flex;gap:6px;"><button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;background:rgba(44,62,122,0.05);color:var(--accent2);font-weight:bold;cursor:pointer;" onclick="editIdentity(\''+esc(String(k))+'\')">Edit</button>' +
+           '<button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;color:#e74c3c;background:rgba(231,76,60,0.05);font-weight:bold;cursor:pointer;" onclick="removeIdentity(\''+esc(String(k))+'\', \''+esc(String(displayName).replace(/'/g, "\\'"))+'\')">Delete</button></div>' +
            '</div>' +
            '<div style="font-family:\'Space Mono\',monospace;margin-top:6px;">' + tags + '</div>' +
            '</div>';
@@ -245,7 +278,8 @@ function renderIdentityList() {
 /* ── QUICK LINK IDENTITY ── */
 var _pendingLinkId = null;
 function openLinkIdentity(devId) {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   _pendingLinkId = devId;
   document.getElementById('link-id-display').textContent = devId;
   var select = document.getElementById('link-profile-select');
@@ -255,29 +289,37 @@ function openLinkIdentity(devId) {
     select.disabled = true;
   } else {
     select.innerHTML = '<option value="">-- Select Profile</option>' + keys.map(function(k) {
-      return '<option value="'+esc(k)+'">'+esc(k)+'</option>';
+      // Logic tương tự: Chỉ Founder mới thấy Alias trong Menu này
+      var displayName = (_currentLoginRole === 'founder' && _identities[k].name) ? _identities[k].name : k;
+      return '<option value="'+esc(String(k))+'">'+esc(String(displayName))+'</option>';
     }).join('');
     select.disabled = false;
   }
   document.getElementById('identity-link-overlay').classList.add('open');
 }
+
 function closeLinkIdentity() {
   document.getElementById('identity-link-overlay').classList.remove('open');
 }
+
 function submitLinkIdentity() {
   var sel = document.getElementById('link-profile-select');
-  var profileName = sel.value;
-  if (!profileName || !_pendingLinkId) return;
-  var ids = (_identities[profileName] || []).slice();
+  var profileKey = sel.value;
+  if (!profileKey || !_pendingLinkId) return;
+  
+  var profile = _identities[profileKey];
+  var ids = Array.isArray(profile.ids) ? profile.ids.slice() : (Array.isArray(profile) ? profile.slice() : []);
+  
   if (ids.indexOf(_pendingLinkId) === -1) {
     ids.push(_pendingLinkId);
+    var dataToSave = profile.name ? { name: profile.name, ids: ids } : ids;
+    
     if (db) {
-      db.ref('settings/identities/' + profileName).set(ids, function(err) {
+      db.ref('settings/identities/' + profileKey).set(dataToSave, function(err) {
         if (!err) {
-          showToast('✓ ID linked to ' + profileName);
-          _identities[profileName] = ids.slice(); // Cập nhật local
+          showToast('✓ ID linked to profile!');
+          _identities[profileKey] = dataToSave; 
           closeLinkIdentity();
-          // Cập nhật giao diện lập tức
           if (document.getElementById('identity-manager-overlay').classList.contains('open')) {
             populateUnassignedIds();
             renderIdentityList();
@@ -294,14 +336,16 @@ function submitLinkIdentity() {
 
 /* ── CONFIG DIALOGS ── */
 function openChangeWelcome() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   document.getElementById('welcome-input').value = currentWelcome;
   document.getElementById('welcome-change-overlay').classList.add('open');
   closeAllMenus();
 }
 function closeChangeWelcome() { document.getElementById('welcome-change-overlay').classList.remove('open'); }
 function submitChangeWelcome() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   var nW = document.getElementById('welcome-input').value.trim() || defaultWelcome;
   currentWelcome = nW; renderWelcome();
   if (db) db.ref('settings/welcome').set(nW, function(err) {
@@ -310,7 +354,8 @@ function submitChangeWelcome() {
 }
 
 function openChangeTitle() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   document.getElementById('tab-title-input').value  = currentTabTitle;
   document.getElementById('main-title-input').value = currentMainTitle;
   document.getElementById('title-change-overlay').classList.add('open');
@@ -318,7 +363,8 @@ function openChangeTitle() {
 }
 function closeChangeTitle() { document.getElementById('title-change-overlay').classList.remove('open'); }
 function submitChangeTitle() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   var tTab  = document.getElementById('tab-title-input').value.trim()  || defaultTabTitle;
   var tMain = document.getElementById('main-title-input').value.trim() || defaultMainTitle;
   currentTabTitle = tTab; currentMainTitle = tMain; renderTitle();
@@ -328,7 +374,8 @@ function submitChangeTitle() {
 }
 
 function openChangePopup() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   document.getElementById('popup-wrong-input').value = currentPopups.wrong;
   document.getElementById('popup-close-input').value = currentPopups.close;
   document.getElementById('popup-change-overlay').classList.add('open');
@@ -336,7 +383,8 @@ function openChangePopup() {
 }
 function closeChangePopup() { document.getElementById('popup-change-overlay').classList.remove('open'); }
 function submitChangePopup() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   var pWrong = document.getElementById('popup-wrong-input').value.trim() || defaultPopups.wrong;
   var pClose = document.getElementById('popup-close-input').value.trim() || defaultPopups.close;
   currentPopups.wrong = pWrong; currentPopups.close = pClose;
@@ -346,7 +394,8 @@ function submitChangePopup() {
 }
 
 function openChangeNotes() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   document.getElementById('note-tagline-input').value = currentNotes.tagline;
   document.getElementById('note-footer-input').value  = currentNotes.footer;
   document.getElementById('notes-change-overlay').classList.add('open');
@@ -354,7 +403,8 @@ function openChangeNotes() {
 }
 function closeChangeNotes() { document.getElementById('notes-change-overlay').classList.remove('open'); }
 function submitChangeNotes() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   var tL = document.getElementById('note-tagline-input').value.trim() || defaultNotes.tagline;
   var fT = document.getElementById('note-footer-input').value.trim()  || defaultNotes.footer;
   currentNotes.tagline = tL; currentNotes.footer = fT; renderNotes();
@@ -364,7 +414,8 @@ function submitChangeNotes() {
 }
 
 function openChangeHints() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   document.getElementById('hint1-input').value = currentHints.hint1;
   document.getElementById('hint2-input').value = currentHints.hint2;
   document.getElementById('hint-change-overlay').classList.add('open');
@@ -372,7 +423,8 @@ function openChangeHints() {
 }
 function closeChangeHints() { document.getElementById('hint-change-overlay').classList.remove('open'); }
 function submitChangeHints() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   var h1 = document.getElementById('hint1-input').value.trim() || defaultHints.hint1;
   var h2 = document.getElementById('hint2-input').value.trim() || defaultHints.hint2;
   currentHints.hint1 = h1; currentHints.hint2 = h2; renderHints();
@@ -382,7 +434,8 @@ function submitChangeHints() {
 }
 
 function openChangeSecret() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   document.getElementById('secret-normal-input').value    = currentSecretMsgs.normal;
   document.getElementById('secret-secondary-input').value = currentSecretMsgs.secondary;
   document.getElementById('secret-admin-input').value     = currentSecretMsgs.admin;
@@ -391,7 +444,8 @@ function openChangeSecret() {
 }
 function closeChangeSecret() { document.getElementById('secret-change-overlay').classList.remove('open'); }
 function submitChangeSecret() {
-  if (_isProtected) { showToast('System is protected!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   var n = document.getElementById('secret-normal-input').value.trim();
   var s = document.getElementById('secret-secondary-input').value.trim();
   var a = document.getElementById('secret-admin-input').value.trim();
@@ -403,7 +457,8 @@ function submitChangeSecret() {
 
 /* ── BLOCKED IP MANAGER ── */
 function blockIP(ip) {
-  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected. Action denied!'); return; }
   if (!db || !ip) return;
   var safeIp = ip.replace(/\./g, '-');
   if (_blockedIPs[safeIp]) { showToast('IP is already blocked!'); return; }
@@ -414,7 +469,8 @@ function blockIP(ip) {
   }
 }
 function unblockIP(safeIp) {
-  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected. Action denied!'); return; }
   if (!db) return;
   db.ref('settings/blockedIPs/' + safeIp).remove(function(err) {
     if (!err) { showToast('✓ Unblocked IP'); openBlockManager(); }
@@ -429,11 +485,12 @@ function openBlockManager() {
   } else {
     listEl.innerHTML = keys.map(function(k) {
       var ip = k.replace(/-/g, '.'), ts = _blockedIPs[k];
-      var ds = new Date(ts).toLocaleDateString('en-US') + ' ' + new Date(ts).toLocaleTimeString('en-US');
+      var dObj = new Date(ts);
+      var ds = isNaN(dObj.getTime()) ? 'N/A' : (dObj.toLocaleDateString('en-US') + ' ' + dObj.toLocaleTimeString('en-US'));
       return '<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:8px 0;align-items:center;">' +
-        '<div><strong style="color:var(--accent);font-size:12px;">' + esc(ip) + '</strong><br>' +
+        '<div><strong style="color:var(--accent);font-size:12px;">' + esc(String(ip)) + '</strong><br>' +
         '<span style="color:var(--muted)">Blocked at: ' + ds + '</span></div>' +
-        '<button class="allow-protected" style="padding:4px 8px;border:1px solid #27ae60;background:transparent;color:#27ae60;border-radius:3px;cursor:pointer;" onclick="unblockIP(\'' + k + '\')">Unblock</button>' +
+        '<button class="allow-protected" style="padding:4px 8px;border:1px solid #27ae60;background:transparent;color:#27ae60;border-radius:3px;cursor:pointer;" onclick="unblockIP(\'' + esc(String(k)) + '\')">Unblock</button>' +
         '</div>';
     }).join('');
   }

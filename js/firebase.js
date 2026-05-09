@@ -18,14 +18,11 @@ function initFirebase() {
       }
     });
 
-    // Lắng nghe dữ liệu nhóm định danh Identities
     db.ref('settings/identities').on('value', function(snap) {
       _identities = snap.val() || {};
       if (document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
         if (typeof renderLogs === 'function') {
-          renderLogs();
-          renderUniqueLogs();
-          renderIpStats();
+          renderLogs(); renderUniqueLogs(); renderIpStats();
         }
       }
     });
@@ -50,9 +47,7 @@ function initFirebase() {
         currentHints.hint1 = snap.val().hint1 || defaultHints.hint1;
         currentHints.hint2 = snap.val().hint2 || defaultHints.hint2;
         renderHints();
-      } else {
-        db.ref('settings/hints_v3').set(currentHints);
-      }
+      } else { db.ref('settings/hints_v3').set(currentHints); }
     });
 
     db.ref('settings/secretMsgs_v3').on('value', function(snap) {
@@ -60,9 +55,7 @@ function initFirebase() {
         currentSecretMsgs.normal    = snap.val().normal    || defaultSecretMsgs.normal;
         currentSecretMsgs.secondary = snap.val().secondary || defaultSecretMsgs.secondary;
         currentSecretMsgs.admin     = snap.val().admin     || defaultSecretMsgs.admin;
-      } else {
-        db.ref('settings/secretMsgs_v3').set(currentSecretMsgs);
-      }
+      } else { db.ref('settings/secretMsgs_v3').set(currentSecretMsgs); }
     });
 
     db.ref('settings/notes_v2').on('value', function(snap) {
@@ -70,9 +63,7 @@ function initFirebase() {
         currentNotes.tagline = snap.val().tagline || defaultNotes.tagline;
         currentNotes.footer  = snap.val().footer  || defaultNotes.footer;
         renderNotes();
-      } else {
-        db.ref('settings/notes_v2').set(currentNotes);
-      }
+      } else { db.ref('settings/notes_v2').set(currentNotes); }
     });
 
     db.ref('settings/protection').on('value', function(snap) { _isProtected = !!snap.val(); updateProtectionUI(); });
@@ -81,31 +72,24 @@ function initFirebase() {
       if (snap.exists()) {
         currentPopups.wrong = snap.val().wrong || defaultPopups.wrong;
         currentPopups.close = snap.val().close || defaultPopups.close;
-      } else {
-        db.ref('settings/popups').set(currentPopups);
-      }
+      } else { db.ref('settings/popups').set(currentPopups); }
     });
     db.ref('settings/titles').on('value', function(snap) {
       if (snap.exists()) {
         currentTabTitle  = snap.val().tab  || defaultTabTitle;
         currentMainTitle = snap.val().main || defaultMainTitle;
         renderTitle();
-      } else {
-        db.ref('settings/titles').set({ tab: currentTabTitle, main: currentMainTitle });
-      }
+      } else { db.ref('settings/titles').set({ tab: currentTabTitle, main: currentMainTitle }); }
     });
     db.ref('settings/welcome').on('value', function(snap) {
       if (snap.exists()) {
         currentWelcome = snap.val() || defaultWelcome;
         renderWelcome();
-      } else {
-        db.ref('settings/welcome').set(currentWelcome);
-      }
+      } else { db.ref('settings/welcome').set(currentWelcome); }
     });
 
     if (document.getElementById('pw-screen').style.display !== 'none') {
-      fbIncrement('view');
-      fbListenOuter();
+      fbIncrement('view'); fbListenOuter();
     }
 
   } catch(e) {
@@ -142,11 +126,14 @@ function fbIncrement(type) {
 
   function pushData(data) {
     db.ref('logs').push(data).then(function(snap) {
-      if (type === 'view')                             _sessionKeys.view      = snap.key;
-      else if (type === 'login_normal')              _sessionKeys.normal    = snap.key;
-      else if (type === 'login_secondary')           _sessionKeys.secondary = snap.key;
-      else if (type === 'login_admin')               _sessionKeys.admin     = snap.key;
-      else if (type === 'login_founder')             _sessionKeys.founder   = snap.key;
+      if (type === 'view')                           _sessionKeys.view       = snap.key;
+      else if (type === 'login_normal')              _sessionKeys.normal     = snap.key;
+      else if (type === 'login_secondary')           _sessionKeys.secondary  = snap.key;
+      else if (type === 'login_admin')               _sessionKeys.admin      = snap.key;
+      else if (type === 'login_head')                _sessionKeys.head       = snap.key;
+      else if (type === 'login_manager')             _sessionKeys.manager    = snap.key;
+      else if (type === 'login_cofounder')           _sessionKeys.cofounder  = snap.key;
+      else if (type === 'login_founder')             _sessionKeys.founder    = snap.key;
     });
   }
 
@@ -157,28 +144,34 @@ function fbIncrement(type) {
 
 /* ── APPLY COMPUTED COUNTS ── */
 function applyCounts() {
-  // 1. Tính toán bộ đếm Unique (Thực) trước
-  _vReal     = Math.max(0, (_rawCounts.real_visitors || 0) + (_offsets.real_visitors || 0));
-  _vUNormal  = Math.max(0, (_rawCounts.unique_normal || 0) + (_offsets.unique_normal || 0));
-  _vUSec     = Math.max(0, (_rawCounts.unique_secondary || 0) + (_offsets.unique_secondary || 0));
-  _vUAdmin   = Math.max(0, (_rawCounts.unique_admin || 0) + (_offsets.unique_admin || 0));
-  _vUFounder = Math.max(0, (_rawCounts.unique_founder || 0) + (_offsets.unique_founder || 0));
+  _vReal      = Math.max(0, (_rawCounts.real_visitors || 0) + (_offsets.real_visitors || 0));
+  _vUNormal   = Math.max(0, (_rawCounts.unique_normal || 0) + (_offsets.unique_normal || 0));
+  _vUSec      = Math.max(0, (_rawCounts.unique_secondary || 0) + (_offsets.unique_secondary || 0));
+  _vUAdmin    = Math.max(0, (_rawCounts.unique_admin || 0) + (_offsets.unique_admin || 0));
+  _vUHead     = Math.max(0, (_rawCounts.unique_head || 0) + (_offsets.unique_head || 0));
+  _vUManager  = Math.max(0, (_rawCounts.unique_manager || 0) + (_offsets.unique_manager || 0));
+  _vUCoFounder= Math.max(0, (_rawCounts.unique_cofounder || 0) + (_offsets.unique_cofounder || 0));
+  _vUFounder  = Math.max(0, (_rawCounts.unique_founder || 0) + (_offsets.unique_founder || 0));
 
-  // 2. Tính toán bộ đếm Total (Tổng) ban đầu
-  var rawOuter   = Math.max(0, (_rawCounts.outer || 0) + (_offsets.outer || 0));
-  var rawNormal  = Math.max(0, (_rawCounts.inner_normal || 0) + (_offsets.inner_normal || 0));
-  var rawSec     = Math.max(0, (_rawCounts.inner_secondary || 0) + (_offsets.inner_secondary || 0));
-  var rawAdmin   = Math.max(0, (_rawCounts.admin || 0) + (_offsets.admin || 0));
-  var rawFounder = Math.max(0, (_rawCounts.founder || 0) + (_offsets.founder || 0));
+  var rawOuter    = Math.max(0, (_rawCounts.outer || 0) + (_offsets.outer || 0));
+  var rawNormal   = Math.max(0, (_rawCounts.inner_normal || 0) + (_offsets.inner_normal || 0));
+  var rawSec      = Math.max(0, (_rawCounts.inner_secondary || 0) + (_offsets.inner_secondary || 0));
+  var rawAdmin    = Math.max(0, (_rawCounts.admin || 0) + (_offsets.admin || 0));
+  var rawHead     = Math.max(0, (_rawCounts.head || 0) + (_offsets.head || 0));
+  var rawManager  = Math.max(0, (_rawCounts.manager || 0) + (_offsets.manager || 0));
+  var rawCoFounder= Math.max(0, (_rawCounts.cofounder || 0) + (_offsets.cofounder || 0));
+  var rawFounder  = Math.max(0, (_rawCounts.founder || 0) + (_offsets.founder || 0));
 
-  // 3. Khôi phục logic: Đảm bảo Total LUÔN LUÔN >= Unique
-  _vOuter    = Math.max(rawOuter, _vReal);
-  _vNormal   = Math.max(rawNormal, _vUNormal);
-  _vSec      = Math.max(rawSec, _vUSec);
-  _vAdmin    = Math.max(rawAdmin, _vUAdmin);
-  _vFounder  = Math.max(rawFounder, _vUFounder);
+  _vOuter     = Math.max(rawOuter, _vReal);
+  _vNormal    = Math.max(rawNormal, _vUNormal);
+  _vSec       = Math.max(rawSec, _vUSec);
+  _vAdmin     = Math.max(rawAdmin, _vUAdmin);
+  _vHead      = Math.max(rawHead, _vUHead);
+  _vManager   = Math.max(rawManager, _vUManager);
+  _vCoFounder = Math.max(rawCoFounder, _vUCoFounder);
+  _vFounder   = Math.max(rawFounder, _vUFounder);
 
-  updateStatsUI();
+  if (typeof updateStatsUI === 'function') updateStatsUI();
 }
 
 /* ── LISTEN: outer only (before login) ── */
@@ -219,8 +212,8 @@ function fbListenAll() {
 
   db.ref('logs').on('value', function(snap) {
     var list = [];
-    var cOut = 0, cNorm = 0, cSec = 0, cAdm = 0, cFou = 0;
-    var uniqueDevs = new Set(), uNorm = new Set(), uSec = new Set(), uAdm = new Set(), uFou = new Set();
+    var cOut=0, cNorm=0, cSec=0, cAdm=0, cHead=0, cMan=0, cCo=0, cFou=0;
+    var uDevs=new Set(), uNorm=new Set(), uSec=new Set(), uAdm=new Set(), uHead=new Set(), uMan=new Set(), uCo=new Set(), uFou=new Set();
     
     snap.forEach(function(c) {
       var val = c.val();
@@ -229,10 +222,13 @@ function fbListenAll() {
       var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip||'')+'|'+(val.device||'')+'|'+(val.os||'')+'|'+(val.browser||'')+'|'+(val.screen||'');
 
       if (val.ts >= _UNIQUE_CUTOFF_TS) {
-        if (val.type === 'view') { uniqueDevs.add(id); }
+        if (val.type === 'view') { uDevs.add(id); }
         else if (val.type === 'login_normal') { uNorm.add(id); }
         else if (val.type === 'login_secondary') { uSec.add(id); }
         else if (val.type === 'login_admin') { uAdm.add(id); }
+        else if (val.type === 'login_head') { uHead.add(id); }
+        else if (val.type === 'login_manager') { uMan.add(id); }
+        else if (val.type === 'login_cofounder') { uCo.add(id); }
         else if (val.type === 'login_founder') { uFou.add(id); }
       }
 
@@ -241,6 +237,9 @@ function fbListenAll() {
         else if (val.type === 'login_normal') { cNorm++; }
         else if (val.type === 'login_secondary') { cSec++; }
         else if (val.type === 'login_admin') { cAdm++; }
+        else if (val.type === 'login_head') { cHead++; }
+        else if (val.type === 'login_manager') { cMan++; }
+        else if (val.type === 'login_cofounder') { cCo++; }
         else if (val.type === 'login_founder') { cFou++; }
       }
     });
@@ -253,22 +252,26 @@ function fbListenAll() {
     _rawCounts.inner_normal = cNorm;
     _rawCounts.inner_secondary = cSec;
     _rawCounts.admin = cAdm;
+    _rawCounts.head = cHead;
+    _rawCounts.manager = cMan;
+    _rawCounts.cofounder = cCo;
     _rawCounts.founder = cFou;
     
     // Unique Counts
-    _rawCounts.real_visitors = uniqueDevs.size;
+    _rawCounts.real_visitors = uDevs.size;
     _rawCounts.unique_normal = uNorm.size;
     _rawCounts.unique_secondary = uSec.size;
     _rawCounts.unique_admin = uAdm.size;
+    _rawCounts.unique_head = uHead.size;
+    _rawCounts.unique_manager = uMan.size;
+    _rawCounts.unique_cofounder = uCo.size;
     _rawCounts.unique_founder = uFou.size;
 
     applyCounts();
 
     var logScreen = document.getElementById('log-screen');
     if (logScreen && logScreen.style.display === 'block') {
-      renderLogs();
-      renderUniqueLogs();
-      renderIpStats();
+      renderLogs(); renderUniqueLogs(); renderIpStats();
     }
   });
 }
