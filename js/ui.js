@@ -108,6 +108,7 @@ function populateUnassignedIds() {
   var assignedIds = new Set();
   Object.values(_identities).forEach(function(profile) { 
     var idsArray = (profile && profile.ids) ? profile.ids : (Array.isArray(profile) ? profile : []);
+    if (typeof idsArray === 'object' && !Array.isArray(idsArray)) idsArray = Object.values(idsArray);
     idsArray.forEach(function(id) { assignedIds.add(id); });
   });
 
@@ -123,7 +124,6 @@ function resetIdentityForm() {
   _editingProfileId = null;
   _tempIds = [];
   document.getElementById('id-profile-name').value = '';
-  // Chỉ Founder mới được tùy ý sửa tên Alias
   document.getElementById('id-profile-name').disabled = (_currentLoginRole !== 'founder');
   document.getElementById('id-dev-input').value = '';
   var sel = document.getElementById('id-dev-select');
@@ -178,13 +178,14 @@ function saveIdentity() {
   if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   
   var nameInput = document.getElementById('id-profile-name').value.trim();
-  // Nếu không phải Founder (bị disable ô Name), nameInput sẽ dùng giá trị placeholder (ID gốc)
   var idToSave = _editingProfileId || ('id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5));
   var finalName = nameInput || idToSave; 
   
   if (_tempIds.length === 0) { showToast('At least one Device ID required!'); return; }
 
-  var dataToSave = { name: finalName, ids: _tempIds };
+  var existingRank = (_identities[idToSave] && _identities[idToSave].rank) ? _identities[idToSave].rank : null;
+  var dataToSave = { name: finalName, ids: _tempIds.slice() };
+  if (existingRank) dataToSave.rank = existingRank;
 
   if (db) {
     var updates = {};
@@ -192,7 +193,7 @@ function saveIdentity() {
     db.ref().update(updates, function(err) {
       if (!err) {
         showToast('✓ Profile saved!');
-        _identities[idToSave] = { name: finalName, ids: _tempIds.slice() }; 
+        _identities[idToSave] = dataToSave; 
         resetIdentityForm();
         populateUnassignedIds();
         renderIdentityList();
@@ -210,16 +211,20 @@ function editIdentity(key) {
   _editingProfileId = key;
   
   var pName = profile.name || key;
-  // Các role khác Founder không được sửa Alias (Tên)
   if (_currentLoginRole === 'founder') {
     document.getElementById('id-profile-name').value = pName;
     document.getElementById('id-profile-name').disabled = false;
   } else {
-    document.getElementById('id-profile-name').value = key; // Chỉ hiện ID Gốc
+    document.getElementById('id-profile-name').value = key;
     document.getElementById('id-profile-name').disabled = true;
   }
   
-  _tempIds = Array.isArray(profile.ids) ? profile.ids.slice() : (Array.isArray(profile) ? profile.slice() : []);
+  var idsArray = [];
+  if (Array.isArray(profile.ids)) idsArray = profile.ids.slice();
+  else if (typeof profile.ids === 'object') idsArray = Object.values(profile.ids);
+  else if (Array.isArray(profile)) idsArray = profile.slice();
+
+  _tempIds = idsArray;
   renderTempIds();
   
   document.getElementById('btn-id-save').textContent = 'Update Profile';
@@ -246,6 +251,36 @@ function removeIdentity(key, displayName) {
   }
 }
 
+function updateIdentityRank(key, newRank) {
+  if (_currentLoginRole !== 'founder') return;
+  var profile = _identities[key];
+  if (!profile) return;
+  
+  // Chuẩn hóa Array trước khi lưu
+  var idsArray = [];
+  if (Array.isArray(profile.ids)) idsArray = profile.ids;
+  else if (typeof profile.ids === 'object') idsArray = Object.values(profile.ids);
+  else if (Array.isArray(profile)) idsArray = profile;
+
+  var dataToSave = { 
+    name: profile.name || key, 
+    ids: idsArray 
+  };
+  
+  if (newRank) dataToSave.rank = newRank;
+
+  if (db) {
+    db.ref('settings/identities/' + key).set(dataToSave, function(err) {
+      if (!err) {
+        showToast('✓ Assigned rank updated!');
+        _identities[key] = dataToSave;
+      } else {
+        showToast('⚠ Error updating rank');
+      }
+    });
+  }
+}
+
 function renderIdentityList() {
   var listEl = document.getElementById('id-active-profiles');
   if (!listEl) return;
@@ -256,18 +291,39 @@ function renderIdentityList() {
   }
   listEl.innerHTML = keys.map(function(k) {
     var profile = _identities[k];
-    // Rule: Chỉ hiển thị tên Alias đối với Founder, còn lại show ID/Key.
     var displayName = (_currentLoginRole === 'founder' && profile.name) ? profile.name : k;
+    var currentRank = profile.rank || '';
     
-    var ids = Array.isArray(profile.ids) ? profile.ids : (Array.isArray(profile) ? profile : []);
-    var tags = ids.map(function(id) { 
+    var idsArray = [];
+    if (Array.isArray(profile.ids)) idsArray = profile.ids;
+    else if (typeof profile.ids === 'object') idsArray = Object.values(profile.ids);
+    else if (Array.isArray(profile)) idsArray = profile;
+
+    var tags = idsArray.map(function(id) { 
       return '<span style="display:inline-block;background:rgba(44,62,122,0.08);color:var(--accent2);padding:3px 6px;border-radius:4px;margin:3px 6px 3px 0;font-size:11px;border:1px solid rgba(44,62,122,0.15);">'+esc(String(id))+'</span>'; 
     }).join('');
+    
+    var rankSelectHtml = '';
+    if (_currentLoginRole === 'founder') {
+      rankSelectHtml = '<select class="rank-select" onchange="updateIdentityRank(\''+esc(String(k))+'\', this.value)">' +
+        '<option value="">(No Rank)</option>' +
+        '<option value="secondary" '+(currentRank==='secondary'?'selected':'')+'>🔑 Sub</option>' +
+        '<option value="normal" '+(currentRank==='normal'?'selected':'')+'>🔒 Main</option>' +
+        '<option value="admin" '+(currentRank==='admin'?'selected':'')+'>🌟 Admin</option>' +
+        '<option value="head" '+(currentRank==='head'?'selected':'')+'>⚜️ Head</option>' +
+        '<option value="manager" '+(currentRank==='manager'?'selected':'')+'>🔱 Manager</option>' +
+        '<option value="cofounder" '+(currentRank==='cofounder'?'selected':'')+'>💎 Co-Founder</option>' +
+        '<option value="founder" '+(currentRank==='founder'?'selected':'')+'>👑 Founder</option>' +
+      '</select>';
+    } else if (currentRank) {
+      rankSelectHtml = '<span style="font-size:11px; font-weight:bold; color:var(--accent);">Rank Assigned</span>';
+    }
     
     return '<div style="padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.02);">' +
            '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">' +
            '<div style="font-weight:800;color:var(--ink);font-size:14px;display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(String(displayName)) + '</div>' +
-           '<div style="display:flex;gap:6px;"><button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;background:rgba(44,62,122,0.05);color:var(--accent2);font-weight:bold;cursor:pointer;" onclick="editIdentity(\''+esc(String(k))+'\')">Edit</button>' +
+           '<div style="display:flex;align-items:center;gap:6px;">' + rankSelectHtml +
+           '<button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;background:rgba(44,62,122,0.05);color:var(--accent2);font-weight:bold;cursor:pointer;" onclick="editIdentity(\''+esc(String(k))+'\')">Edit</button>' +
            '<button class="btn-ghost" style="padding:4px 12px;font-size:11px;border-radius:4px;color:#e74c3c;background:rgba(231,76,60,0.05);font-weight:bold;cursor:pointer;" onclick="removeIdentity(\''+esc(String(k))+'\', \''+esc(String(displayName).replace(/'/g, "\\'"))+'\')">Delete</button></div>' +
            '</div>' +
            '<div style="font-family:\'Space Mono\',monospace;margin-top:6px;">' + tags + '</div>' +
@@ -289,7 +345,6 @@ function openLinkIdentity(devId) {
     select.disabled = true;
   } else {
     select.innerHTML = '<option value="">-- Select Profile</option>' + keys.map(function(k) {
-      // Logic tương tự: Chỉ Founder mới thấy Alias trong Menu này
       var displayName = (_currentLoginRole === 'founder' && _identities[k].name) ? _identities[k].name : k;
       return '<option value="'+esc(String(k))+'">'+esc(String(displayName))+'</option>';
     }).join('');
@@ -308,11 +363,15 @@ function submitLinkIdentity() {
   if (!profileKey || !_pendingLinkId) return;
   
   var profile = _identities[profileKey];
-  var ids = Array.isArray(profile.ids) ? profile.ids.slice() : (Array.isArray(profile) ? profile.slice() : []);
+  var idsArray = [];
+  if (Array.isArray(profile.ids)) idsArray = profile.ids.slice();
+  else if (typeof profile.ids === 'object') idsArray = Object.values(profile.ids);
+  else if (Array.isArray(profile)) idsArray = profile.slice();
   
-  if (ids.indexOf(_pendingLinkId) === -1) {
-    ids.push(_pendingLinkId);
-    var dataToSave = profile.name ? { name: profile.name, ids: ids } : ids;
+  if (idsArray.indexOf(_pendingLinkId) === -1) {
+    idsArray.push(_pendingLinkId);
+    var dataToSave = { name: profile.name || profileKey, ids: idsArray };
+    if (profile.rank) dataToSave.rank = profile.rank; 
     
     if (db) {
       db.ref('settings/identities/' + profileKey).set(dataToSave, function(err) {

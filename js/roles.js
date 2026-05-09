@@ -229,8 +229,8 @@ function admAdjustCounter(e, key) {
   var lbls = { 
     outer: '👁 Views', real_visitors: '👤 Unique',
     inner_normal: '🔒 Total', unique_normal: '🔒 Unique',
-    inner_secondary: '🗝 Total', unique_secondary: '🗝 Unique',
-    admin: '★ Total', unique_admin: '★ Unique',
+    inner_secondary: '🔑 Total', unique_secondary: '🔑 Unique',
+    admin: '🌟 Total', unique_admin: '🌟 Unique',
     head: '⚜️ Total', unique_head: '⚜️ Unique',
     manager: '🔱 Total', unique_manager: '🔱 Unique',
     cofounder: '💎 Total', unique_cofounder: '💎 Unique',

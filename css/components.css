@@ -42,7 +42,9 @@ body.role-founder .stat-adj:hover { opacity: 0.5; }
 /* ── DIALOG / MODAL ── */
 .dialog-overlay { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(26,26,46,.5); backdrop-filter: blur(2px); align-items: center; justify-content: center; }
 .dialog-overlay.open { display: flex; }
-.dialog-box { background: var(--card); border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 32px 28px 24px; max-width: 380px; width: 90%; text-align: center; }
+.dialog-box { background: var(--card); border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 32px 28px 24px; max-width: 380px; width: 90%; text-align: center; max-height: 90vh; overflow-y: auto; overflow-x: hidden; }
+.dialog-box::-webkit-scrollbar { width: 6px; }
+.dialog-box::-webkit-scrollbar-thumb { background: rgba(138,127,110,.4); border-radius: 3px; }
 .dialog-box h3 { font-size: 1.3rem; font-weight: 900; color: var(--ink); margin-bottom: 10px; font-family: 'Nunito', sans-serif; }
 .dialog-box p { font-family: 'Nunito', sans-serif; font-size: 0.9rem; color: var(--muted); letter-spacing: .2px; line-height: 1.6; margin-bottom: 22px; }
 .dialog-box p strong { color: var(--accent); font-weight: 700; }
@@ -83,6 +85,7 @@ body.role-founder .stat-adj:hover { opacity: 0.5; }
 .badge-login_head     { background: rgba(108,92,231,.1); color: var(--head); border: 1px solid rgba(108,92,231,.3); }
 .badge-login_manager  { background: rgba(0,184,148,.1); color: var(--manager); border: 1px solid rgba(0,184,148,.3); }
 .badge-login_cofounder{ background: rgba(9,132,227,.1); color: var(--cofounder); border: 1px solid rgba(9,132,227,.3); }
+.auth-via-label       { display: block; font-family: 'Space Mono', monospace; font-size: 8px; color: var(--muted); margin-top: 3px; font-weight: bold; letter-spacing: 0.5px; opacity: 0.8; }
 
 /* ── LOG TABLE BUTTONS ── */
 .btn-refresh { padding: 8px 18px; border: 2px solid var(--ink); background: var(--card); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .15s; }
@@ -94,6 +97,22 @@ body.role-founder .stat-adj:hover { opacity: 0.5; }
 .btn-del-ip, .btn-block-ip { background: none; border: none; cursor: pointer; color: rgba(192,57,43,.4); padding: 4px; border-radius: 4px; margin-top: 2px; transition: all .15s; display: flex; align-items: center; justify-content: center; }
 .btn-del-ip:hover, .btn-block-ip:hover { color: var(--accent); background: rgba(192,57,43,.1); }
 .btn-del-ip svg, .btn-block-ip svg { width: 14px; height: 14px; }
+
+/* ── IDENTITY RANK SELECT ── */
+.rank-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+.rank-select:hover { border-color: var(--ink); }
 
 /* ── IP STATS GRID ── */
 .ip-stats-section { margin-top: 36px; }

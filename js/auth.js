@@ -2,6 +2,34 @@
    AUTH — checkPw, elevate, setup, change password, shield
    ══════════════════════════════════════════ */
 
+/* ── HELPERS ── */
+function getIdentityRankByDevId(devId) {
+  if (!devId) return null;
+  devId = String(devId).trim();
+  
+  for (var key in _identities) {
+    var profile = _identities[key];
+    if (!profile) continue;
+    
+    // Ép kiểu chống suy biến Array của Firebase
+    var idsArray = [];
+    if (Array.isArray(profile.ids)) {
+      idsArray = profile.ids;
+    } else if (typeof profile.ids === 'object') {
+      idsArray = Object.values(profile.ids);
+    } else if (Array.isArray(profile)) {
+      idsArray = profile;
+    }
+    
+    for (var i = 0; i < idsArray.length; i++) {
+      if (String(idsArray[i]).trim() === devId) {
+        return profile.rank || null;
+      }
+    }
+  }
+  return null;
+}
+
 /* ── TOGGLE PASSWORD EYE ── */
 function toggleEye() {
   var inp = document.getElementById('pw-input');
@@ -52,12 +80,51 @@ async function checkPw() {
   var buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
   var hash = Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
 
-  if      (hash === currentHashes.founder)   { _originalRole = 'founder';   _currentLoginRole = 'founder';   _isAdmin = true;  _loggedIn = true; sessionStorage.setItem('hun_known_founder', 'true'); }
-  else if (hash === currentHashes.admin)     { _originalRole = 'admin';     _currentLoginRole = 'admin';     _isAdmin = true;  _loggedIn = true; }
-  else if (hash === currentHashes.normal)    { _originalRole = 'normal';    _currentLoginRole = 'normal';    _isAdmin = false; _loggedIn = true; }
-  else if (hash === currentHashes.secondary) { _originalRole = 'secondary'; _currentLoginRole = 'secondary'; _isAdmin = false; _loggedIn = true; }
+  var pwRole = null;
+  if      (hash === currentHashes.founder)   { pwRole = 'founder'; }
+  else if (hash === currentHashes.admin)     { pwRole = 'admin'; }
+  else if (hash === currentHashes.normal)    { pwRole = 'normal'; }
+  else if (hash === currentHashes.secondary) { pwRole = 'secondary'; }
 
-  if (_loggedIn) {
+  if (pwRole) {
+    _loggedIn = true;
+    _originalRole = pwRole;
+    
+    if (pwRole === 'founder') sessionStorage.setItem('hun_known_founder', 'true');
+
+    // Chặn luồng, ép tải dữ liệu Identities sạch từ Firebase
+    if (db) {
+      var idSnap = await db.ref('settings/identities').once('value');
+      _identities = idSnap.val() || {};
+    }
+
+    var devId = localStorage.getItem('hun_device_id');
+    var assignedRank = getIdentityRankByDevId(devId);
+    
+    // LOGIC DUAL TAGGING CHUẨN: So sánh Cấp bậc (ROLE_LEVEL)
+    var newRole = pwRole;
+    var finalAuthVia = null;
+
+    if (assignedRank && assignedRank !== pwRole) {
+      var rankLv = ROLE_LEVEL[assignedRank] || 0;
+      var pwLv = ROLE_LEVEL[pwRole] || 0;
+      
+      if (rankLv > pwLv) {
+        // Định danh có chức vụ CAO HƠN pass đang nhập (VD: Rank Co-Founder dùng Pass Sub)
+        newRole = assignedRank;
+        finalAuthVia = pwRole;
+      } else {
+        // Định danh có chức vụ THẤP HƠN pass đang nhập -> Ưu tiên theo Pass
+        newRole = pwRole;
+        finalAuthVia = null;
+      }
+    }
+
+    _currentLoginRole = newRole;
+    _authVia = finalAuthVia;
+
+    _isAdmin = (ROLE_LEVEL[_currentLoginRole] >= 3);
+
     btn.innerHTML = oldText; btn.disabled = false;
     var pw = document.getElementById('pw-screen');
     pw.style.transition = 'opacity .4s'; pw.style.opacity = '0';
@@ -70,10 +137,7 @@ async function checkPw() {
     document.getElementById('nav-btns').style.display  = 'flex';
     updateNavBtns();
 
-    var logType = _isAdmin
-      ? (_currentLoginRole === 'founder' ? 'login_founder' : 'login_admin')
-      : (_currentLoginRole === 'normal' ? 'login_normal' : 'login_secondary');
-    fbIncrement(logType);
+    fbIncrement('login_' + _currentLoginRole, _authVia);
     fbListenAll();
 
     if (_isAdmin) applyAdminModeUI(); else applyUserModeUI();
@@ -146,20 +210,44 @@ async function submitElevate() {
   var buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
   var hash = Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2,'0'); }).join('');
 
-  var newRole = null;
-  if (hash === currentHashes.founder) newRole = 'founder';
-  else if (hash === currentHashes.admin)  newRole = 'admin';
-  else if (hash === currentHashes.normal) newRole = 'normal';
+  var pwRole = null;
+  if (hash === currentHashes.founder) pwRole = 'founder';
+  else if (hash === currentHashes.admin)  pwRole = 'admin';
+  else if (hash === currentHashes.normal) pwRole = 'normal';
 
-  if (!newRole) {
+  if (!pwRole) {
     var err = document.getElementById('elevate-err');
     err.style.display = 'block';
     setTimeout(function() { err.style.display = 'none'; }, 2000);
     return;
   }
 
-  const roleHierarchy = { founder: 4, admin: 3, normal: 2, secondary: 1 };
-  if (roleHierarchy[newRole] <= roleHierarchy[_currentLoginRole]) {
+  if (db) {
+    var idSnap = await db.ref('settings/identities').once('value');
+    _identities = idSnap.val() || {};
+  }
+
+  var devId = localStorage.getItem('hun_device_id');
+  var assignedRank = getIdentityRankByDevId(devId);
+  
+  // Áp dụng chung logic Đẳng cấp như hàm checkPw
+  var newRole = pwRole;
+  var newAuthVia = null;
+
+  if (assignedRank && assignedRank !== pwRole) {
+    var rankLv = ROLE_LEVEL[assignedRank] || 0;
+    var pwLv = ROLE_LEVEL[pwRole] || 0;
+    
+    if (rankLv > pwLv) {
+      newRole = assignedRank;
+      newAuthVia = pwRole;
+    } else {
+      newRole = pwRole;
+      newAuthVia = null;
+    }
+  }
+
+  if ((ROLE_LEVEL[newRole] || 0) <= (ROLE_LEVEL[_currentLoginRole] || 0)) {
     showToast('Already at this or higher privilege level!');
     closeElevateModal();
     return;
@@ -167,37 +255,37 @@ async function submitElevate() {
 
   closeElevateModal();
   _currentLoginRole = newRole;
+  _authVia = newAuthVia;
 
-  if (newRole === 'founder' || newRole === 'admin') {
+  if (ROLE_LEVEL[newRole] >= 3) {
     _isAdmin = true;
     localStorage.setItem('hun_is_admin', 'true');
     _hist = ['lock', 'main-' + _mode]; _hidx = 1;
 
-    if (newRole === 'founder') {
+    if (newRole === 'founder' || pwRole === 'founder') {
       _originalRole = 'founder';
       sessionStorage.setItem('hun_known_founder', 'true');
       
-      // Wipe previous non-founder session traces completely from DB 
       var updates = {};
       if (_sessionKeys.normal) { updates['logs/' + _sessionKeys.normal] = null; _sessionKeys.normal = null; }
       if (_sessionKeys.secondary) { updates['logs/' + _sessionKeys.secondary] = null; _sessionKeys.secondary = null; }
       if (_sessionKeys.admin) { updates['logs/' + _sessionKeys.admin] = null; _sessionKeys.admin = null; }
       
       if (Object.keys(updates).length > 0) db.ref().update(updates);
-      fbIncrement('login_founder');
     } else {
       if (_originalRole !== 'founder') _originalRole = 'admin';
-      fbIncrement('login_admin');
     }
+    
+    fbIncrement('login_' + _currentLoginRole, _authVia);
     applyAdminModeUI();
-    showToast(newRole === 'founder' ? '✓ Elevated to Founder!' : '✓ Elevated to Admin!');
+    showToast('✓ Elevated to ' + newRole.toUpperCase() + '!');
 
-  } else if (newRole === 'normal') {
+  } else {
     _isAdmin = false;
-    _originalRole = 'normal';
-    fbIncrement('login_normal');
+    _originalRole = pwRole;
+    fbIncrement('login_' + _currentLoginRole, _authVia);
     applyUserModeUI();
-    showToast('✓ Elevated to Main User!');
+    showToast('✓ Elevated to ' + newRole.toUpperCase() + '!');
   }
 }
 

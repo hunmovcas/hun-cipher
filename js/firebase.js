@@ -20,6 +20,7 @@ function initFirebase() {
 
     db.ref('settings/identities').on('value', function(snap) {
       _identities = snap.val() || {};
+      // Tên Alias đổi thì render lại Log (Rank Snapshot vẫn giữ nguyên quá khứ)
       if (document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
         if (typeof renderLogs === 'function') {
           renderLogs(); renderUniqueLogs(); renderIpStats();
@@ -100,7 +101,7 @@ function initFirebase() {
 }
 
 /* ── INCREMENT COUNTERS & PUSH LOG ── */
-function fbIncrement(type) {
+function fbIncrement(type, authVia) {
   if (!db) return;
 
   if (type === 'view') {
@@ -124,9 +125,11 @@ function fbIncrement(type) {
     deviceId: deviceId
   };
 
+  if (authVia) logData.authVia = authVia;
+
   function pushData(data) {
     db.ref('logs').push(data).then(function(snap) {
-      if (type === 'view')                           _sessionKeys.view       = snap.key;
+      if (type === 'view')                             _sessionKeys.view       = snap.key;
       else if (type === 'login_normal')              _sessionKeys.normal     = snap.key;
       else if (type === 'login_secondary')           _sessionKeys.secondary  = snap.key;
       else if (type === 'login_admin')               _sessionKeys.admin      = snap.key;
@@ -247,7 +250,6 @@ function fbListenAll() {
     _allLogs = list.reverse();
     computeUniqueLogs();
     
-    // Total Counts
     _rawCounts.outer = cOut;
     _rawCounts.inner_normal = cNorm;
     _rawCounts.inner_secondary = cSec;
@@ -257,7 +259,6 @@ function fbListenAll() {
     _rawCounts.cofounder = cCo;
     _rawCounts.founder = cFou;
     
-    // Unique Counts
     _rawCounts.real_visitors = uDevs.size;
     _rawCounts.unique_normal = uNorm.size;
     _rawCounts.unique_secondary = uSec.size;

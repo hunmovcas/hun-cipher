@@ -13,6 +13,7 @@ var _loggedIn         = false;
 var _isAdmin          = false;
 var _currentLoginRole = 'normal';   // 'normal' | 'secondary' | 'admin' | 'head' | 'manager' | 'cofounder' | 'founder'
 var _originalRole     = 'normal';
+var _authVia          = null;       // Lưu trữ pass thực sự được dùng (nếu identity rank ghi đè)
 var _isProtected      = false;
 var _blockedIPs       = {};
 
@@ -35,7 +36,7 @@ var _vUNormal = 0, _vUSec = 0, _vUAdmin = 0, _vUHead = 0, _vUManager = 0, _vUCoF
 // Logs & Identities
 var _allLogs = [];
 var _uniqueLogs = [];
-var _identities = {}; // Stores mappings of ProfileName -> [DeviceIDs]
+var _identities = {}; // Stores mappings of ProfileName -> {name, ids, rank}
 
 // Notifications
 var _allNoti = [];

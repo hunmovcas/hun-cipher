@@ -118,8 +118,44 @@ footer span { color: var(--accent); }
 #cnt-profile:hover svg { opacity: 1; transform: scale(1.15); }
 
 /* ── TOAST ── */
-.toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: var(--card); padding: 12px 28px; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .9rem; border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--accent); z-index: 99999; transition: transform .3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
-.toast.show { transform: translateX(-50%) translateY(0); }
+@keyframes toastBounce {
+  0%   { transform: translateX(-50%) translateY(100px) scale(0.5); opacity: 0; }
+  60%  { transform: translateX(-50%) translateY(-15px) scale(1.05); opacity: 1; }
+  80%  { transform: translateX(-50%) translateY(5px) scale(0.98); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes toastPulseGlow {
+  0%, 100% { box-shadow: 0 10px 30px rgba(192, 57, 43, 0.4), 0 0 0 2px rgba(192, 57, 43, 0.3); }
+  50%      { box-shadow: 0 15px 40px rgba(192, 57, 43, 0.8), 0 0 0 5px rgba(192, 57, 43, 0.6); }
+}
+
+.toast {
+  position: fixed;
+  bottom: 45px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px) scale(0.5);
+  opacity: 0;
+  background: linear-gradient(135deg, var(--ink) 0%, #0d0d1a 100%);
+  color: #fff;
+  padding: 16px 36px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900;
+  font-size: 1.05rem;
+  border-radius: 50px;
+  z-index: 99999;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.toast.show {
+  animation: 
+    toastBounce 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+    toastPulseGlow 1.5s ease-in-out infinite 0.6s;
+}
 
 /* ── RESPONSIVE ── */
 @media (max-width: 500px) {
@@ -127,4 +163,5 @@ footer span { color: var(--accent); }
   h1 { font-size: 2rem; }
   .actions { flex-direction: column; align-items: stretch; }
   .btn { text-align: center; }
+  .toast { font-size: 0.95rem; padding: 14px 28px; bottom: 30px; }
 }
