@@ -157,18 +157,27 @@ function fbIncrement(type) {
 
 /* ── APPLY COMPUTED COUNTS ── */
 function applyCounts() {
-  _vOuter    = Math.max(0, _rawCounts.outer + (_offsets.outer || 0));
-  _vReal     = Math.max(0, _rawCounts.real_visitors + (_offsets.real_visitors || 0));
-  _vNormal   = Math.max(0, _rawCounts.inner_normal + (_offsets.inner_normal || 0));
-  _vSec      = Math.max(0, _rawCounts.inner_secondary + (_offsets.inner_secondary || 0));
-  _vAdmin    = Math.max(0, _rawCounts.admin + (_offsets.admin || 0));
-  _vFounder  = Math.max(0, _rawCounts.founder + (_offsets.founder || 0));
- 
+  // 1. Tính toán bộ đếm Unique (Thực) trước
+  _vReal     = Math.max(0, (_rawCounts.real_visitors || 0) + (_offsets.real_visitors || 0));
   _vUNormal  = Math.max(0, (_rawCounts.unique_normal || 0) + (_offsets.unique_normal || 0));
   _vUSec     = Math.max(0, (_rawCounts.unique_secondary || 0) + (_offsets.unique_secondary || 0));
   _vUAdmin   = Math.max(0, (_rawCounts.unique_admin || 0) + (_offsets.unique_admin || 0));
   _vUFounder = Math.max(0, (_rawCounts.unique_founder || 0) + (_offsets.unique_founder || 0));
- 
+
+  // 2. Tính toán bộ đếm Total (Tổng) ban đầu
+  var rawOuter   = Math.max(0, (_rawCounts.outer || 0) + (_offsets.outer || 0));
+  var rawNormal  = Math.max(0, (_rawCounts.inner_normal || 0) + (_offsets.inner_normal || 0));
+  var rawSec     = Math.max(0, (_rawCounts.inner_secondary || 0) + (_offsets.inner_secondary || 0));
+  var rawAdmin   = Math.max(0, (_rawCounts.admin || 0) + (_offsets.admin || 0));
+  var rawFounder = Math.max(0, (_rawCounts.founder || 0) + (_offsets.founder || 0));
+
+  // 3. Khôi phục logic: Đảm bảo Total LUÔN LUÔN >= Unique
+  _vOuter    = Math.max(rawOuter, _vReal);
+  _vNormal   = Math.max(rawNormal, _vUNormal);
+  _vSec      = Math.max(rawSec, _vUSec);
+  _vAdmin    = Math.max(rawAdmin, _vUAdmin);
+  _vFounder  = Math.max(rawFounder, _vUFounder);
+
   updateStatsUI();
 }
 
@@ -199,7 +208,7 @@ function fbListenOuter() {
 /* ── LISTEN: all counters + logs (after login) ── */
 function fbListenAll() {
   if (!db) return;
- 
+  
   db.ref('logs').off();
   db.ref('settings/counter_offsets').off();
 
@@ -212,11 +221,11 @@ function fbListenAll() {
     var list = [];
     var cOut = 0, cNorm = 0, cSec = 0, cAdm = 0, cFou = 0;
     var uniqueDevs = new Set(), uNorm = new Set(), uSec = new Set(), uAdm = new Set(), uFou = new Set();
-   
+    
     snap.forEach(function(c) {
       var val = c.val();
       list.push(Object.assign({ _k: c.key }, val));
-     
+      
       var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip||'')+'|'+(val.device||'')+'|'+(val.os||'')+'|'+(val.browser||'')+'|'+(val.screen||'');
 
       if (val.ts >= _UNIQUE_CUTOFF_TS) {
@@ -238,14 +247,14 @@ function fbListenAll() {
 
     _allLogs = list.reverse();
     computeUniqueLogs();
-   
+    
     // Total Counts
     _rawCounts.outer = cOut;
     _rawCounts.inner_normal = cNorm;
     _rawCounts.inner_secondary = cSec;
     _rawCounts.admin = cAdm;
     _rawCounts.founder = cFou;
-   
+    
     // Unique Counts
     _rawCounts.real_visitors = uniqueDevs.size;
     _rawCounts.unique_normal = uNorm.size;
