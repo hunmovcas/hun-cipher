@@ -7,11 +7,8 @@ function initFirebase() {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
 
-    // ── AUTO-MIGRATION DỮ LIỆU CŨ ──
-    // Quét kiểm tra xem mảng offsets mới đã tồn tại chưa
     db.ref('settings/counter_offsets').once('value', function(snap) {
       if (!snap.exists()) {
-        // Nếu chưa tồn tại (chạy lần đầu sau update), tiến hành copy toàn bộ dữ liệu từ counters cũ
         db.ref('counters').once('value', function(oldSnap) {
           if (oldSnap.exists()) {
             db.ref('settings/counter_offsets').set(oldSnap.val());
@@ -133,7 +130,7 @@ function fbIncrement(type) {
 
   function pushData(data) {
     db.ref('logs').push(data).then(function(snap) {
-      if (type === 'view')                           _sessionKeys.view      = snap.key;
+      if (type === 'view')                             _sessionKeys.view      = snap.key;
       else if (type === 'login_normal')              _sessionKeys.normal    = snap.key;
       else if (type === 'login_secondary')           _sessionKeys.secondary = snap.key;
       else if (type === 'login_admin')               _sessionKeys.admin     = snap.key;
@@ -148,12 +145,18 @@ function fbIncrement(type) {
 
 /* ── APPLY COMPUTED COUNTS ── */
 function applyCounts() {
-  _vOuter   = Math.max(0, _rawCounts.outer + (_offsets.outer || 0));
-  _vReal    = Math.max(0, _rawCounts.real_visitors + (_offsets.real_visitors || 0));
-  _vNormal  = Math.max(0, _rawCounts.inner_normal + (_offsets.inner_normal || 0));
-  _vSec     = Math.max(0, _rawCounts.inner_secondary + (_offsets.inner_secondary || 0));
-  _vAdmin   = Math.max(0, _rawCounts.admin + (_offsets.admin || 0));
-  _vFounder = Math.max(0, _rawCounts.founder + (_offsets.founder || 0));
+  _vOuter    = Math.max(0, _rawCounts.outer + (_offsets.outer || 0));
+  _vReal     = Math.max(0, _rawCounts.real_visitors + (_offsets.real_visitors || 0));
+  _vNormal   = Math.max(0, _rawCounts.inner_normal + (_offsets.inner_normal || 0));
+  _vSec      = Math.max(0, _rawCounts.inner_secondary + (_offsets.inner_secondary || 0));
+  _vAdmin    = Math.max(0, _rawCounts.admin + (_offsets.admin || 0));
+  _vFounder  = Math.max(0, _rawCounts.founder + (_offsets.founder || 0));
+  
+  _vUNormal  = Math.max(0, (_rawCounts.unique_normal || 0) + (_offsets.unique_normal || 0));
+  _vUSec     = Math.max(0, (_rawCounts.unique_secondary || 0) + (_offsets.unique_secondary || 0));
+  _vUAdmin   = Math.max(0, (_rawCounts.unique_admin || 0) + (_offsets.unique_admin || 0));
+  _vUFounder = Math.max(0, (_rawCounts.unique_founder || 0) + (_offsets.unique_founder || 0));
+  
   updateStatsUI();
 }
 
@@ -162,10 +165,17 @@ function fbListenOuter() {
   if (!db) return;
   db.ref('logs').orderByChild('type').equalTo('view').on('value', function(snap) {
     var cOut = 0;
+    var uniqueDevs = new Set();
     snap.forEach(function(c) {
-      if (c.val().ts >= _CUTOFF_TS) cOut++;
+      var val = c.val();
+      if (val.ts >= _CUTOFF_TS) cOut++;
+      if (val.ts >= _UNIQUE_CUTOFF_TS) {
+        var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip||'')+'|'+(val.device||'')+'|'+(val.os||'')+'|'+(val.browser||'')+'|'+(val.screen||'');
+        uniqueDevs.add(id);
+      }
     });
     _rawCounts.outer = cOut;
+    _rawCounts.real_visitors = uniqueDevs.size;
     applyCounts();
   });
   db.ref('settings/counter_offsets').on('value', function(snap) {
@@ -178,7 +188,7 @@ function fbListenOuter() {
 function fbListenAll() {
   if (!db) return;
   
-  db.ref('logs').off(); // Clear any previous listeners to prevent overlap
+  db.ref('logs').off();
   db.ref('settings/counter_offsets').off();
 
   db.ref('settings/counter_offsets').on('value', function(s) {
@@ -189,39 +199,54 @@ function fbListenAll() {
   db.ref('logs').on('value', function(snap) {
     var list = [];
     var cOut = 0, cNorm = 0, cSec = 0, cAdm = 0, cFou = 0;
-    var uniqueDevs = new Set();
+    var uniqueDevs = new Set(), uNorm = new Set(), uSec = new Set(), uAdm = new Set(), uFou = new Set();
     
     snap.forEach(function(c) {
       var val = c.val();
       list.push(Object.assign({ _k: c.key }, val));
       
-      // Calculate dynamic counters exactly post-cutoff
+      var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip||'')+'|'+(val.device||'')+'|'+(val.os||'')+'|'+(val.browser||'')+'|'+(val.screen||'');
+
+      if (val.ts >= _UNIQUE_CUTOFF_TS) {
+        if (val.type === 'view') { uniqueDevs.add(id); }
+        else if (val.type === 'login_normal') { uNorm.add(id); }
+        else if (val.type === 'login_secondary') { uSec.add(id); }
+        else if (val.type === 'login_admin') { uAdm.add(id); }
+        else if (val.type === 'login_founder') { uFou.add(id); }
+      }
+
       if (val.ts >= _CUTOFF_TS) {
-        if (val.type === 'view') {
-          cOut++;
-          if (val.deviceId) uniqueDevs.add(val.deviceId);
-          else if (val.ip) uniqueDevs.add(val.ip);
-        }
-        else if (val.type === 'login_normal') cNorm++;
-        else if (val.type === 'login_secondary') cSec++;
-        else if (val.type === 'login_admin') cAdm++;
-        else if (val.type === 'login_founder') cFou++;
+        if (val.type === 'view') { cOut++; }
+        else if (val.type === 'login_normal') { cNorm++; }
+        else if (val.type === 'login_secondary') { cSec++; }
+        else if (val.type === 'login_admin') { cAdm++; }
+        else if (val.type === 'login_founder') { cFou++; }
       }
     });
 
     _allLogs = list.reverse();
+    computeUniqueLogs();
+    
+    // Total Counts
     _rawCounts.outer = cOut;
-    _rawCounts.real_visitors = uniqueDevs.size;
     _rawCounts.inner_normal = cNorm;
     _rawCounts.inner_secondary = cSec;
     _rawCounts.admin = cAdm;
     _rawCounts.founder = cFou;
+    
+    // Unique Counts
+    _rawCounts.real_visitors = uniqueDevs.size;
+    _rawCounts.unique_normal = uNorm.size;
+    _rawCounts.unique_secondary = uSec.size;
+    _rawCounts.unique_admin = uAdm.size;
+    _rawCounts.unique_founder = uFou.size;
 
     applyCounts();
 
     var logScreen = document.getElementById('log-screen');
     if (logScreen && logScreen.style.display === 'block') {
       renderLogs();
+      renderUniqueLogs();
       renderIpStats();
     }
   });

@@ -135,10 +135,10 @@ function setNum(id, n) { var el = document.getElementById(id); if (el) el.textCo
 function updateStatsUI() {
   setNum('login-outer-num', _vOuter);
   setNum('num-traffic',     _vOuter);
+  
+  // Dropdown adjustments
   setNum('drop-views',      _vOuter);
   setNum('drop-unique',     _vReal);
-  setNum('stat-outer',      _vOuter);
-  setNum('stat-real',       _vReal);
 
   var totalAuth = _vNormal + _vSec + _vAdmin + _vFounder;
   setNum('num-auth',    totalAuth);
@@ -149,36 +149,52 @@ function updateStatsUI() {
   setNum('drop-admin',  _vAdmin);
   setNum('drop-founder',_vFounder);
   
-  // Update UI Stats Bar
+  setNum('drop-sub-u',    _vUSec);
+  setNum('drop-main-u',   _vUNormal);
+  setNum('drop-admin-u',  _vUAdmin);
+  setNum('drop-founder-u',_vUFounder);
+  
+  // Update UI Stats Bar (Total Logins)
+  setNum('stat-outer',  _vOuter);
   setNum('stat-sec',    _vSec);
   setNum('stat-inner',  _vNormal);
   setNum('stat-admin',  _vAdmin);
   setNum('stat-founder',_vFounder);
+
+  // Update UI Stats Bar (Unique Logins)
+  setNum('stat-real',      _vReal);
+  setNum('stat-u-sec',     _vUSec);
+  setNum('stat-u-inner',   _vUNormal);
+  setNum('stat-u-admin',   _vUAdmin);
+  setNum('stat-u-founder', _vUFounder);
 }
 
-/* ── ADJUST/RESET VIA OFFSETS ── */
+/* ── ADJUST VIA OFFSETS ── */
 function admAdjustCounter(e, key) {
   e.stopPropagation(); closeAllMenus();
+  if (_currentLoginRole !== 'founder') return;
   if (_isProtected) { showToast('System is protected. Action denied!'); return; }
+  
   _pendingAdjustKey = key;
-  var lbls = { outer: '👁', inner_normal: '🔑', inner_secondary: '🗝', admin: '★', founder: '👑', real_visitors: '👤' };
-  document.getElementById('adjust-title').textContent = 'Adjust ' + lbls[key];
-  var val = { outer: _vOuter, real_visitors: _vReal, inner_normal: _vNormal, inner_secondary: _vSec, admin: _vAdmin, founder: _vFounder }[key] || 0;
+  var lbls = { 
+    outer: '👁 Views', real_visitors: '👤 Unique',
+    inner_normal: '🔒 Total', unique_normal: '🔒 Unique',
+    inner_secondary: '🗝 Total', unique_secondary: '🗝 Unique',
+    admin: '★ Total', unique_admin: '★ Unique',
+    founder: '👑 Total', unique_founder: '👑 Unique'
+  };
+  document.getElementById('adjust-title').textContent = 'Adjust ' + (lbls[key]||'Counter');
+  
+  var val = { 
+    outer: _vOuter, real_visitors: _vReal, 
+    inner_normal: _vNormal, inner_secondary: _vSec, admin: _vAdmin, founder: _vFounder,
+    unique_normal: _vUNormal, unique_secondary: _vUSec, unique_admin: _vUAdmin, unique_founder: _vUFounder
+  }[key] || 0;
+  
   var inp = document.getElementById('adjust-input');
   inp.value = val;
   document.getElementById('adjust-overlay').classList.add('open');
   setTimeout(function() { inp.focus(); inp.select(); }, 50);
-}
-
-function admClearCounter(e, key) {
-  e.stopPropagation(); closeAllMenus();
-  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
-  _pendingClearKey = key;
-  var lbls = { outer: '👁', inner_normal: '🔑', inner_secondary: '🗝', admin: '★', founder: '👑', real_visitors: '👤' };
-  document.getElementById('confirm-title').textContent = 'Reset ' + lbls[key] + '?';
-  document.getElementById('confirm-msg').innerHTML = 'This action will reset the visual counter to 0 without deleting actual log records.';
-  document.getElementById('confirm-yes').onclick = function() { doResetCounter(_pendingClearKey); };
-  document.getElementById('confirm-overlay').classList.add('open');
 }
 
 function doAdjustCounter() {
@@ -191,14 +207,6 @@ function doAdjustCounter() {
   var computed = _rawCounts[key] || 0;
   var newOffset = val - computed;
   db.ref('settings/counter_offsets/' + key).set(newOffset, function() { showToast('✓ Updated successfully!'); });
-}
-
-function doResetCounter(key) {
-  closeConfirm();
-  if (!db || !key) return;
-  
-  var computed = _rawCounts[key] || 0;
-  db.ref('settings/counter_offsets/' + key).set(-computed, function() { showToast('✓ Counter reset!'); });
 }
 
 /* ── internal show/hide helpers ── */

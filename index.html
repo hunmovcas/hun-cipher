@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/screens.css">
+  <style>
+    #log-table-u th { border-right: 1px solid rgba(255,255,255,0.1); }
+    #log-table-u th.sortable:hover { background: #1e8449 !important; }
+  </style>
 </head>
 <body>
 
@@ -82,10 +86,16 @@
       <div id="traffic-dropdown" class="dropdown-menu">
         <div class="adm-section">
           <div class="adm-section-label">Traffic Overview</div>
-          <div class="adm-item" style="cursor:default" title="Total Views">👁 <strong id="drop-views" style="margin-left:auto">0</strong></div>
-          <div class="adm-item" id="item-unique-view" style="cursor:default" title="Unique Visitors">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-            <strong id="drop-unique" style="margin-left:auto">0</strong>
+          <div class="adm-item" style="cursor:default">
+            <span style="font-weight:900; color:var(--ink);">👁 Views</span>
+            <span class="stat-adj" onclick="admAdjustCounter(event, 'outer')" id="drop-views" style="margin-left:auto; font-family:'Space Mono',monospace; color:var(--ink);">0</span>
+          </div>
+          <div class="adm-item" id="item-unique-view" style="cursor:default">
+            <span style="font-weight:900; color:#27ae60; display:flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+              Unique
+            </span>
+            <span class="stat-adj" onclick="admAdjustCounter(event, 'real_visitors')" id="drop-unique" style="margin-left:auto; font-family:'Space Mono',monospace; color:#27ae60; font-weight:bold;">0</span>
           </div>
         </div>
       </div>
@@ -99,10 +109,38 @@
       <div id="auth-dropdown" class="dropdown-menu">
         <div class="adm-section">
           <div class="adm-section-label">Session Breakdown</div>
-          <div class="adm-item" style="cursor:default" title="Sub Pass">🗝  <strong id="drop-sub"     style="margin-left:auto">0</strong></div>
-          <div class="adm-item" style="cursor:default" title="Main Pass">🔒 <strong id="drop-main"    style="margin-left:auto">0</strong></div>
-          <div class="adm-item" style="cursor:default" title="Admin">★      <strong id="drop-admin"   style="margin-left:auto">0</strong></div>
-          <div class="adm-item founder-only" style="cursor:default" title="Founder">👑 <strong id="drop-founder" style="margin-left:auto">0</strong></div>
+          <div class="adm-item" style="cursor:default">
+            <span style="font-size:14px;" title="Main Pass">🔒</span>
+            <div style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_normal')" id="drop-main" style="color:var(--ink);">0</span>
+              <span style="color:var(--border); margin:0 6px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_normal')" id="drop-main-u" style="color:#27ae60; font-weight:bold;">0</span>
+            </div>
+          </div>
+          <div class="adm-item" style="cursor:default">
+            <span style="font-size:14px;" title="Sub Pass">🗝</span>
+            <div style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_secondary')" id="drop-sub" style="color:var(--ink);">0</span>
+              <span style="color:var(--border); margin:0 6px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_secondary')" id="drop-sub-u" style="color:#27ae60; font-weight:bold;">0</span>
+            </div>
+          </div>
+          <div class="adm-item" style="cursor:default">
+            <span style="font-size:14px;" title="Admin">★</span>
+            <div style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'admin')" id="drop-admin" style="color:var(--ink);">0</span>
+              <span style="color:var(--border); margin:0 6px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_admin')" id="drop-admin-u" style="color:#27ae60; font-weight:bold;">0</span>
+            </div>
+          </div>
+          <div class="adm-item founder-only" style="cursor:default">
+            <span style="font-size:14px;" title="Founder">👑</span>
+            <div style="margin-left:auto; font-family:'Space Mono',monospace; font-size:11px;">
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'founder')" id="drop-founder" style="color:var(--ink);">0</span>
+              <span style="color:var(--border); margin:0 6px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_founder')" id="drop-founder-u" style="color:#27ae60; font-weight:bold;">0</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -147,26 +185,6 @@
           <button class="adm-item edit"   onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Sub Pass</button>
           <button class="adm-item danger" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Admin Pass</button>
           <button class="adm-item success" onclick="openChangeHints()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Edit Hints</button>
-        </div>
-        <!-- Founder modify data -->
-        <div class="adm-section founder-only">
-          <div class="adm-section-label">Modify Data</div>
-          <button class="adm-item edit"    onclick="admAdjustCounter(event,'outer')">Adjust 👁</button>
-          <button class="adm-item success" onclick="admAdjustCounter(event,'real_visitors')">Adjust 👤</button>
-          <button class="adm-item edit"    onclick="admAdjustCounter(event,'inner_secondary')">Adjust 🗝</button>
-          <button class="adm-item edit"    onclick="admAdjustCounter(event,'inner_normal')">Adjust 🔑</button>
-          <button class="adm-item edit"    onclick="admAdjustCounter(event,'admin')">Adjust ★</button>
-          <button class="adm-item founder" onclick="admAdjustCounter(event,'founder')">Adjust 👑</button>
-        </div>
-        <!-- Founder reset data -->
-        <div class="adm-section founder-only">
-          <div class="adm-section-label">Reset Data</div>
-          <button class="adm-item danger" onclick="admClearCounter(event,'outer')"           title="Reset Total Views">Reset 👁</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'real_visitors')"   title="Reset Unique Visitors">Reset 👤</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'inner_secondary')" title="Reset Sub Pass">Reset 🗝</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'inner_normal')"    title="Reset Main Pass">Reset 🔑</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'admin')"           title="Reset Admin Pass">Reset ★</button>
-          <button class="adm-item danger" onclick="admClearCounter(event,'founder')"         title="Reset Founder Pass">Reset 👑</button>
         </div>
         <!-- Logout -->
         <div class="adm-section">
@@ -221,13 +239,54 @@
         <button class="btn-refresh allow-protected" onclick="loadLogs()" title="Reload Data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Reload</button>
       </div>
     </div>
+
+    <!-- 1. TOTAL LOGINS HEADER & GRID -->
+    <div class="ip-stats-header" style="margin-bottom: 12px;">
+      <div class="ip-stats-title" style="color:var(--accent);">Total Logins</div>
+    </div>
     <div class="log-stats" id="log-stats-grid">
-      <div class="stat-card clickable allow-protected" id="sc-all"     onclick="setFilter('all')">         <div class="stat-num red"    id="stat-outer">–</div>  <div class="stat-label">👁 Total Views</div></div>
-      <div class="stat-card allow-protected"           id="sc-real">                                       <div class="stat-num green"  id="stat-real">–</div>   <div class="stat-label" style="color:#27ae60;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div></div>
-      <div class="stat-card clickable allow-protected" id="sc-sec"     onclick="setFilter('login_secondary')"><div class="stat-num blue"   id="stat-sec">–</div>    <div class="stat-label">🗝 Sub</div></div>
-      <div class="stat-card clickable allow-protected" id="sc-normal"  onclick="setFilter('login_normal')"><div class="stat-num blue"   id="stat-inner">–</div>  <div class="stat-label">🔒 Main</div></div>
-      <div class="stat-card clickable allow-protected" id="sc-admin"   onclick="setFilter('login_admin')"> <div class="stat-num orange" id="stat-admin">–</div>  <div class="stat-label">★ Admin</div></div>
-      <div class="stat-card clickable allow-protected" id="sc-founder" onclick="setFilter('login_founder')"><div class="stat-num" style="color:var(--founder);" id="stat-founder">–</div><div class="stat-label">👑 Founder</div></div>
+      <div class="stat-card clickable allow-protected" id="sc-all" onclick="setFilter('all')">
+        <div class="stat-num red" id="stat-outer">–</div> <div class="stat-label">👁 Total Views</div>
+      </div>
+      <div class="stat-card clickable allow-protected" id="sc-sec" onclick="setFilter('login_secondary')">
+        <div class="stat-num blue" id="stat-sec">–</div> <div class="stat-label">🗝 Sub</div>
+      </div>
+      <div class="stat-card clickable allow-protected" id="sc-normal" onclick="setFilter('login_normal')">
+        <div class="stat-num blue" id="stat-inner">–</div> <div class="stat-label">🔒 Main</div>
+      </div>
+      <div class="stat-card clickable allow-protected" id="sc-admin" onclick="setFilter('login_admin')">
+        <div class="stat-num orange" id="stat-admin">–</div> <div class="stat-label">★ Admin</div>
+      </div>
+      <div class="stat-card clickable allow-protected" id="sc-founder" onclick="setFilter('login_founder')">
+        <div class="stat-num" style="color:var(--founder);" id="stat-founder">–</div> <div class="stat-label">👑 Founder</div>
+      </div>
+    </div>
+
+    <!-- 2. UNIQUE LOGINS HEADER & GRID -->
+    <div class="ip-stats-header" style="margin-bottom: 12px; margin-top: 24px;">
+      <div class="ip-stats-title" style="color:#27ae60;">Unique Logins</div>
+    </div>
+    <div class="log-stats" id="log-stats-unique-grid" style="margin-bottom: 36px;">
+      <div class="stat-card allow-protected">
+        <div class="stat-num green" id="stat-real">–</div> <div class="stat-label" style="color:#27ae60;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div>
+      </div>
+      <div class="stat-card allow-protected">
+        <div class="stat-num blue" id="stat-u-sec">–</div> <div class="stat-label">🗝 Sub Unique</div>
+      </div>
+      <div class="stat-card allow-protected">
+        <div class="stat-num blue" id="stat-u-inner">–</div> <div class="stat-label">🔒 Main Unique</div>
+      </div>
+      <div class="stat-card allow-protected">
+        <div class="stat-num orange" id="stat-u-admin">–</div> <div class="stat-label">★ Admin Unique</div>
+      </div>
+      <div class="stat-card allow-protected">
+        <div class="stat-num" style="color:var(--founder);" id="stat-u-founder">–</div> <div class="stat-label">👑 Founder Unique</div>
+      </div>
+    </div>
+
+    <!-- 3. TOTAL LOGINS TABLE -->
+    <div class="ip-stats-header" style="margin-bottom: 12px; margin-top: 36px;">
+      <div class="ip-stats-title" style="color:var(--accent);">Total Logins Data</div>
     </div>
     <div class="log-filters">
       <button class="filter-btn active allow-protected" onclick="setFilter('all')"          id="f-all">All</button>
@@ -261,7 +320,46 @@
       </table>
     </div>
     <div class="log-pagination allow-protected" id="log-pagination"></div>
-    <div class="ip-stats-section" id="ip-stats-section">
+
+    <!-- 4. UNIQUE LOGINS TABLE -->
+    <div class="ip-stats-header" style="margin-bottom: 12px; margin-top: 36px;">
+      <div class="ip-stats-title" style="color:#27ae60;">Unique Logins Data</div>
+    </div>
+    <div class="log-filters">
+      <button class="filter-btn active allow-protected" onclick="setFilterU('all')"          id="fu-all">All</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterU('view')"         id="fu-view">👁 Page view</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterU('login_secondary')" id="fu-sec">🗝 Sub</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterU('login_normal')" id="fu-normal">🔒 Main</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterU('login_admin')"  id="fu-admin">★ Admin</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterU('login_founder')"id="fu-founder">👑 Founder</button>
+      <span class="log-count" id="log-count-u"></span>
+    </div>
+    <div class="log-search-row">
+      <input type="text" id="log-search-u" class="allow-protected" placeholder="Filter by ID, IP, city..." oninput="renderUniqueLogs()">
+      <div class="log-date-group">
+        <label>From</label><input type="date" class="date-inp allow-protected" id="date-from-u" onchange="renderUniqueLogs()">
+        <label>to</label>  <input type="date" class="date-inp allow-protected" id="date-to-u"   onchange="renderUniqueLogs()">
+      </div>
+    </div>
+    <div class="log-table-wrap" style="border-color:#27ae60; box-shadow:6px 6px 0 rgba(39,174,96,0.3);">
+      <div class="log-status" id="log-status-u"><span class="spin">⟳</span> Loading...</div>
+      <table class="log-table" id="log-table-u" style="display:none">
+        <thead style="background:#27ae60;"><tr>
+          <th style="width:110px; background:#27ae60;">Type</th>
+          <th style="width:145px; background:#27ae60;" class="sortable sort-desc allow-protected" id="thu-ts" onclick="toggleSortU('ts')">Timestamp <span class="sort-arrow"></span></th>
+          <th style="width:115px; background:#27ae60;">ID</th>
+          <th style="width:160px; background:#27ae60;" class="sortable allow-protected" id="thu-br" onclick="toggleSortU('br')">Browser · OS <span class="sort-arrow"></span></th>
+          <th style="background:#27ae60;">Location · IP · ISP</th>
+          <th style="width:110px; background:#27ae60;">Misc</th>
+          <th style="width:40px;text-align:center; background:#27ae60;">Act</th>
+        </tr></thead>
+        <tbody id="log-body-u"></tbody>
+      </table>
+    </div>
+    <div class="log-pagination allow-protected" id="log-pagination-u"></div>
+
+    <!-- 5. UNIQUE DEVICES GRID -->
+    <div class="ip-stats-section" id="ip-stats-section" style="margin-top: 36px;">
       <div class="ip-stats-header">
         <div class="ip-stats-title">Unique Devices (Fingerprinted)</div>
         <div class="ip-mode-tabs">
@@ -274,6 +372,7 @@
       </div>
       <div class="ip-stats-grid" id="ip-stats-grid"></div>
     </div>
+
   </div>
 </div>
 

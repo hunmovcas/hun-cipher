@@ -2,6 +2,24 @@
    LOGS — loadLogs, renderLogs, renderIpStats, trash, delete, export
    ══════════════════════════════════════════ */
 
+/* ── COMPUTE UNIQUE LOGS ── */
+function computeUniqueLogs() {
+  var seen = {};
+  var uLogs = [];
+  var sorted = _allLogs.slice().sort(function(a,b) { return a.ts - b.ts; });
+  sorted.forEach(function(log) {
+    if (log.ts >= _UNIQUE_CUTOFF_TS) {
+      var id = log.deviceId ? 'dev_' + log.deviceId : 'fp_' + (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
+      var key = log.type + '_' + id;
+      if (!seen[key]) {
+        seen[key] = true;
+        uLogs.push(log);
+      }
+    }
+  });
+  _uniqueLogs = uLogs.sort(function(a,b) { return b.ts - a.ts; });
+}
+
 /* ── FILTER / SORT / SEARCH ── */
 function loadLogs() {
   var statusEl = document.getElementById('log-status');
@@ -16,9 +34,10 @@ function loadLogs() {
       if (val.ts >= _CUTOFF_TS) _allLogs.push(Object.assign({ _k: c.key }, val));
     });
     _allLogs.reverse();
+    computeUniqueLogs();
     statusEl.style.display = 'none';
-    _page = 1;
-    renderLogs(); renderIpStats();
+    _page = 1; _pageU = 1;
+    renderLogs(); renderUniqueLogs(); renderIpStats();
   }, function(err) { statusEl.innerHTML = '⚠ Error: ' + err.message; });
 }
 
@@ -40,6 +59,28 @@ function getFilteredLogs() {
   }).sort(function(a, b) {
     var va = a[_sortField]||'', vb = b[_sortField]||'';
     if (_sortDir === 'asc') return va > vb ? 1 : va < vb ? -1 : 0;
+    return va < vb ? 1 : va > vb ? -1 : 0;
+  });
+}
+
+function getFilteredUniqueLogs() {
+  var search   = (document.getElementById('log-search-u').value || '').toLowerCase().trim();
+  var dateFrom = document.getElementById('date-from-u').value;
+  var dateTo   = document.getElementById('date-to-u').value;
+  return _uniqueLogs.filter(function(l) {
+    if (_filterU !== 'all' && l.type !== _filterU) return false;
+    if (search) {
+      var hay = [l.deviceId||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'',
+                 l.isp||'', l.browser||'', l.device||'', l.os||'', l.ua||'', l.tz||'', l.lang||'',
+                 l.screen||'', labelType(l.type)].join(' ').toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    if (dateFrom) { var ds  = new Date(l.ts).toISOString().slice(0,10); if (ds  < dateFrom) return false; }
+    if (dateTo)   { var ds2 = new Date(l.ts).toISOString().slice(0,10); if (ds2 > dateTo)   return false; }
+    return true;
+  }).sort(function(a, b) {
+    var va = a[_sortFieldU]||'', vb = b[_sortFieldU]||'';
+    if (_sortDirU === 'asc') return va > vb ? 1 : va < vb ? -1 : 0;
     return va < vb ? 1 : va > vb ? -1 : 0;
   });
 }
@@ -73,6 +114,7 @@ function labelType(t) {
   return t==='view' ? '👁 Page view' : t==='login_secondary' ? '🗝 Sub' : t==='login_normal' ? '🔒 Main' : t==='login_founder' ? '👑 Founder' : '★ Admin';
 }
 
+/* ── TOTAL LOGS EVENTS ── */
 function setFilter(type) {
   _filter = type; _page = 1;
   ['all','view','login_secondary','login_normal','login_admin','login_founder'].forEach(function(t) {
@@ -80,11 +122,6 @@ function setFilter(type) {
     var el = document.getElementById(id);
     if (el) el.classList.toggle('active', t === type);
   });
-  ['sc-all','sc-sec','sc-normal','sc-admin','sc-founder','sc-real'].forEach(function(id) {
-    var el = document.getElementById(id); if (el) el.classList.remove('sel');
-  });
-  var map = { all:'sc-all', login_secondary:'sc-sec', login_normal:'sc-normal', login_admin:'sc-admin', login_founder:'sc-founder' };
-  if (map[type]) { var el = document.getElementById(map[type]); if (el) el.classList.add('sel'); }
   renderLogs();
 }
 
@@ -100,11 +137,49 @@ function toggleSort(field) {
   renderLogs();
 }
 
-/* ── RENDER TABLE ── */
+/* ── UNIQUE LOGS EVENTS ── */
+function setFilterU(type) {
+  _filterU = type; _pageU = 1;
+  ['all','view','login_secondary','login_normal','login_admin','login_founder'].forEach(function(t) {
+    var id = 'fu-' + (t==='login_normal'?'normal':t==='login_secondary'?'sec':t==='login_admin'?'admin':t==='login_founder'?'founder':t);
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', t === type);
+  });
+  renderUniqueLogs();
+}
+
+function toggleSortU(field) {
+  if (_sortFieldU === field) _sortDirU = _sortDirU==='desc'?'asc':'desc';
+  else { _sortFieldU = field; _sortDirU = 'desc'; }
+  ['ts','br'].forEach(function(f) {
+    var th = document.getElementById('thu-'+f);
+    if (!th) return;
+    th.classList.remove('sort-asc','sort-desc');
+    if (f === _sortFieldU) th.classList.add('sort-' + _sortDirU);
+  });
+  renderUniqueLogs();
+}
+
+/* ── RENDER TABLES ── */
+function generateRowHtml(log) {
+  var d = new Date(log.ts), dstr = d.toLocaleDateString('en-US') + ' ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var browser = log.browser || _detectBrowser(log.ua||''), device = log.device || _detectDevice(log.ua||''), os = log.os || _detectOS(log.ua||'');
+  var locStr = buildLocationStr(log), locHtml = locStr ? '📍 ' + esc(locStr) + geoSrcBadge(log.geoSrc) : '<span style="color:var(--muted);font-style:italic">No location</span>';
+  var postalStr = log.postal ? ' <span style="color:var(--muted);font-size:8px">[' + esc(log.postal) + ']</span>' : '';
+  var ipStr = log.ip ? esc(log.ip) : '–', ispStr = log.isp ? esc(log.isp) : '';
+  var coordStr = (log.latitude && log.longitude) ? '<a href="https://maps.google.com/?q='+log.latitude+','+log.longitude+'" target="_blank" style="color:var(--accent2);font-size:8px;text-decoration:none;" title="View map">🗺 '+String(log.latitude).slice(0,8)+','+String(log.longitude).slice(0,8)+'</a>' : '';
+  var extra = [log.tz, log.screen].filter(Boolean).join(' · ');
+  var devIdStr = log.deviceId ? '<span class="dev-badge">' + esc(log.deviceId) + '</span>' : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
+  var delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log" onclick="deleteSingleLog(\''+log._k+'\', \''+log.type+'\', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
+  return '<tr><td>' + badgeHtml(log.type) + '</td><td><span style="color:var(--ink)">' + esc(dstr) + '</span></td><td>' + devIdStr + '</td><td><div class="cell-main">' + esc(browser) + '</div><div class="cell-sub">' + esc(device) + (os?' · '+esc(os):'') + '</div></td><td><div class="cell-loc">' + locHtml + postalStr + '</div><div class="cell-ip">🌐 ' + ipStr + (coordStr?' &nbsp;'+coordStr:'') + '</div>' + (ispStr?'<div class="cell-isp">'+ispStr+(log.asn?' · '+esc(log.asn):'')+'</div>':'') + '</td><td><div class="cell-sub">' + esc(extra) + '</div></td><td style="vertical-align:middle;">' + delBtn + '</td></tr>';
+}
+
 function renderLogs() {
   var list = getFilteredLogs();
-  document.getElementById('log-count').textContent = list.length + ' records';
+  var countEl = document.getElementById('log-count');
+  if (countEl) countEl.textContent = list.length + ' records';
   var tbody = document.getElementById('log-body'), tableEl = document.getElementById('log-table'), statusEl = document.getElementById('log-status');
+  if (!tbody) return;
   if (list.length === 0) {
     statusEl.innerHTML = 'No matching records found'; statusEl.style.display = 'block'; tableEl.style.display = 'none';
     document.getElementById('log-pagination').innerHTML = '';
@@ -114,39 +189,48 @@ function renderLogs() {
   if (_page > totalPages) _page = totalPages;
   var start = (_page-1)*_perPage, end = Math.min(start+_perPage, list.length), pageList = list.slice(start, end);
 
-  tbody.innerHTML = pageList.map(function(log) {
-    var d = new Date(log.ts), dstr = d.toLocaleDateString('en-US') + ' ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    var browser = log.browser || _detectBrowser(log.ua||''), device = log.device || _detectDevice(log.ua||''), os = log.os || _detectOS(log.ua||'');
-    var locStr = buildLocationStr(log), locHtml = locStr ? '📍 ' + esc(locStr) + geoSrcBadge(log.geoSrc) : '<span style="color:var(--muted);font-style:italic">No location</span>';
-    var postalStr = log.postal ? ' <span style="color:var(--muted);font-size:8px">[' + esc(log.postal) + ']</span>' : '';
-    var ipStr = log.ip ? esc(log.ip) : '–', ispStr = log.isp ? esc(log.isp) : '';
-    var coordStr = (log.latitude && log.longitude) ? '<a href="https://maps.google.com/?q='+log.latitude+','+log.longitude+'" target="_blank" style="color:var(--accent2);font-size:8px;text-decoration:none;" title="View map">🗺 '+String(log.latitude).slice(0,8)+','+String(log.longitude).slice(0,8)+'</a>' : '';
-    var extra = [log.tz, log.screen].filter(Boolean).join(' · ');
-    var devIdStr = log.deviceId ? '<span class="dev-badge">' + esc(log.deviceId) + '</span>' : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
-    var delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log" onclick="deleteSingleLog(\''+log._k+'\', \''+log.type+'\', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
-    return '<tr><td>' + badgeHtml(log.type) + '</td><td><span style="color:var(--ink)">' + esc(dstr) + '</span></td><td>' + devIdStr + '</td><td><div class="cell-main">' + esc(browser) + '</div><div class="cell-sub">' + esc(device) + (os?' · '+esc(os):'') + '</div></td><td><div class="cell-loc">' + locHtml + postalStr + '</div><div class="cell-ip">🌐 ' + ipStr + (coordStr?' &nbsp;'+coordStr:'') + '</div>' + (ispStr?'<div class="cell-isp">'+ispStr+(log.asn?' · '+esc(log.asn):'')+'</div>':'') + '</td><td><div class="cell-sub">' + esc(extra) + '</div></td><td style="vertical-align:middle;">' + delBtn + '</td></tr>';
-  }).join('');
-
+  tbody.innerHTML = pageList.map(generateRowHtml).join('');
   tableEl.style.display = 'table'; statusEl.style.display = 'none';
-  renderPagination(totalPages, list.length, start, end);
+  renderPagination(totalPages, list.length, start, end, 'log-pagination', 'goPage', _page);
 }
 
-function renderPagination(total, count, start, end) {
-  var pg = document.getElementById('log-pagination');
+function renderUniqueLogs() {
+  var list = getFilteredUniqueLogs();
+  var countEl = document.getElementById('log-count-u');
+  if (countEl) countEl.textContent = list.length + ' records';
+  var tbody = document.getElementById('log-body-u'), tableEl = document.getElementById('log-table-u'), statusEl = document.getElementById('log-status-u');
+  if (!tbody) return;
+  if (list.length === 0) {
+    statusEl.innerHTML = 'No matching records found'; statusEl.style.display = 'block'; tableEl.style.display = 'none';
+    document.getElementById('log-pagination-u').innerHTML = '';
+    return;
+  }
+  var totalPages = Math.ceil(list.length / _perPage);
+  if (_pageU > totalPages) _pageU = totalPages;
+  var start = (_pageU-1)*_perPage, end = Math.min(start+_perPage, list.length), pageList = list.slice(start, end);
+
+  tbody.innerHTML = pageList.map(generateRowHtml).join('');
+  tableEl.style.display = 'table'; statusEl.style.display = 'none';
+  renderPagination(totalPages, list.length, start, end, 'log-pagination-u', 'goPageU', _pageU);
+}
+
+function renderPagination(total, count, start, end, containerId, fnName, currentPage) {
+  var pg = document.getElementById(containerId);
   if (total <= 1) { pg.innerHTML = ''; return; }
-  var html = '<button class="pg-btn" onclick="goPage('+(_page-1)+')" '+(_page<=1?'disabled':'')+'>←</button>';
-  var rs = Math.max(1,_page-2), re = Math.min(total,_page+2);
-  if (rs > 1) html += '<button class="pg-btn" onclick="goPage(1)">1</button>';
+  var html = '<button class="pg-btn" onclick="'+fnName+'('+(currentPage-1)+')" '+(currentPage<=1?'disabled':'')+'>←</button>';
+  var rs = Math.max(1, currentPage-2), re = Math.min(total, currentPage+2);
+  if (rs > 1) html += '<button class="pg-btn" onclick="'+fnName+'(1)">1</button>';
   if (rs > 2) html += '<span class="pg-info">…</span>';
-  for (var i=rs; i<=re; i++) html += '<button class="pg-btn'+(i===_page?' active':'')+'" onclick="goPage('+i+')">'+i+'</button>';
+  for (var i=rs; i<=re; i++) html += '<button class="pg-btn'+(i===currentPage?' active':'')+'" onclick="'+fnName+'('+i+')">'+i+'</button>';
   if (re < total-1) html += '<span class="pg-info">…</span>';
-  if (re < total)   html += '<button class="pg-btn" onclick="goPage('+total+')">'+total+'</button>';
-  html += '<button class="pg-btn" onclick="goPage('+(_page+1)+')" '+(_page>=total?'disabled':'')+'>→</button>';
+  if (re < total)   html += '<button class="pg-btn" onclick="'+fnName+'('+total+')">'+total+'</button>';
+  html += '<button class="pg-btn" onclick="'+fnName+'('+(currentPage+1)+')" '+(currentPage>=total?'disabled':'')+'>→</button>';
   html += '<span class="pg-info">'+(start+1)+'–'+end+' / '+count+'</span>';
   pg.innerHTML = html;
 }
 
-function goPage(n) { _page = n; renderLogs(); document.getElementById('log-screen').scrollTop = 0; }
+function goPage(n) { _page = n; renderLogs(); }
+function goPageU(n) { _pageU = n; renderUniqueLogs(); }
 
 /* ── DELETE / TRASH ── */
 function deleteSingleLog(key, type, btnEl) {

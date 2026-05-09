@@ -31,6 +31,9 @@
 .adm-item.success:hover { background: rgba(39,174,96,.06); }
 .adm-item svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .8; }
 
+body.role-founder .stat-adj { cursor: pointer; transition: opacity .2s; }
+body.role-founder .stat-adj:hover { opacity: 0.5; }
+
 /* ── SWITCH MENU ── */
 #switch-dropdown { border-radius: 16px; padding: 24px 20px !important; box-shadow: 0 10px 40px rgba(0,0,0,0.12) !important; border: 2px solid var(--border) !important; background: linear-gradient(to bottom, var(--card), #ffffff) !important; }
 .switch-icon { font-size: 2rem; cursor: pointer; opacity: 0.5; filter: grayscale(0.8); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }

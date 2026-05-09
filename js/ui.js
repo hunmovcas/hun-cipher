@@ -83,15 +83,6 @@ function closeAdjust() {
   document.getElementById('adjust-overlay').classList.remove('open');
 }
 
-function doAdjustCounter() {
-  var val = parseInt(document.getElementById('adjust-input').value) || 0;
-  if (val < 0) val = 0;
-  var key = _pendingAdjustKey;
-  closeAdjust();
-  if (!db || !key) return;
-  db.ref('counters/' + key).set(val, function() { showToast('✓ Updated successfully!'); });
-}
-
 /* ── CONFIG DIALOGS ── */
 function openChangeWelcome() {
   if (_isProtected) { showToast('System is protected!'); return; }
@@ -199,37 +190,6 @@ function submitChangeSecret() {
   if (db) db.ref('settings/secretMsgs_v3').set(currentSecretMsgs, function(err) {
     if (err) showToast('⚠ Error!'); else { closeChangeSecret(); showToast('✓ Messages updated'); }
   }); else closeChangeSecret();
-}
-
-/* ── ADJUST / RESET COUNTERS ── */
-function admAdjustCounter(e, key) {
-  e.stopPropagation(); closeAllMenus();
-  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
-  _pendingAdjustKey = key;
-  var lbls = { outer: '👁', inner_normal: '🔑', inner_secondary: '🗝', admin: '★', founder: '👑', real_visitors: '👤' };
-  document.getElementById('adjust-title').textContent = 'Adjust ' + lbls[key];
-  var val = { outer: _vOuter, real_visitors: _vReal, inner_normal: _vNormal, inner_secondary: _vSec, admin: _vAdmin, founder: _vFounder }[key] || 0;
-  var inp = document.getElementById('adjust-input');
-  inp.value = val;
-  document.getElementById('adjust-overlay').classList.add('open');
-  setTimeout(function() { inp.focus(); inp.select(); }, 50);
-}
-
-function admClearCounter(e, key) {
-  e.stopPropagation(); closeAllMenus();
-  if (_isProtected) { showToast('System is protected. Action denied!'); return; }
-  _pendingClearKey = key;
-  var lbls = { outer: '👁', inner_normal: '🔑', inner_secondary: '🗝', admin: '★', founder: '👑', real_visitors: '👤' };
-  document.getElementById('confirm-title').textContent = 'Reset ' + lbls[key] + '?';
-  document.getElementById('confirm-msg').innerHTML = 'This action <strong>cannot be undone</strong>.<br>The counter will be reset to 0.';
-  document.getElementById('confirm-yes').onclick = function() { doResetCounter(_pendingClearKey); };
-  document.getElementById('confirm-overlay').classList.add('open');
-}
-
-function doResetCounter(key) {
-  closeConfirm();
-  if (!db || !key) return;
-  db.ref('counters/' + key).set(0, function() { showToast('✓ Counter reset!'); });
 }
 
 /* ── BLOCKED IP MANAGER ── */

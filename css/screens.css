@@ -48,7 +48,7 @@
 .log-title em { font-style: normal; color: var(--orange); }
 .log-header-right { display: flex; align-items: center; gap: 10px; }
 
-.log-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
+.log-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
 .stat-card { background: var(--card); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 16px 20px; text-align: center; cursor: default; transition: transform .15s, box-shadow .15s; }
 .stat-card:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
 .stat-num { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; line-height: 1; }
@@ -67,8 +67,8 @@
 .log-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; }
 
 .log-search-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
-#log-search { flex: 1; min-width: 160px; background: var(--card); border: 2px solid var(--border); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 11px; padding: 7px 12px; outline: none; border-radius: 0; transition: border-color .2s; }
-#log-search:focus { border-color: var(--ink); }
+#log-search, #log-search-u { flex: 1; min-width: 160px; background: var(--card); border: 2px solid var(--border); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 11px; padding: 7px 12px; outline: none; border-radius: 0; transition: border-color .2s; }
+#log-search:focus, #log-search-u:focus { border-color: var(--ink); }
 .log-date-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .log-date-group label { font-size: 9px; letter-spacing: 1px; color: var(--muted); margin-bottom: 0; text-transform: uppercase; white-space: nowrap; pointer-events: none; }
 .date-inp { background: var(--card); border: 2px solid var(--border); color: var(--ink); font-family: 'Space Mono', monospace; font-size: 10px; padding: 6px 8px; outline: none; border-radius: 0; cursor: pointer; transition: border-color .2s; }
