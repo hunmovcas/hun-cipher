@@ -64,6 +64,7 @@ function applyNav(s) {
       var statusEl = document.getElementById('log-status');
       if (statusEl) statusEl.style.display = 'none';
       renderLogs();
+      renderUniqueLogs(); // Đã bổ sung dòng này để bảng Unique render ngay lập tức
       renderIpStats();
     } else {
       loadLogs();
