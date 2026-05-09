@@ -58,7 +58,9 @@ function getFilteredLogs() {
     if (_filter !== 'all' && l.type !== _filter) return false;
     if (search) {
       var idName = l.deviceId ? getIdentityName(l.deviceId) : '';
+      var coordCombo = (l.latitude && l.longitude) ? l.latitude+','+l.longitude : ''; // Hỗ trợ gõ dính liền tọa độ
       var hay = [l.deviceId||'', idName||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'',
+                 l.latitude||'', l.longitude||'', coordCombo, // Tìm bằng tọa độ hoặc IP
                  l.isp||'', l.browser||'', l.device||'', l.os||'', l.ua||'', l.tz||'', l.lang||'',
                  l.screen||'', labelType(l.type)].join(' ').toLowerCase();
       if (hay.indexOf(search) === -1) return false;
@@ -81,7 +83,9 @@ function getFilteredUniqueLogs() {
     if (_filterU !== 'all' && l.type !== _filterU) return false;
     if (search) {
       var idName = l.deviceId ? getIdentityName(l.deviceId) : '';
+      var coordCombo = (l.latitude && l.longitude) ? l.latitude+','+l.longitude : ''; // Hỗ trợ gõ dính liền tọa độ
       var hay = [l.deviceId||'', idName||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'',
+                 l.latitude||'', l.longitude||'', coordCombo, // Tìm bằng tọa độ hoặc IP
                  l.isp||'', l.browser||'', l.device||'', l.os||'', l.ua||'', l.tz||'', l.lang||'',
                  l.screen||'', labelType(l.type)].join(' ').toLowerCase();
       if (hay.indexOf(search) === -1) return false;

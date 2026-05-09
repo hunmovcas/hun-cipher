@@ -112,7 +112,7 @@ function populateUnassignedIds() {
   var sel = document.getElementById('id-dev-select');
   if (!sel) return;
   
-  sel.innerHTML = '<option value="">-- Quick pick unassigned ID --</option>' +
+  sel.innerHTML = '<option value="">-- Quick pick unassigned ID</option>' +
                   available.map(function(id) { return '<option value="'+esc(id)+'">'+esc(id)+'</option>'; }).join('');
 }
 
@@ -251,10 +251,10 @@ function openLinkIdentity(devId) {
   var select = document.getElementById('link-profile-select');
   var keys = Object.keys(_identities);
   if (keys.length === 0) {
-    select.innerHTML = '<option value="">-- No profiles exist --</option>';
+    select.innerHTML = '<option value="">-- No profiles exist</option>';
     select.disabled = true;
   } else {
-    select.innerHTML = '<option value="">-- Select Profile --</option>' + keys.map(function(k) {
+    select.innerHTML = '<option value="">-- Select Profile</option>' + keys.map(function(k) {
       return '<option value="'+esc(k)+'">'+esc(k)+'</option>';
     }).join('');
     select.disabled = false;
