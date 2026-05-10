@@ -38,7 +38,8 @@ function updateExclusions() {
 }
 
 function updateGuestExclusions() {
-  _guestExcludedRanks = Array.from(document.querySelectorAll('#auth-dropdown input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
+  _guestExcludedRanks = Array.from(document.querySelectorAll('.chk-guest-exclude-role:checked')).map(function(cb) { return cb.value; });
+  _guestExcludedProfiles = Array.from(document.querySelectorAll('.chk-guest-exclude-prof:checked')).map(function(cb) { return cb.value; });
   computeUniqueLogs();
   if (typeof renderGuestLogs === 'function') renderGuestLogs();
 }
@@ -121,8 +122,11 @@ function computeUniqueLogs() {
       else if (log.type === 'login_founder') gFou.add(id);
     }
 
-    // Identify roles for Guest Exclusion (Dựa hoàn toàn vào tick box)
+    // Identify roles and profiles for Guest Exclusion
     if (log.ts >= _UNIQUE_CUTOFF_TS) {
+      var idenName = log.deviceId ? getIdentityName(log.deviceId) : null;
+      var isExcludedByProfile = idenName && typeof _guestExcludedProfiles !== 'undefined' && _guestExcludedProfiles.indexOf(idenName) !== -1;
+
       var idenRank = getIdentityRankByDevId(log.deviceId);
       var passRole = (log.type !== 'view') ? log.type.replace('login_', '') : null;
       var finalRank = passRole;
@@ -137,8 +141,10 @@ function computeUniqueLogs() {
         }
       }
 
-      // Nếu finalRank của thiết bị nằm trong mảng những ô được tick -> Đưa vào danh sách loại trừ
-      if (finalRank && typeof _guestExcludedRanks !== 'undefined' && _guestExcludedRanks.indexOf(finalRank) !== -1) {
+      var isExcludedByRank = finalRank && typeof _guestExcludedRanks !== 'undefined' && _guestExcludedRanks.indexOf(finalRank) !== -1;
+
+      // Nếu nằm trong mảng những ô được tick -> Đưa vào danh sách loại trừ
+      if (isExcludedByProfile || isExcludedByRank) {
         guestExcludedIds.add(id);
       }
     }

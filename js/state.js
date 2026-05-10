@@ -62,6 +62,7 @@ var _filterG = 'all';
 var _excludedRanks = [];
 var _excludedProfiles = [];
 var _guestExcludedRanks = [];
+var _guestExcludedProfiles = [];
 var _ipMode = 'all';
 
 // Pending Actions

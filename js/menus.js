@@ -21,7 +21,10 @@ function toggleMenu(e, menuVarName, menuId) {
 
 function toggleProfileMenu(e) { toggleMenu(e, '_profileOpen', 'profile-dropdown'); }
 function toggleTrafficMenu(e)  { toggleMenu(e, '_trafficOpen', 'traffic-dropdown'); }
-function toggleAuthMenu(e)     { toggleMenu(e, '_authOpen',    'auth-dropdown'); }
+function toggleAuthMenu(e)     { 
+  if (typeof renderGuestExcludeProfilesList === 'function') renderGuestExcludeProfilesList();
+  toggleMenu(e, '_authOpen',    'auth-dropdown'); 
+}
 function toggleNoti(e)         { toggleMenu(e, '_notiOpen',    'noti-dropdown'); }
 function toggleExcludeMenu(e)  { 
   if (typeof renderExcludeProfilesList === 'function') renderExcludeProfilesList();

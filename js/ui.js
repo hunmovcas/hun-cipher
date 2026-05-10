@@ -71,6 +71,37 @@ window.toggleProfileExclusion = function(e) {
   }
 };
 
+/* ── GUEST EXCLUDE PROFILES UI ── */
+function renderGuestExcludeProfilesList() {
+  var container = document.getElementById('guest-exclude-profiles-container');
+  if (!container) return;
+  var keys = Object.keys(_identities);
+  if (keys.length === 0) {
+    container.innerHTML = '<div style="font-size:10px; color:var(--muted); font-style:italic;">No profiles</div>';
+    return;
+  }
+  var html = keys.map(function(k) {
+    var profile = _identities[k];
+    var pName = profile.name || k;
+    var isChecked = _guestExcludedProfiles.indexOf(pName) !== -1 ? 'checked' : '';
+    return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:\'Nunito\',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-guest-exclude-prof" value="'+esc(pName)+'" onchange="updateGuestExclusions()" '+isChecked+'> 👤 '+esc(pName)+'</label>';
+  }).join('');
+  container.innerHTML = html;
+}
+
+window.toggleGuestProfileExclusion = function(e) {
+  e.stopPropagation();
+  var container = document.getElementById('guest-exclude-profiles-container');
+  var arrow = document.getElementById('guest-prof-excl-arrow');
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    arrow.style.transform = 'rotate(180deg)';
+  } else {
+    container.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  }
+};
+
 /* ── SECRET MESSAGE ── */
 function showSecretCipher() {
   var msg = currentSecretMsgs[_currentLoginRole] || '';
@@ -317,6 +348,7 @@ function renderIdentityList() {
   if (!listEl) return;
   
   renderExcludeProfilesList(); // Update Exclude Profiles List in filter menu
+  renderGuestExcludeProfilesList(); // Update Guest Exclude Profiles List
   
   var keys = Object.keys(_identities);
   if (keys.length === 0) {
