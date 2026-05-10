@@ -59,10 +59,12 @@ var _sortFieldG = 'ts';
 var _sortDirG = 'desc';
 var _filterG = 'all';
 
-var _excludedRanks = [];
-var _excludedProfiles = [];
-var _guestExcludedRanks = [];
-var _guestExcludedProfiles = [];
+// Khôi phục mảng Exclusions từ LocalStorage
+var _excludedRanks = JSON.parse(localStorage.getItem('hun_exclude_ranks') || '[]');
+var _excludedProfiles = JSON.parse(localStorage.getItem('hun_exclude_profiles') || '[]');
+var _guestExcludedRanks = JSON.parse(localStorage.getItem('hun_guest_exclude_ranks') || '[]');
+var _guestExcludedProfiles = JSON.parse(localStorage.getItem('hun_guest_exclude_profiles') || '[]');
+
 var _ipMode = 'all';
 
 // Pending Actions

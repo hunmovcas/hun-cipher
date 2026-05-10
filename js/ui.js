@@ -691,3 +691,25 @@ function fbCopy(t) {
     document.body.removeChild(ta); showToast('✓ Copied to clipboard!');
   } catch(e) { showToast('⚠ Failed to copy'); }
 }
+
+/* ── RESTORE EXCLUSIONS UI ON LOAD ── */
+window.restoreExclusionsUI = function() {
+  // Update Role checkboxes
+  document.querySelectorAll('.chk-exclude').forEach(function(cb) {
+    if (_excludedRanks.indexOf(cb.value) !== -1) cb.checked = true;
+  });
+  document.querySelectorAll('.chk-guest-exclude-role').forEach(function(cb) {
+    if (_guestExcludedRanks.indexOf(cb.value) !== -1) cb.checked = true;
+  });
+
+  // Update Main Exclusions button text
+  var totalExcluded = _excludedRanks.length + _excludedProfiles.length;
+  var btn = document.getElementById('btn-exclude-menu');
+  if (btn) {
+    if (totalExcluded > 0) {
+      btn.style.background = 'var(--ink)'; btn.style.color = 'var(--card)';
+      btn.innerHTML = '🚫 Excluding (' + totalExcluded + ')';
+    }
+  }
+  // Profile checkboxes will be automatically checked when their menus are generated
+};

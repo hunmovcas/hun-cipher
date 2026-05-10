@@ -22,6 +22,10 @@ function updateExclusions() {
   _excludedRanks = Array.from(document.querySelectorAll('.chk-exclude:checked')).map(function(cb) { return cb.value; });
   _excludedProfiles = Array.from(document.querySelectorAll('.chk-exclude-prof:checked')).map(function(cb) { return cb.value; });
   
+  // Save to LocalStorage
+  localStorage.setItem('hun_exclude_ranks', JSON.stringify(_excludedRanks));
+  localStorage.setItem('hun_exclude_profiles', JSON.stringify(_excludedProfiles));
+
   var totalExcluded = _excludedRanks.length + _excludedProfiles.length;
   var btn = document.getElementById('btn-exclude-menu');
   if (btn) {
@@ -40,6 +44,11 @@ function updateExclusions() {
 function updateGuestExclusions() {
   _guestExcludedRanks = Array.from(document.querySelectorAll('.chk-guest-exclude-role:checked')).map(function(cb) { return cb.value; });
   _guestExcludedProfiles = Array.from(document.querySelectorAll('.chk-guest-exclude-prof:checked')).map(function(cb) { return cb.value; });
+  
+  // Save to LocalStorage
+  localStorage.setItem('hun_guest_exclude_ranks', JSON.stringify(_guestExcludedRanks));
+  localStorage.setItem('hun_guest_exclude_profiles', JSON.stringify(_guestExcludedProfiles));
+
   computeUniqueLogs();
   if (typeof renderGuestLogs === 'function') renderGuestLogs();
 }
@@ -310,7 +319,7 @@ function geoSrcBadge(src) {
 }
 
 function badgeHtml(type) {
-  if (type === 'view')            return '<span class="badge badge-view"><span class="badge-icon">👁</span>Page view</span>';
+  if (type === 'view')             return '<span class="badge badge-view"><span class="badge-icon">👁</span>Page view</span>';
   if (type === 'login_secondary') return '<span class="badge badge-login_normal" style="background:rgba(44,62,122,.05);color:var(--accent2);border-color:rgba(44,62,122,.2)"><span class="badge-icon">🔑</span>Sub</span>';
   if (type === 'login_normal')    return '<span class="badge badge-login_normal"><span class="badge-icon">🔒</span>Main</span>';
   if (type === 'login_admin')     return '<span class="badge badge-login_admin"><span class="badge-icon">🌟</span>Admin</span>';
@@ -549,7 +558,7 @@ function doDeleteSingleLog() {
   trashData.deletedAt = Date.now();
   
   var updates = {}; updates['trash/logs/' + key] = trashData; updates['logs/' + key] = null;
- 
+  
   db.ref().update(updates, function(err) {
     if (err) { showToast('⚠ Error wiping log!'); return; }
     showToast('✓ Log moved to trash!');
@@ -575,7 +584,7 @@ function doDeleteDeviceLogs() {
   if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   closeConfirm();
   if (!db || !_pendingDeleteKeys || !_pendingDeleteKeys.length) return;
- 
+  
   if (_pendingDeleteRow) {
     _pendingDeleteRow.style.opacity = '0'; _pendingDeleteRow.style.transform = 'scale(0.95)';
     setTimeout(function() { if (_pendingDeleteRow) _pendingDeleteRow.remove(); }, 300);
@@ -713,7 +722,7 @@ function renderIpStats() {
       { key:'sec',       label:'🔑 Sub',     cls:'col-normal',     numCls:'cnt-normal', barCls:'bar-normal',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
       { key:'normal',    label:'🔒 Main',    cls:'col-normal',     numCls:'cnt-normal', barCls:'bar-normal',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
       { key:'admin',     label:'🌟 Admin',   cls:'col-admin',      numCls:'cnt-admin',  barCls:'bar-admin',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
-      { key:'head',      label:'⚜️ Head',      cls:'col-head',      numCls:'cnt-admin',  barCls:'bar-head',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
+      { key:'head',      label:'⚜️ Head',     cls:'col-head',      numCls:'cnt-admin',  barCls:'bar-head',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
       { key:'manager',   label:'🔱 Manager',   cls:'col-manager',   numCls:'cnt-admin',  barCls:'bar-manager',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
       { key:'cofounder', label:'💎 Co-Founder',cls:'col-cofounder', numCls:'cnt-admin',  barCls:'bar-cofounder', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 4 8 11 2 4 5 16 19 16 22 4 16 11 12 4"></polygon><line x1="5" y1="20" x2="19" y2="20"></line></svg>' },
       { key:'founder',   label:'👑 Founder', cls:'col-founder',   numCls:'cnt-admin',  barCls:'bar-founder',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 4 8 11 2 4 5 16 19 16 22 4 16 11 12 4"></polygon><line x1="5" y1="20" x2="19" y2="20"></line></svg>' }

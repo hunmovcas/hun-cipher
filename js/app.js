@@ -7,6 +7,7 @@ function initApp() {
   renderTitle();
   renderNotes();
   renderWelcome();
+  if (typeof restoreExclusionsUI === 'function') restoreExclusionsUI(); // Phục hồi giao diện Exclusions
   initFirebase();
 }
 
