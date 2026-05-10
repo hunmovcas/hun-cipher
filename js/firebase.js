@@ -20,8 +20,9 @@ function initFirebase() {
 
     db.ref('settings/identities').on('value', function(snap) {
       _identities = snap.val() || {};
-      // Tên Alias đổi thì render lại Log (Rank Snapshot vẫn giữ nguyên quá khứ)
+      // Tên Alias đổi thì render lại Log và tính lại lượng Guest
       if (document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
+        if (typeof computeUniqueLogs === 'function') computeUniqueLogs();
         if (typeof renderLogs === 'function') {
           renderLogs(); renderUniqueLogs(); renderIpStats();
         }

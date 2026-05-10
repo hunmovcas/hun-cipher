@@ -17,23 +17,140 @@ function getIdentityName(devId) {
   return devId;
 }
 
-/* ── COMPUTE UNIQUE LOGS ── */
+/* ── MULTI-ROLE EXCLUSION LOGIC ── */
+function updateExclusions() {
+  _excludedRanks = Array.from(document.querySelectorAll('.chk-exclude:checked')).map(function(cb) { return cb.value; });
+  _excludedProfiles = Array.from(document.querySelectorAll('.chk-exclude-prof:checked')).map(function(cb) { return cb.value; });
+  
+  var totalExcluded = _excludedRanks.length + _excludedProfiles.length;
+  var btn = document.getElementById('btn-exclude-menu');
+  if (btn) {
+    if (totalExcluded > 0) {
+      btn.style.background = 'var(--ink)'; btn.style.color = 'var(--card)';
+      btn.innerHTML = '🚫 Excluding (' + totalExcluded + ')';
+    } else {
+      btn.style.background = 'var(--card)'; btn.style.color = 'var(--ink)';
+      btn.innerHTML = '🚫 Exclude Profiles';
+    }
+  }
+  _page = 1; _pageU = 1;
+  renderLogs(); renderUniqueLogs(); renderIpStats();
+}
+
+function updateGuestExclusions() {
+  _guestExcludedRanks = Array.from(document.querySelectorAll('#auth-dropdown input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
+  computeUniqueLogs();
+}
+
+function isLogExcluded(log) {
+  if (_excludedRanks.length === 0 && _excludedProfiles.length === 0) return false;
+
+  var idenName = log.deviceId ? getIdentityName(log.deviceId) : null;
+  if (idenName && _excludedProfiles.indexOf(idenName) !== -1) return true;
+
+  var idenRank = getIdentityRankByDevId(log.deviceId);
+  
+  if (log.type === 'view') {
+    return idenRank ? _excludedRanks.indexOf(idenRank) !== -1 : false;
+  }
+  
+  var passRole = log.type.replace('login_', '');
+  var finalRank = passRole;
+  if (idenRank && idenRank !== passRole) {
+    var rLv = ROLE_LEVEL[idenRank] || 0;
+    var pLv = ROLE_LEVEL[passRole] || 0;
+    if (rLv > pLv) finalRank = idenRank;
+  }
+  return _excludedRanks.indexOf(finalRank) !== -1;
+}
+
+/* ── COMPUTE UNIQUE LOGS & GUEST COUNTERS ── */
 function computeUniqueLogs() {
   var seen = {};
   var uLogs = [];
+  var uNorm=new Set(), uSec=new Set(), uAdm=new Set(), uHead=new Set(), uMan=new Set(), uCo=new Set(), uFou=new Set();
+  var uDevs=new Set();
+
+  var gNorm=new Set(), gSec=new Set(), gAdm=new Set(), gHead=new Set(), gMan=new Set(), gCo=new Set(), gFou=new Set();
+  var gDevs=new Set();
+
+  var guestExcludedIds = new Set();
+  var guestExcludeDevsTraffic = new Set();
+
   var sorted = _allLogs.slice().sort(function(a,b) { return (a.ts||0) - (b.ts||0); });
   sorted.forEach(function(log) {
     if (log.ts >= _UNIQUE_CUTOFF_TS) {
       var id = log.deviceId ? 'dev_' + log.deviceId : 'fp_' + (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
-      // Nhóm theo loại log đã đóng băng (Snapshot)
       var key = log.type + '_' + id;
       if (!seen[key]) {
         seen[key] = true;
         uLogs.push(log);
       }
+      
+      // Standard sets
+      if (log.type === 'view') uDevs.add(id);
+      else if (log.type === 'login_normal') uNorm.add(id);
+      else if (log.type === 'login_secondary') uSec.add(id);
+      else if (log.type === 'login_admin') uAdm.add(id);
+      else if (log.type === 'login_head') uHead.add(id);
+      else if (log.type === 'login_manager') uMan.add(id);
+      else if (log.type === 'login_cofounder') uCo.add(id);
+      else if (log.type === 'login_founder') uFou.add(id);
+
+      // Guest sets (Filtered by cutoff timestamp)
+      if (log.ts >= _GUEST_CUTOFF_TS) {
+        if (log.type === 'view') gDevs.add(id);
+        else if (log.type === 'login_normal') gNorm.add(id);
+        else if (log.type === 'login_secondary') gSec.add(id);
+        else if (log.type === 'login_admin') gAdm.add(id);
+        else if (log.type === 'login_head') gHead.add(id);
+        else if (log.type === 'login_manager') gMan.add(id);
+        else if (log.type === 'login_cofounder') gCo.add(id);
+        else if (log.type === 'login_founder') gFou.add(id);
+      }
+
+      // Identify roles for Guest Exclusion
+      var passRole = log.type.replace('login_', '');
+      var idenRank = getIdentityRankByDevId(log.deviceId);
+      var finalRank = passRole;
+      if (idenRank && idenRank !== passRole && log.type !== 'view') {
+        var rLv = ROLE_LEVEL[idenRank] || 0;
+        var pLv = ROLE_LEVEL[passRole] || 0;
+        if (rLv > pLv) finalRank = idenRank;
+      }
+
+      if (log.type !== 'view' && typeof _guestExcludedRanks !== 'undefined' && _guestExcludedRanks.indexOf(finalRank) !== -1) {
+        guestExcludedIds.add(id);
+      }
+
+      if (finalRank === 'founder' || idenRank === 'founder') {
+        guestExcludeDevsTraffic.add(id);
+      }
     }
   });
+  
   _uniqueLogs = uLogs.sort(function(a,b) { return (b.ts||0) - (a.ts||0); });
+  
+  // Calculate Guests by filtering out devices that fall under excluded ranks from the Guest-specific sets
+  var filterGuest = function(setObj) {
+    var c = 0;
+    setObj.forEach(function(id) { if (!guestExcludedIds.has(id)) c++; });
+    return c;
+  };
+
+  _vGuestSec = filterGuest(gSec);
+  _vGuestNormal = filterGuest(gNorm);
+  _vGuestAdmin = filterGuest(gAdm);
+  _vGuestHead = filterGuest(gHead);
+  _vGuestManager = filterGuest(gMan);
+  _vGuestCoFounder = filterGuest(gCo);
+  _vGuestFounder = filterGuest(gFou);
+  
+  var cView = 0;
+  gDevs.forEach(function(id) { if (!guestExcludeDevsTraffic.has(id)) cView++; });
+  _vGuestOuter = cView;
+  
+  if (typeof updateStatsUI === 'function') updateStatsUI();
 }
 
 /* ── FILTER / SORT / SEARCH ── */
@@ -62,6 +179,7 @@ function getFilteredLogs() {
   var dateFrom = document.getElementById('date-from').value;
   var dateTo   = document.getElementById('date-to').value;
   return _allLogs.filter(function(l) {
+    if (isLogExcluded(l)) return false;
     if (_filter !== 'all' && l.type !== _filter) return false;
     if (search) {
       var idName = l.deviceId ? getIdentityName(l.deviceId) : '';
@@ -93,6 +211,7 @@ function getFilteredUniqueLogs() {
   var dateFrom = document.getElementById('date-from-u').value;
   var dateTo   = document.getElementById('date-to-u').value;
   return _uniqueLogs.filter(function(l) {
+    if (isLogExcluded(l)) return false;
     if (_filterU !== 'all' && l.type !== _filterU) return false;
     if (search) {
       var idName = l.deviceId ? getIdentityName(l.deviceId) : '';
@@ -230,11 +349,11 @@ function generateRowHtml(log) {
     ' <span style="cursor:pointer;font-size:10px;opacity:0.6;vertical-align:middle;margin-left:4px;" onclick="openLinkIdentity(\''+esc(String(log.deviceId))+'\')" title="Link to Profile">🔗</span>'
     : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
     
-  var authBadgeStr = log.authVia ? '<span class="auth-via-label">via '+labelType('login_'+log.authVia).replace(/[^a-zA-Z\s-]/g, '').trim()+' pass</span>' : '';
+  var authBadgeStr = log.authVia ? '<span class="auth-via-label">via '+labelType('login_'+log.authVia).replace(/[^a-zA-Z\s-]/g, '').trim().toLowerCase()+'</span>' : '';
 
   var delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log" onclick="deleteSingleLog(\''+String(log._k)+'\', \''+String(log.type)+'\', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
   
-  return '<tr><td>' + badgeHtml(log.type) + authBadgeStr + '</td><td><span style="color:var(--ink)">' + esc(dstr) + '</span></td><td>' + devIdStr + '</td><td><div class="cell-main">' + esc(browser) + '</div><div class="cell-sub">' + esc(device) + (os?' · '+esc(os):'') + '</div></td><td><div class="cell-loc">' + locHtml + postalStr + '</div><div class="cell-ip">🌐 ' + ipStr + (coordStr?' &nbsp;'+coordStr:'') + '</div>' + (ispStr?'<div class="cell-isp">'+ispStr+(log.asn?' · '+esc(String(log.asn)):'')+'</div>':'') + '</td><td><div class="cell-sub">' + esc(extra) + '</div></td><td style="vertical-align:middle;">' + delBtn + '</td></tr>';
+  return '<tr><td>' + badgeHtml(log.type) + authBadgeStr + '</td><td><span style="color:var(--ink)">' + esc(dstr) + '</span></td><td>' + devIdStr + '</td><td><div class="cell-main">' + esc(browser) + '</div><div class="cell-sub">' + esc(device) + (os?' · '+esc(os):'') + '</div></td><td><div class="cell-loc">' + locHtml + postalStr + '</div><div class="cell-ip">🌐 ' + ipStr + (coordStr?'  '+coordStr:'') + '</div>' + (ispStr?'<div class="cell-isp">'+ispStr+(log.asn?' · '+esc(String(log.asn)):'')+'</div>':'') + '</td><td><div class="cell-sub">' + esc(extra) + '</div></td><td style="vertical-align:middle;">' + delBtn + '</td></tr>';
 }
 
 function renderLogs() {
@@ -426,6 +545,8 @@ function buildDeviceMap(typeFilter) {
   
   logs.forEach(function(log) {
     if (log.type === 'view') return;
+    if (isLogExcluded(log)) return;
+    
     if (typeFilter === 'sec'       && log.type !== 'login_secondary') return;
     if (typeFilter === 'normal'    && log.type !== 'login_normal')    return;
     if (typeFilter === 'admin'     && log.type !== 'login_admin')     return;
@@ -528,7 +649,7 @@ function renderIpStats() {
         if (lastStr) html += '<div class="ip-last">🕐 '+esc(lastStr)+'</div>';
         html += '<div class="ip-bar-wrap"><div class="ip-bar '+col.barCls+'" style="width:'+barPct+'%"></div></div></div>';
         html += '<div class="ip-count-badge"><div class="ip-count-num '+col.numCls+'">'+count+'</div><div class="ip-count-label">times</div></div>';
-        var keysStr = JSON.stringify(entry.logKeys).replace(/"/g,'&quot;');
+        var keysStr = JSON.stringify(entry.logKeys).replace(/"/g,'"');
         html += '<div style="display:flex;flex-direction:column;">';
         html += '<button class="btn-del-ip allow-protected" title="Delete completely" data-keys="'+keysStr+'" onclick="deleteDeviceLogs(this.dataset.keys,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
         if (entry.ips.length>0) html += '<button class="btn-block-ip allow-protected" title="Block this IP" onclick="blockIP(\''+esc(String(entry.ips[0]))+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></button>';
@@ -555,7 +676,7 @@ function exportCSV() {
     profile = (profile === l.deviceId) ? '' : profile; 
     
     var typeText = labelType(l.type).replace(/[^a-zA-Z\s-]/g, '').trim();
-    var viaText = l.authVia ? labelType('login_'+l.authVia).replace(/[^a-zA-Z\s-]/g, '').trim() : '';
+    var viaText = l.authVia ? labelType('login_'+l.authVia).replace(/[^a-zA-Z\s-]/g, '').trim().toLowerCase() : '';
 
     rows.push([typeText, viaText, dstr, profile, l.deviceId||'', l.ip||'', l.district||'', l.city||'', l.region||'', l.country||'', l.postal||'', coord, l.isp||'', l.asn||'', l.browser||_detectBrowser(l.ua||''), l.device||_detectDevice(l.ua||''), l.os||_detectOS(l.ua||''), l.tz||'', l.lang||'', l.screen||'', srcMap[l.geoSrc]||'']);
   });

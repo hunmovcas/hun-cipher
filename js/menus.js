@@ -2,10 +2,10 @@
    MENUS — dropdowns, modals toggle
    ══════════════════════════════════════════ */
 
-var _profileOpen = false, _trafficOpen = false, _authOpen = false, _notiOpen = false, _switchOpen = false;
+var _profileOpen = false, _trafficOpen = false, _authOpen = false, _notiOpen = false, _switchOpen = false, _excludeMenuOpen = false;
 
 function closeAllMenus() {
-  _profileOpen = _trafficOpen = _authOpen = _notiOpen = _switchOpen = false;
+  _profileOpen = _trafficOpen = _authOpen = _notiOpen = _switchOpen = _excludeMenuOpen = false;
   document.querySelectorAll('.dropdown-menu.open').forEach(function(el) { el.classList.remove('open'); });
 }
 
@@ -23,6 +23,10 @@ function toggleProfileMenu(e) { toggleMenu(e, '_profileOpen', 'profile-dropdown'
 function toggleTrafficMenu(e)  { toggleMenu(e, '_trafficOpen', 'traffic-dropdown'); }
 function toggleAuthMenu(e)     { toggleMenu(e, '_authOpen',    'auth-dropdown'); }
 function toggleNoti(e)         { toggleMenu(e, '_notiOpen',    'noti-dropdown'); }
+function toggleExcludeMenu(e)  { 
+  if (typeof renderExcludeProfilesList === 'function') renderExcludeProfilesList();
+  toggleMenu(e, '_excludeMenuOpen', 'exclude-dropdown'); 
+}
 
 function toggleSwitchMenu(e) {
   e.stopPropagation();
@@ -83,7 +87,7 @@ function doLogout(e) {
 
 // Close dropdowns when clicking outside
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.cnt') && !e.target.closest('.dropdown-menu')) {
+  if (!e.target.closest('.cnt') && !e.target.closest('.dropdown-menu') && !e.target.closest('#btn-exclude-menu')) {
     closeAllMenus();
   }
 });

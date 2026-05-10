@@ -17,18 +17,15 @@
 </head>
 <body>
 
-<!-- ── NAV BTNS LEFT ── -->
 <div id="nav-btns">
   <button class="nav-btn" id="btn-undo" onclick="navUndo()" disabled title="Go back (Alt+←)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
   <button class="nav-btn" id="btn-redo" onclick="navRedo()" disabled title="Go forward (Alt+→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg></button>
   <button class="nav-btn" id="btn-reload" onclick="softReload()" title="Soft Reload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 2.13-5.87L9 8"/></svg></button>
 </div>
 
-<!-- ── COMPACT COUNTERS RIGHT & MENUS ── -->
 <div id="counters">
   <div class="cnt-row">
 
-    <!-- Switch Role -->
     <div class="cnt-div" id="div-switch" style="display:none;"></div>
     <div class="cnt" id="cnt-switch" title="Switch Role" onclick="toggleSwitchMenu(event)" style="display:none;">
       <span style="font-size:12.5px;cursor:pointer;">🎭</span>
@@ -46,19 +43,16 @@
       </div>
     </div>
 
-    <!-- Secret -->
     <div class="cnt-div" id="div-secret"></div>
     <div class="cnt" id="cnt-secret" title="Secret message for you" onclick="showSecretCipher()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
     </div>
 
-    <!-- Elevate -->
     <div class="cnt-div" id="div-elevate"></div>
     <div class="cnt" id="cnt-elevate" title="Elevate Privilege" onclick="openElevateModal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="17 11 12 6 7 11"></polyline><line x1="12" y1="18" x2="12" y2="6"></line></svg>
     </div>
 
-    <!-- Shield -->
     <div class="cnt-div" id="div-shield"></div>
     <div class="cnt" id="cnt-shield" title="System Protection" onclick="openShieldModal()">
       <svg id="shield-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
@@ -67,7 +61,6 @@
       </svg>
     </div>
 
-    <!-- Notifications (Only Founder sees this) -->
     <div class="cnt-div" id="div-noti"></div>
     <div class="cnt" id="cnt-noti" title="System Notifications" onclick="toggleNoti(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -81,7 +74,6 @@
       </div>
     </div>
 
-    <!-- Traffic Stats -->
     <div class="cnt-div" id="div-traffic"></div>
     <div class="cnt" id="cnt-traffic" title="Traffic Statistics" onclick="toggleTrafficMenu(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -103,80 +95,114 @@
               <span class="stat-adj" onclick="admAdjustCounter(event, 'real_visitors')" id="drop-unique" style="font-weight:bold; color:#27ae60;">0</span>
             </div>
           </div>
+          <div class="adm-item" id="item-guest-view" style="cursor:default; padding: 6px 20px;">
+            <span style="width:28px; display:inline-flex; justify-content:center; align-items:center;" title="Guest Views">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#e74c3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:text-bottom"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            </span>
+            <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
+              <span id="drop-views-g" style="font-weight:bold; color:#e74c3c;">0</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Active Auth / Session Breakdown -->
     <div class="cnt-div" id="div-auth"></div>
     <div class="cnt" id="cnt-auth" title="Active Logins" onclick="toggleAuthMenu(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
       <span class="cnum" id="num-auth">·</span>
       
-      <div id="auth-dropdown" class="dropdown-menu" style="min-width: 220px; padding-bottom: 8px;">
+      <div id="auth-dropdown" class="dropdown-menu" style="min-width: 250px; padding-bottom: 8px;">
+        <div class="adm-section" style="padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px;">
+          <div class="adm-section-label" style="margin-bottom: 8px;">Guest Exclusions</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px;">
+            <label style="font-size:11px; cursor:pointer; font-family:'Nunito',sans-serif; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;"><input type="checkbox" value="founder" onchange="updateGuestExclusions()"> 👑 Founder</label>
+            <label style="font-size:11px; cursor:pointer; font-family:'Nunito',sans-serif; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;"><input type="checkbox" value="cofounder" onchange="updateGuestExclusions()"> 💎 Co-Founder</label>
+            <label style="font-size:11px; cursor:pointer; font-family:'Nunito',sans-serif; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;"><input type="checkbox" value="manager" onchange="updateGuestExclusions()"> 🔱 Manager</label>
+            <label style="font-size:11px; cursor:pointer; font-family:'Nunito',sans-serif; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;"><input type="checkbox" value="head" onchange="updateGuestExclusions()"> ⚜️ Head</label>
+            <label style="font-size:11px; cursor:pointer; font-family:'Nunito',sans-serif; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;"><input type="checkbox" value="admin" onchange="updateGuestExclusions()"> 🌟 Admin</label>
+            <label style="font-size:11px; cursor:pointer; font-family:'Nunito',sans-serif; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;"><input type="checkbox" value="normal" onchange="updateGuestExclusions()"> 🔒 Main</label>
+            <label style="font-size:11px; cursor:pointer; font-family:'Nunito',sans-serif; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;"><input type="checkbox" value="secondary" onchange="updateGuestExclusions()"> 🔑 Sub</label>
+          </div>
+        </div>
+
         <div class="adm-section">
           <div class="adm-section-label" style="margin-bottom: 4px;">Session Breakdown</div>
 
-          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+          <div class="adm-item" style="cursor:default; padding: 6px 16px;">
             <span style="font-size:15px; width:28px; display:inline-flex; justify-content:center; align-items:center;" title="Sub Pass">🔑</span>
             <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_secondary')" id="drop-sub" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
-              <span style="color:var(--border); margin:0 12px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_secondary')" id="drop-sub-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_secondary')" id="drop-sub" style="color:var(--ink); width:32px; text-align:right; font-weight:bold;" title="Total Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_secondary')" id="drop-sub-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:center;" title="Unique Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span id="drop-sub-g" style="color:var(--orange); font-weight:bold; width:24px; text-align:left;" title="Guest Unique Logins">0</span>
             </div>
           </div>
           
-          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+          <div class="adm-item" style="cursor:default; padding: 6px 16px;">
             <span style="font-size:15px; width:28px; display:inline-flex; justify-content:center; align-items:center;" title="Main Pass">🔒</span>
             <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_normal')" id="drop-main" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
-              <span style="color:var(--border); margin:0 12px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_normal')" id="drop-main-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'inner_normal')" id="drop-main" style="color:var(--ink); width:32px; text-align:right; font-weight:bold;" title="Total Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_normal')" id="drop-main-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:center;" title="Unique Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span id="drop-main-g" style="color:var(--orange); font-weight:bold; width:24px; text-align:left;" title="Guest Unique Logins">0</span>
             </div>
           </div>
           
-          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+          <div class="adm-item" style="cursor:default; padding: 6px 16px;">
             <span style="font-size:15px; width:28px; display:inline-flex; justify-content:center; align-items:center;" title="Admin">🌟</span>
             <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'admin')" id="drop-admin" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
-              <span style="color:var(--border); margin:0 12px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_admin')" id="drop-admin-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'admin')" id="drop-admin" style="color:var(--ink); width:32px; text-align:right; font-weight:bold;" title="Total Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_admin')" id="drop-admin-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:center;" title="Unique Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span id="drop-admin-g" style="color:var(--orange); font-weight:bold; width:24px; text-align:left;" title="Guest Unique Logins">0</span>
             </div>
           </div>
           
-          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+          <div class="adm-item" style="cursor:default; padding: 6px 16px;">
             <span style="font-size:15px; width:28px; display:inline-flex; justify-content:center; align-items:center;" title="Head">⚜️</span>
             <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'head')" id="drop-head" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
-              <span style="color:var(--border); margin:0 12px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_head')" id="drop-head-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'head')" id="drop-head" style="color:var(--ink); width:32px; text-align:right; font-weight:bold;" title="Total Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_head')" id="drop-head-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:center;" title="Unique Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span id="drop-head-g" style="color:var(--orange); font-weight:bold; width:24px; text-align:left;" title="Guest Unique Logins">0</span>
             </div>
           </div>
           
-          <div class="adm-item" style="cursor:default; padding: 6px 20px;">
+          <div class="adm-item" style="cursor:default; padding: 6px 16px;">
             <span style="font-size:15px; width:28px; display:inline-flex; justify-content:center; align-items:center;" title="Manager">🔱</span>
             <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'manager')" id="drop-manager" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
-              <span style="color:var(--border); margin:0 12px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_manager')" id="drop-manager-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'manager')" id="drop-manager" style="color:var(--ink); width:32px; text-align:right; font-weight:bold;" title="Total Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_manager')" id="drop-manager-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:center;" title="Unique Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span id="drop-manager-g" style="color:var(--orange); font-weight:bold; width:24px; text-align:left;" title="Guest Unique Logins">0</span>
             </div>
           </div>
           
-          <div class="adm-item founder-only" style="cursor:default; padding: 6px 20px;">
+          <div class="adm-item founder-only" style="cursor:default; padding: 6px 16px;">
             <span style="font-size:15px; width:28px; display:inline-flex; justify-content:center; align-items:center;" title="Co-Founder">💎</span>
             <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'cofounder')" id="drop-cofounder" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
-              <span style="color:var(--border); margin:0 12px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_cofounder')" id="drop-cofounder-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'cofounder')" id="drop-cofounder" style="color:var(--ink); width:32px; text-align:right; font-weight:bold;" title="Total Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_cofounder')" id="drop-cofounder-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:center;" title="Unique Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span id="drop-cofounder-g" style="color:var(--orange); font-weight:bold; width:24px; text-align:left;" title="Guest Unique Logins">0</span>
             </div>
           </div>
           
-          <div class="adm-item founder-only" style="cursor:default; padding: 6px 20px;">
+          <div class="adm-item founder-only" style="cursor:default; padding: 6px 16px;">
             <span style="font-size:15px; width:28px; display:inline-flex; justify-content:center; align-items:center;" title="Founder">👑</span>
             <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; font-family:'Space Mono',monospace; font-size:13px;">
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'founder')" id="drop-founder" style="color:var(--ink); width:36px; text-align:right; font-weight:bold;">0</span>
-              <span style="color:var(--border); margin:0 12px;">|</span>
-              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_founder')" id="drop-founder-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:left;">0</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'founder')" id="drop-founder" style="color:var(--ink); width:32px; text-align:right; font-weight:bold;" title="Total Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span class="stat-adj" onclick="admAdjustCounter(event, 'unique_founder')" id="drop-founder-u" style="color:#27ae60; font-weight:bold; width:24px; text-align:center;" title="Unique Logins">0</span>
+              <span style="color:var(--border); margin:0 8px;">|</span>
+              <span id="drop-founder-g" style="color:var(--orange); font-weight:bold; width:24px; text-align:left;" title="Guest Unique Logins">0</span>
             </div>
           </div>
 
@@ -184,7 +210,6 @@
       </div>
     </div>
 
-    <!-- Profile Menu -->
     <div class="cnt-div" id="div-profile" style="display:block"></div>
     <div class="cnt" id="cnt-profile" title="System Menu" onclick="toggleProfileMenu(event)">
       <svg id="icon-prof-normal"  style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -192,12 +217,7 @@
       <svg id="icon-prof-founder" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polygon points="12 4 8 11 2 4 5 16 19 16 22 4 16 11 12 4"></polygon><line x1="5" y1="20" x2="19" y2="20"></line></svg>
 
       <div id="profile-dropdown" class="dropdown-menu">
-        <!-- Normal user -->
-        <div class="adm-section normal-only">
-          <button class="adm-item edit" onclick="openChangePw('normal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Main Pass</button>
-          <button class="adm-item edit" onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Sub Pass</button>
-        </div>
-        <!-- Admin & Founder -->
+
         <div class="adm-section protected-only" style="display:none">
           <div class="adm-section-label">System Logs</div>
           <button class="adm-item allow-protected" onclick="admGoLog(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> Traffic & Analytics</button>
@@ -206,12 +226,14 @@
           <div class="adm-section-label">Identities</div>
           <button class="adm-item success allow-protected" onclick="openIdentityManager()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Manage Identities</button>
         </div>
-        <!-- Admin only security -->
-        <div class="adm-section admin-only" style="display:none">
-          <div class="adm-section-label">Security</div>
-          <button class="adm-item danger" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Admin Pass</button>
+
+        <div class="adm-section">
+          <div class="adm-section-label">Credentials</div>
+          <button class="adm-item edit allow-protected" onclick="openChangePw('normal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Update Main Key</button>
+          <button class="adm-item edit allow-protected" onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Update Sub Key</button>
+          <button class="adm-item danger admin-only allow-protected" style="display:none" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Update Admin Key</button>
         </div>
-        <!-- Founder appearance -->
+        
         <div class="adm-section founder-only">
           <div class="adm-section-label">Appearance</div>
           <button class="adm-item edit" onclick="openChangeTitle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit Title</button>
@@ -219,26 +241,23 @@
           <button class="adm-item edit" onclick="openChangeNotes()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Edit Notes</button>
           <button class="adm-item edit" onclick="openChangePopup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Edit Popups</button>
         </div>
-        <!-- Founder global security -->
+        
         <div class="adm-section founder-only">
-          <div class="adm-section-label">Global Security</div>
+          <div class="adm-section-label">Secret Data</div>
           <button class="adm-item edit"   onclick="openChangeSecret()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> Edit Secret Messages</button>
-          <button class="adm-item edit"   onclick="openChangePw('normal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Main Pass</button>
-          <button class="adm-item edit"   onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Sub Pass</button>
-          <button class="adm-item danger" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Edit Admin Pass</button>
           <button class="adm-item success" onclick="openChangeHints()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Edit Hints</button>
         </div>
-        <!-- Logout -->
+
         <div class="adm-section">
           <button class="adm-item allow-protected" onclick="doLogout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Log Out</button>
         </div>
+
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- ── LOCK SCREEN ── -->
 <div id="pw-screen">
   <div id="login-view-count" style="position:absolute;top:16px;right:20px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:bold;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -269,12 +288,35 @@
   </div>
 </div>
 
-<!-- ── TRAFFIC ANALYTICS SCREEN ── -->
 <div id="log-screen">
   <div class="log-wrap">
     <div class="log-header">
       <div class="log-title">📊 Traffic <em>Analytics</em></div>
       <div class="log-header-right">
+        
+        <div style="position:relative; display:inline-block; margin-right:8px;">
+          <button class="filter-btn allow-protected" id="btn-exclude-menu" onclick="toggleExcludeMenu(event)" style="border-radius:4px; padding:6px 12px; height:100%; display:flex; align-items:center; font-family:'Space Mono',monospace; font-size:10px; font-weight:bold; transition:all 0.2s;">
+            🚫 Exclude Profiles
+          </button>
+          <div id="exclude-dropdown" class="dropdown-menu" style="padding:10px 14px; min-width:160px; right:0; top:calc(100% + 4px);">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;font-weight:bold;">Exclude from stats:</div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Nunito',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-exclude" value="founder" onchange="updateExclusions()"> 👑 Founder</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Nunito',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-exclude" value="cofounder" onchange="updateExclusions()"> 💎 Co-Founder</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Nunito',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-exclude" value="manager" onchange="updateExclusions()"> 🔱 Manager</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Nunito',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-exclude" value="head" onchange="updateExclusions()"> ⚜️ Head</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Nunito',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-exclude" value="admin" onchange="updateExclusions()"> 🌟 Admin</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Nunito',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-exclude" value="normal" onchange="updateExclusions()"> 🔒 Main (User)</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Nunito',sans-serif;margin-bottom:0;cursor:pointer;"><input type="checkbox" class="chk-exclude" value="secondary" onchange="updateExclusions()"> 🔑 Sub (User)</label>
+            
+            <div style="margin-top:8px; border-top:1px solid var(--border); padding-top:8px;"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:4px 0;" onclick="toggleProfileExclusion(event)">
+              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:bold;">Specific Profiles</div>
+              <span id="prof-excl-arrow" style="font-size:10px; color:var(--muted); transition: transform 0.2s;">▼</span>
+            </div>
+            <div id="exclude-profiles-container" style="display:none; margin-top:8px; max-height: 150px; overflow-y: auto;"></div>
+          </div>
+        </div>
+
         <div class="realtime-label"><span class="realtime-dot"></span>Realtime</div>
         <button class="btn-refresh allow-protected" onclick="openTrash()" title="View Trash" style="color:var(--accent);border-color:rgba(192,57,43,0.3);background:rgba(192,57,43,0.05);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg> Trash</button>
         <button class="btn-export allow-protected" onclick="exportCSV()" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
@@ -282,71 +324,8 @@
       </div>
     </div>
 
-    <!-- 1. TOTAL LOGINS HEADER & GRID -->
-    <div class="ip-stats-header" style="margin-bottom: 12px;">
+    <div class="ip-stats-header" style="margin-bottom: 12px; margin-top: 12px;">
       <div class="ip-stats-title" style="color:var(--accent);">Total Logins</div>
-    </div>
-    <div class="log-stats" id="log-stats-grid">
-      <div class="stat-card clickable allow-protected" id="sc-all" onclick="setFilter('all')">
-        <div class="stat-num red" id="stat-outer">–</div> <div class="stat-label">👁 Total Views</div>
-      </div>
-      <div class="stat-card clickable allow-protected" id="sc-sec" onclick="setFilter('login_secondary')">
-        <div class="stat-num blue" id="stat-sec">–</div> <div class="stat-label">🔑 Sub</div>
-      </div>
-      <div class="stat-card clickable allow-protected" id="sc-normal" onclick="setFilter('login_normal')">
-        <div class="stat-num blue" id="stat-inner">–</div> <div class="stat-label">🔒 Main</div>
-      </div>
-      <div class="stat-card clickable allow-protected" id="sc-admin" onclick="setFilter('login_admin')">
-        <div class="stat-num orange" id="stat-admin">–</div> <div class="stat-label">🌟 Admin</div>
-      </div>
-      <div class="stat-card clickable allow-protected" id="sc-head" onclick="setFilter('login_head')">
-        <div class="stat-num" style="color:var(--head);" id="stat-head">–</div> <div class="stat-label">⚜️ Head</div>
-      </div>
-      <div class="stat-card clickable allow-protected" id="sc-manager" onclick="setFilter('login_manager')">
-        <div class="stat-num" style="color:var(--manager);" id="stat-manager">–</div> <div class="stat-label">🔱 Manager</div>
-      </div>
-      <div class="stat-card clickable allow-protected" id="sc-cofounder" onclick="setFilter('login_cofounder')">
-        <div class="stat-num" style="color:var(--cofounder);" id="stat-cofounder">–</div> <div class="stat-label">💎 Co-Founder</div>
-      </div>
-      <div class="stat-card clickable allow-protected" id="sc-founder" onclick="setFilter('login_founder')">
-        <div class="stat-num" style="color:var(--founder);" id="stat-founder">–</div> <div class="stat-label">👑 Founder</div>
-      </div>
-    </div>
-
-    <!-- 2. UNIQUE LOGINS HEADER & GRID -->
-    <div class="ip-stats-header" style="margin-bottom: 12px; margin-top: 24px;">
-      <div class="ip-stats-title" style="color:#27ae60;">Unique Logins</div>
-    </div>
-    <div class="log-stats" id="log-stats-unique-grid" style="margin-bottom: 36px;">
-      <div class="stat-card allow-protected">
-        <div class="stat-num green" id="stat-real">–</div> <div class="stat-label" style="color:#27ae60;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg> Unique Views</div>
-      </div>
-      <div class="stat-card allow-protected">
-        <div class="stat-num blue" id="stat-u-sec">–</div> <div class="stat-label">🔑 Sub Unique</div>
-      </div>
-      <div class="stat-card allow-protected">
-        <div class="stat-num blue" id="stat-u-inner">–</div> <div class="stat-label">🔒 Main Unique</div>
-      </div>
-      <div class="stat-card allow-protected">
-        <div class="stat-num orange" id="stat-u-admin">–</div> <div class="stat-label">🌟 Admin Unique</div>
-      </div>
-      <div class="stat-card allow-protected">
-        <div class="stat-num" style="color:var(--head);" id="stat-u-head">–</div> <div class="stat-label">⚜️ Head Unique</div>
-      </div>
-      <div class="stat-card allow-protected">
-        <div class="stat-num" style="color:var(--manager);" id="stat-u-manager">–</div> <div class="stat-label">🔱 Manager Unique</div>
-      </div>
-      <div class="stat-card allow-protected">
-        <div class="stat-num" style="color:var(--cofounder);" id="stat-u-cofounder">–</div> <div class="stat-label">💎 Co-Founder Unique</div>
-      </div>
-      <div class="stat-card allow-protected">
-        <div class="stat-num" style="color:var(--founder);" id="stat-u-founder">–</div> <div class="stat-label">👑 Founder Unique</div>
-      </div>
-    </div>
-
-    <!-- 3. TOTAL LOGINS TABLE -->
-    <div class="ip-stats-header" style="margin-bottom: 12px; margin-top: 36px;">
-      <div class="ip-stats-title" style="color:var(--accent);">Total Logins Data</div>
     </div>
     <div class="log-filters">
       <button class="filter-btn active allow-protected" onclick="setFilter('all')"          id="f-all">All</button>
@@ -384,9 +363,8 @@
     </div>
     <div class="log-pagination allow-protected" id="log-pagination"></div>
 
-    <!-- 4. UNIQUE LOGINS TABLE -->
     <div class="ip-stats-header" style="margin-bottom: 12px; margin-top: 36px;">
-      <div class="ip-stats-title" style="color:#27ae60;">Unique Logins Data</div>
+      <div class="ip-stats-title" style="color:#27ae60;">Unique Logins</div>
     </div>
     <div class="log-filters">
       <button class="filter-btn active allow-protected" onclick="setFilterU('all')"          id="fu-all">All</button>
@@ -424,7 +402,6 @@
     </div>
     <div class="log-pagination allow-protected" id="log-pagination-u"></div>
 
-    <!-- 5. UNIQUE DEVICES GRID -->
     <div class="ip-stats-section" id="ip-stats-section" style="margin-top: 36px;">
       <div class="ip-stats-header">
         <div class="ip-stats-title">Unique Devices (Fingerprinted)</div>
@@ -445,7 +422,6 @@
   </div>
 </div>
 
-<!-- ── MAIN APP PAGE ── -->
 <div class="wrap" id="main-wrap">
   <header>
     <div><span class="stamp">Private Cipher</span></div>
@@ -475,15 +451,12 @@
   <footer><p id="main-footer">Encrypted for the masses, <span>decrypted by one</span></p></footer>
 </div>
 
-<!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
 
-<!-- ── FIREBASE ERROR ── -->
 <div id="fb-err" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;font-family:monospace;font-size:12px;padding:10px 16px;text-align:center;letter-spacing:.5px;">⚠ Cannot connect to Firebase — check your network or disable VPN/adblock and reload.</div>
 
-<!-- ── DIALOGS ── -->
 <div class="dialog-overlay" id="elevate-overlay"><div class="dialog-box"><h3 id="elevate-title">Elevate Privilege</h3><p id="elevate-desc" style="margin-bottom:16px;">Authenticate as Admin or Founder.</p><p id="elevate-err" style="color:var(--accent);display:none;font-weight:bold;margin-bottom:10px;">Incorrect password!</p><div class="form-group" style="margin-bottom:24px;"><input type="password" id="elevate-pw" class="input-field" placeholder="Admin or Founder Password..." autocomplete="off"></div><div class="dialog-actions" style="margin-top:0;"><button class="btn-dialog-yes btn-save" onclick="submitElevate()">Confirm</button><button class="btn-dialog-no" onclick="closeElevateModal()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="shield-overlay"><div class="dialog-box"><h3>System Protection</h3><p style="margin-bottom:12px;">Status: <strong id="shield-status-text" style="color:var(--muted);">DISABLED</strong></p><p id="shield-err" style="color:var(--accent);display:none;font-weight:bold;margin-bottom:10px;">Incorrect Founder password!</p><div class="form-group" style="margin-bottom:24px;"><input type="password" id="shield-pw" class="input-field allow-protected" placeholder="Founder Password..." autocomplete="off"></div><div class="dialog-actions" style="flex-wrap:wrap;flex-direction:column;gap:8px;margin-top:0;"><button class="btn-dialog-yes btn-save allow-protected" onclick="submitToggleShield()" id="btn-toggle-shield" style="width:100%;">Enable Protection</button><button class="btn-dialog-yes allow-protected" style="background:var(--accent2);border-color:var(--accent2);width:100%;" onclick="openChangePw('founder')">Change Founder Pass</button><button class="btn-dialog-no allow-protected" style="width:100%;margin-top:4px;" onclick="closeShieldModal()">Close</button></div></div></div>
+<div class="dialog-overlay" id="shield-overlay"><div class="dialog-box"><h3>System Protection</h3><p style="margin-bottom:12px;">Status: <strong id="shield-status-text" style="color:var(--muted);">DISABLED</strong></p><p id="shield-err" style="color:var(--accent);display:none;font-weight:bold;margin-bottom:10px;">Incorrect Founder password!</p><div class="form-group" style="margin-bottom:24px;"><input type="password" id="shield-pw" class="input-field allow-protected" placeholder="Founder Password..." autocomplete="off"></div><div class="dialog-actions" style="flex-wrap:wrap;flex-direction:column;gap:8px;margin-top:0;"><button class="btn-dialog-yes btn-save allow-protected" onclick="submitToggleShield()" id="btn-toggle-shield" style="width:100%;">Enable Protection</button><button class="btn-dialog-no allow-protected" style="width:100%;margin-top:4px;" onclick="closeShieldModal()">Close</button></div></div></div>
 <div class="dialog-overlay" id="trash-overlay"><div class="dialog-box" style="max-width:600px;width:95%;padding:24px;"><h3>Trash Bin 🗑️</h3><p style="font-size:11px;margin-bottom:16px;">Logs are kept here for 24 hours before permanent deletion.</p><div id="trash-list" style="max-height:300px;overflow-y:auto;text-align:left;font-family:'Space Mono',monospace;font-size:10px;border:1px solid var(--border);padding:8px;">Loading...</div><div class="dialog-actions"><button class="btn-dialog-no" onclick="closeTrash()">Close</button></div></div></div>
 <div class="dialog-overlay" id="admin-deny-overlay"><div class="dialog-box deny-box"><div class="deny-header"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Access Denied</div><div class="deny-body"><div class="deny-icon">🚷</div><p style="font-weight:900;color:var(--ink);font-size:1.1rem;margin-bottom:6px;font-family:'Nunito',sans-serif;">RESTRICTED FEATURE</p><p style="color:var(--muted);font-size:0.9rem;margin-bottom:24px;">Please elevate to <strong>Founder</strong> to unlock this functionality.</p><div class="dialog-actions"><button class="btn-dialog-yes allow-protected" style="background:var(--orange);border-color:var(--orange);width:100%;box-shadow:4px 4px 0 rgba(180,83,9,0.3);" onclick="closeAdminDenyModal()">I Understand</button></div></div></div></div>
 <div class="dialog-overlay" id="block-overlay"><div class="dialog-box" style="max-width:450px;width:95%;padding:28px 24px 24px;"><h3>Blocked IPs 🚫</h3><p style="margin-bottom:12px">List of currently blocked IP addresses.</p><div id="block-list" style="max-height:250px;overflow-y:auto;text-align:left;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:11px;"></div><div class="dialog-actions"><button class="btn-dialog-no allow-protected" onclick="closeBlockManager()">Close</button></div></div></div>
@@ -500,7 +473,6 @@
 <div class="dialog-overlay" id="admin-secret-overlay"><div class="dialog-box"><h3>💖 Admin Note 💖</h3><div id="admin-secret-content"></div><div class="dialog-actions"><button class="btn-dialog-no allow-protected" onclick="closeAdminSecretDisplay()">Close</button></div></div></div>
 <div class="dialog-overlay" id="congrats-overlay"><div class="dialog-box" style="border-color:#e84393;box-shadow:6px 6px 0 rgba(232,67,147,0.2);"><div style="font-size:3rem;margin-bottom:10px;">🎉💖🎉</div><h3 style="color:#e84393;">Amazing!</h3><p>You've successfully decoded the hidden message:</p><div id="congrats-msg" style="font-size:1.1rem;font-weight:900;color:var(--accent2);padding:16px;background:rgba(44,62,122,.05);border:2px dashed var(--accent2);margin-bottom:20px;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save allow-protected" style="background:#e84393;border-color:#e84393;" onclick="closeCongrats()">Close</button></div></div></div>
 
-<!-- ── IDENTITY OVERLAYS ── -->
 <div class="dialog-overlay" id="identity-manager-overlay">
   <div class="dialog-box" style="max-width:550px;width:95%;padding:30px;">
     <h3 style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.4rem;margin-bottom:8px;color:var(--ink);">Identity Management</h3>
@@ -552,7 +524,6 @@
   </div>
 </div>
 
-<!-- ── INITIAL SETUP SCREEN ── -->
 <div id="setup-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;padding:20px;">
   <div class="dialog-box" style="max-width:450px;width:100%;">
     <h3 style="color:var(--accent);">Initialize Security 🔒</h3>
@@ -565,11 +536,9 @@
   </div>
 </div>
 
-<!-- ── FIREBASE SDK ── -->
 <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-app-compat.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-database-compat.min.js"></script>
 
-<!-- ── APP SCRIPTS (load order matters) ── -->
 <script src="js/config.js"></script>
 <script src="js/state.js"></script>
 <script src="js/geo.js"></script>

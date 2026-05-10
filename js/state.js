@@ -1,79 +1,76 @@
 /* ══════════════════════════════════════════
-   STATE — all global mutable variables
+   STATE — global variables, constants
    ══════════════════════════════════════════ */
 
-// Firebase instance
-var db = null;
+// Auth & Roles
+var _loggedIn = false;
+var _originalRole = 'normal';
+var _currentLoginRole = 'normal';
+var _authVia = null;
+var _isAdmin = false;
 
-// Role Hierarchy Level mapping
-var ROLE_LEVEL = { secondary: 1, normal: 2, admin: 3, head: 4, manager: 5, cofounder: 6, founder: 7 };
-
-// Auth state
-var _loggedIn         = false;
-var _isAdmin          = false;
-var _currentLoginRole = 'normal';   // 'normal' | 'secondary' | 'admin' | 'head' | 'manager' | 'cofounder' | 'founder'
-var _originalRole     = 'normal';
-var _authVia          = null;       // Lưu trữ pass thực sự được dùng (nếu identity rank ghi đè)
-var _isProtected      = false;
-var _blockedIPs       = {};
-
-// Session keys — used to upgrade / wipe traces on elevate
-var _sessionKeys = { view: null, normal: null, secondary: null, admin: null, head: null, manager: null, cofounder: null, founder: null };
-var _sessionLogged = false;
-
-// Cutoff Dates
-var _CUTOFF_TS = new Date('2026-05-09T00:00:00+07:00').getTime();
-var _UNIQUE_CUTOFF_TS = new Date('2026-05-05T14:14:00+07:00').getTime();
-
-// Raw Counter values
-var _rawCounts = { outer: 0, real_visitors: 0, inner_normal: 0, inner_secondary: 0, admin: 0, head: 0, manager: 0, cofounder: 0, founder: 0, unique_normal: 0, unique_secondary: 0, unique_admin: 0, unique_head: 0, unique_manager: 0, unique_cofounder: 0, unique_founder: 0 };
-var _offsets   = { outer: 0, real_visitors: 0, inner_normal: 0, inner_secondary: 0, admin: 0, head: 0, manager: 0, cofounder: 0, founder: 0, unique_normal: 0, unique_secondary: 0, unique_admin: 0, unique_head: 0, unique_manager: 0, unique_cofounder: 0, unique_founder: 0 };
-
-// Final visible counters
-var _vOuter = 0, _vReal = 0, _vNormal = 0, _vSec = 0, _vAdmin = 0, _vHead = 0, _vManager = 0, _vCoFounder = 0, _vFounder = 0;
-var _vUNormal = 0, _vUSec = 0, _vUAdmin = 0, _vUHead = 0, _vUManager = 0, _vUCoFounder = 0, _vUFounder = 0;
-
-// Logs & Identities
-var _allLogs = [];
-var _uniqueLogs = [];
-var _identities = {}; // Stores mappings of ProfileName -> {name, ids, rank}
-
-// Notifications
-var _allNoti = [];
-
-// Pending action state
-var _pendingClearKey     = null;
-var _pendingAdjustKey    = null;
-var _pendingDeleteKeys   = [];
-var _pendingDeleteRow    = null;
-var _pendingSingleDelete = null;
-
-// Log screen pagination / filter / sort (Total)
-var _filter    = 'all';
-var _page      = 1;
-var _perPage   = 25;
-var _sortField = 'ts';
-var _sortDir   = 'desc';
-
-// Log screen pagination / filter / sort (Unique)
-var _filterU    = 'all';
-var _pageU      = 1;
-var _sortFieldU = 'ts';
-var _sortDirU   = 'desc';
-
-// IP Stats
-var _ipMode    = 'all';
-
-// Navigation history
+// Navigation & Cipher
+var _mode = 'd';
 var _hist = [];
 var _hidx = -1;
+var _lastCongratulatedText = '';
+var _letterRegex = /[a-zA-Z]/;
 
-// Cipher mode
-var _mode = 'd';
+// Data Maps
+var _identities = {};
+var _blockedIPs = {};
+var _isProtected = false;
+var _allLogs = [];
+var _uniqueLogs = [];
+var _allNoti = [];
 
-// Cipher helpers
-var _letterRegex = /[a-zA-ZáàảãạâấầẩẫậăắằẳẵặéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠÂẤẦẨẪẬĂẮẰẲẴẶÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ]/;
-var _lastCongratulatedText = "";
+// System Counters & Offsets
+var _rawCounts = {};
+var _offsets = {};
+var _sessionLogged = false;
+var _sessionKeys = { view: null, normal: null, secondary: null, admin: null, head: null, manager: null, cofounder: null, founder: null };
 
-// IP detection
-window._myIP = '';
+var _vReal = 0, _vUNormal = 0, _vUSec = 0, _vUAdmin = 0, _vUHead = 0, _vUManager = 0, _vUCoFounder = 0, _vUFounder = 0;
+var _vOuter = 0, _vNormal = 0, _vSec = 0, _vAdmin = 0, _vHead = 0, _vManager = 0, _vCoFounder = 0, _vFounder = 0;
+var _vGuestNormal = 0, _vGuestSec = 0, _vGuestAdmin = 0, _vGuestHead = 0, _vGuestManager = 0, _vGuestCoFounder = 0, _vGuestFounder = 0;
+var _vGuestOuter = 0;
+
+// Time Cutoffs for analytics (0 = all time)
+var _CUTOFF_TS = 0;
+var _UNIQUE_CUTOFF_TS = 0;
+var _GUEST_CUTOFF_TS = new Date('2026-05-05T14:44:00+07:00').getTime(); // Mốc thời gian đếm Guest
+
+// Tables & Filters
+var _perPage = 15;
+var _page = 1;
+var _sortField = 'ts';
+var _sortDir = 'desc';
+var _filter = 'all';
+
+var _pageU = 1;
+var _sortFieldU = 'ts';
+var _sortDirU = 'desc';
+var _filterU = 'all';
+
+var _excludedRanks = [];
+var _excludedProfiles = [];
+var _guestExcludedRanks = [];
+var _ipMode = 'all';
+
+// Pending Actions
+var _pendingSingleDelete = null;
+var _pendingDeleteKeys = [];
+var _pendingDeleteRow = null;
+var _pendingAdjustKey = null;
+var _pendingClearKey = null;
+
+// RBAC Setup
+var ROLE_LEVEL = {
+  'secondary': 1,
+  'normal': 2,
+  'admin': 3,
+  'head': 4,
+  'manager': 5,
+  'cofounder': 6,
+  'founder': 7
+};

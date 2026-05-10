@@ -40,6 +40,37 @@ function renderWelcome() {
   if (welEl) welEl.innerHTML = esc(currentWelcome);
 }
 
+/* ── EXCLUDE PROFILES UI ── */
+function renderExcludeProfilesList() {
+  var container = document.getElementById('exclude-profiles-container');
+  if (!container) return;
+  var keys = Object.keys(_identities);
+  if (keys.length === 0) {
+    container.innerHTML = '<div style="font-size:10px; color:var(--muted); font-style:italic;">No profiles</div>';
+    return;
+  }
+  var html = keys.map(function(k) {
+    var profile = _identities[k];
+    var pName = profile.name || k;
+    var isChecked = _excludedProfiles.indexOf(pName) !== -1 ? 'checked' : '';
+    return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:\'Nunito\',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-exclude-prof" value="'+esc(pName)+'" onchange="updateExclusions()" '+isChecked+'> 👤 '+esc(pName)+'</label>';
+  }).join('');
+  container.innerHTML = html;
+}
+
+window.toggleProfileExclusion = function(e) {
+  e.stopPropagation();
+  var container = document.getElementById('exclude-profiles-container');
+  var arrow = document.getElementById('prof-excl-arrow');
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    arrow.style.transform = 'rotate(180deg)';
+  } else {
+    container.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  }
+};
+
 /* ── SECRET MESSAGE ── */
 function showSecretCipher() {
   var msg = currentSecretMsgs[_currentLoginRole] || '';
@@ -284,6 +315,9 @@ function updateIdentityRank(key, newRank) {
 function renderIdentityList() {
   var listEl = document.getElementById('id-active-profiles');
   if (!listEl) return;
+  
+  renderExcludeProfilesList(); // Update Exclude Profiles List in filter menu
+  
   var keys = Object.keys(_identities);
   if (keys.length === 0) {
     listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border-radius:6px;border:1px dashed var(--border);">No active profiles yet.</div>';
@@ -305,15 +339,15 @@ function renderIdentityList() {
     
     var rankSelectHtml = '';
     if (_currentLoginRole === 'founder') {
-      rankSelectHtml = '<select class="rank-select" onchange="updateIdentityRank(\''+esc(String(k))+'\', this.value)">' +
-        '<option value="">(No Rank)</option>' +
-        '<option value="secondary" '+(currentRank==='secondary'?'selected':'')+'>🔑 Sub</option>' +
-        '<option value="normal" '+(currentRank==='normal'?'selected':'')+'>🔒 Main</option>' +
-        '<option value="admin" '+(currentRank==='admin'?'selected':'')+'>🌟 Admin</option>' +
-        '<option value="head" '+(currentRank==='head'?'selected':'')+'>⚜️ Head</option>' +
-        '<option value="manager" '+(currentRank==='manager'?'selected':'')+'>🔱 Manager</option>' +
-        '<option value="cofounder" '+(currentRank==='cofounder'?'selected':'')+'>💎 Co-Founder</option>' +
-        '<option value="founder" '+(currentRank==='founder'?'selected':'')+'>👑 Founder</option>' +
+      rankSelectHtml = '<select class="rank-select" style="padding:2px; width:44px; text-align:center; text-align-last:center; appearance:auto;" onchange="updateIdentityRank(\''+esc(String(k))+'\', this.value)">' +
+        '<option value="" title="No Rank" '+(currentRank===''||!currentRank?'selected':'')+'>➖</option>' +
+        '<option value="secondary" title="Sub" '+(currentRank==='secondary'?'selected':'')+'>🔑</option>' +
+        '<option value="normal" title="Main" '+(currentRank==='normal'?'selected':'')+'>🔒</option>' +
+        '<option value="admin" title="Admin" '+(currentRank==='admin'?'selected':'')+'>🌟</option>' +
+        '<option value="head" title="Head" '+(currentRank==='head'?'selected':'')+'>⚜️</option>' +
+        '<option value="manager" title="Manager" '+(currentRank==='manager'?'selected':'')+'>🔱</option>' +
+        '<option value="cofounder" title="Co-Founder" '+(currentRank==='cofounder'?'selected':'')+'>💎</option>' +
+        '<option value="founder" title="Founder" '+(currentRank==='founder'?'selected':'')+'>👑</option>' +
       '</select>';
     } else if (currentRank) {
       rankSelectHtml = '<span style="font-size:11px; font-weight:bold; color:var(--accent);">Rank Assigned</span>';

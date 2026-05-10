@@ -17,6 +17,16 @@ function updateProfileIcon() {
   else pf.style.color = 'var(--accent2)';
 }
 
+function setDisplay(selector, show) {
+  document.querySelectorAll(selector).forEach(function(el) {
+    if (!show) {
+      el.style.display = 'none';
+    } else {
+      el.style.display = el.classList.contains('adm-item') ? 'flex' : 'block';
+    }
+  });
+}
+
 function applyAdminModeUI() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   
@@ -28,9 +38,9 @@ function applyAdminModeUI() {
   if (lv >= 3) document.body.classList.add('role-admin');
   else document.body.classList.remove('role-admin');
 
-  document.querySelectorAll('.normal-only').forEach(function(el)    { el.style.display = 'none'; });
-  document.querySelectorAll('.protected-only').forEach(function(el) { el.style.display = 'block'; });
-  document.querySelectorAll('.admin-only').forEach(function(el)     { el.style.display = 'block'; });
+  setDisplay('.normal-only', false);
+  setDisplay('.protected-only', true);
+  setDisplay('.admin-only', true);
 
   _show('div-shield', 'cnt-shield');
   _show('div-traffic','cnt-traffic');
@@ -47,6 +57,8 @@ function applyAdminModeUI() {
 
   var uView = document.getElementById('item-unique-view');
   if (uView) uView.style.display = 'flex';
+  var gView = document.getElementById('item-guest-view');
+  if (gView) gView.style.display = 'flex';
 
   // Elevate (Ẩn với người đã đạt max level - Founder)
   if (lv < 7) { _show('div-elevate', 'cnt-elevate'); }
@@ -69,9 +81,9 @@ function applyUserModeUI() {
   document.body.classList.remove('role-founder');
   document.body.classList.remove('role-admin');
 
-  document.querySelectorAll('.normal-only').forEach(function(el)    { el.style.display = 'block'; });
-  document.querySelectorAll('.protected-only').forEach(function(el) { el.style.display = 'none'; });
-  document.querySelectorAll('.admin-only').forEach(function(el)     { el.style.display = 'none'; });
+  setDisplay('.normal-only', true);
+  setDisplay('.protected-only', false);
+  setDisplay('.admin-only', false);
 
   _hide('div-shield', 'cnt-shield');
   _hide('div-noti',   'cnt-noti');
@@ -81,9 +93,13 @@ function applyUserModeUI() {
   if (_currentLoginRole === 'secondary') {
     var uv = document.getElementById('item-unique-view');
     if (uv) uv.style.display = 'none';
+    var gv = document.getElementById('item-guest-view');
+    if (gv) gv.style.display = 'none';
   } else {
     var uv2 = document.getElementById('item-unique-view');
     if (uv2) uv2.style.display = 'flex';
+    var gv2 = document.getElementById('item-guest-view');
+    if (gv2) gv2.style.display = 'flex';
   }
 
   _show('div-secret',  'cnt-secret');
@@ -175,46 +191,36 @@ function updateStatsUI() {
   // Dropdown adjustments
   setNum('drop-views',      _vOuter);
   setNum('drop-unique',     _vReal);
+  setNum('drop-views-g',    _vGuestOuter);
 
   var totalAuth = _vNormal + _vSec + _vAdmin + _vHead + _vManager + _vCoFounder + _vFounder;
   setNum('num-auth', totalAuth);
   
-  // Update Dropdown Session Breakdown
-  setNum('drop-sub',       _vSec);
-  setNum('drop-main',      _vNormal);
-  setNum('drop-admin',     _vAdmin);
-  setNum('drop-head',      _vHead);
-  setNum('drop-manager',   _vManager);
-  setNum('drop-cofounder', _vCoFounder);
-  setNum('drop-founder',   _vFounder);
+  // Update Dropdown Session Breakdown (Total | Unique | Guest Unique)
+  setNum('drop-sub',        _vSec);
+  setNum('drop-main',       _vNormal);
+  setNum('drop-admin',      _vAdmin);
+  setNum('drop-head',       _vHead);
+  setNum('drop-manager',    _vManager);
+  setNum('drop-cofounder',  _vCoFounder);
+  setNum('drop-founder',    _vFounder);
   
-  setNum('drop-sub-u',       _vUSec);
-  setNum('drop-main-u',      _vUNormal);
-  setNum('drop-admin-u',     _vUAdmin);
-  setNum('drop-head-u',      _vUHead);
-  setNum('drop-manager-u',   _vUManager);
-  setNum('drop-cofounder-u', _vUCoFounder);
-  setNum('drop-founder-u',   _vUFounder);
-  
-  // Update UI Stats Bar (Total Logins)
-  setNum('stat-outer',     _vOuter);
-  setNum('stat-sec',       _vSec);
-  setNum('stat-inner',     _vNormal);
-  setNum('stat-admin',     _vAdmin);
-  setNum('stat-head',      _vHead);
-  setNum('stat-manager',   _vManager);
-  setNum('stat-cofounder', _vCoFounder);
-  setNum('stat-founder',   _vFounder);
+  setNum('drop-sub-u',        _vUSec);
+  setNum('drop-main-u',       _vUNormal);
+  setNum('drop-admin-u',      _vUAdmin);
+  setNum('drop-head-u',       _vUHead);
+  setNum('drop-manager-u',    _vUManager);
+  setNum('drop-cofounder-u',  _vUCoFounder);
+  setNum('drop-founder-u',    _vUFounder);
 
-  // Update UI Stats Bar (Unique Logins)
-  setNum('stat-real',        _vReal);
-  setNum('stat-u-sec',       _vUSec);
-  setNum('stat-u-inner',     _vUNormal);
-  setNum('stat-u-admin',     _vUAdmin);
-  setNum('stat-u-head',      _vUHead);
-  setNum('stat-u-manager',   _vUManager);
-  setNum('stat-u-cofounder', _vUCoFounder);
-  setNum('stat-u-founder',   _vUFounder);
+  // Guest Counters
+  setNum('drop-sub-g',        _vGuestSec);
+  setNum('drop-main-g',       _vGuestNormal);
+  setNum('drop-admin-g',      _vGuestAdmin);
+  setNum('drop-head-g',       _vGuestHead);
+  setNum('drop-manager-g',    _vGuestManager);
+  setNum('drop-cofounder-g',  _vGuestCoFounder);
+  setNum('drop-founder-g',    _vGuestFounder);
 }
 
 /* ── ADJUST VIA OFFSETS ── */
