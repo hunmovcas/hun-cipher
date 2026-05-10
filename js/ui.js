@@ -49,9 +49,10 @@ function renderExcludeProfilesList() {
     container.innerHTML = '<div style="font-size:10px; color:var(--muted); font-style:italic;">No profiles</div>';
     return;
   }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   var html = keys.map(function(k) {
     var profile = _identities[k];
-    var pName = profile.name || k;
+    var pName = (lv === 7 && profile.name) ? profile.name : k;
     var isChecked = _excludedProfiles.indexOf(pName) !== -1 ? 'checked' : '';
     return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:\'Nunito\',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-exclude-prof" value="'+esc(pName)+'" onchange="updateExclusions()" '+isChecked+'> 👤 '+esc(pName)+'</label>';
   }).join('');
@@ -80,9 +81,10 @@ function renderGuestExcludeProfilesList() {
     container.innerHTML = '<div style="font-size:10px; color:var(--muted); font-style:italic;">No profiles</div>';
     return;
   }
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   var html = keys.map(function(k) {
     var profile = _identities[k];
-    var pName = profile.name || k;
+    var pName = (lv === 7 && profile.name) ? profile.name : k;
     var isChecked = _guestExcludedProfiles.indexOf(pName) !== -1 ? 'checked' : '';
     return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:\'Nunito\',sans-serif;margin-bottom:6px;cursor:pointer;"><input type="checkbox" class="chk-guest-exclude-prof" value="'+esc(pName)+'" onchange="updateGuestExclusions()" '+isChecked+'> 👤 '+esc(pName)+'</label>';
   }).join('');
@@ -185,8 +187,9 @@ function populateUnassignedIds() {
 function resetIdentityForm() {
   _editingProfileId = null;
   _tempIds = [];
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   document.getElementById('id-profile-name').value = '';
-  document.getElementById('id-profile-name').disabled = (_currentLoginRole !== 'founder');
+  document.getElementById('id-profile-name').disabled = (lv !== 7); // Chỉ Founder mới được sửa tên
   document.getElementById('id-dev-input').value = '';
   var sel = document.getElementById('id-dev-select');
   if (sel) sel.value = '';
@@ -268,12 +271,13 @@ function saveIdentity() {
 }
 
 function editIdentity(key) {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   var profile = _identities[key];
   if (!profile) return;
   _editingProfileId = key;
   
   var pName = profile.name || key;
-  if (_currentLoginRole === 'founder') {
+  if (lv === 7) {
     document.getElementById('id-profile-name').value = pName;
     document.getElementById('id-profile-name').disabled = false;
   } else {
@@ -296,7 +300,7 @@ function editIdentity(key) {
 function removeIdentity(key, displayName) {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
-  var confirmMsg = (_currentLoginRole === 'founder') ? 'Delete profile "'+displayName+'"?' : 'Delete identity grouping "'+key+'"?';
+  var confirmMsg = (lv === 7) ? 'Delete profile "'+displayName+'"?' : 'Delete identity grouping "'+key+'"?';
   if (confirm(confirmMsg + ' Log records will revert to original IDs.')) {
     if (db) {
       db.ref('settings/identities/' + key).remove(function(err) {
@@ -314,7 +318,9 @@ function removeIdentity(key, displayName) {
 }
 
 function updateIdentityRank(key, newRank) {
-  if (_currentLoginRole !== 'founder') return;
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  // Co-Founder và Founder đều được Update Rank
+  if (lv < 6) return;
   var profile = _identities[key];
   if (!profile) return;
   
@@ -355,9 +361,11 @@ function renderIdentityList() {
     listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border-radius:6px;border:1px dashed var(--border);">No active profiles yet.</div>';
     return;
   }
+  
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   listEl.innerHTML = keys.map(function(k) {
     var profile = _identities[k];
-    var displayName = (_currentLoginRole === 'founder' && profile.name) ? profile.name : k;
+    var displayName = (lv === 7 && profile.name) ? profile.name : k;
     var currentRank = profile.rank || '';
     
     var idsArray = [];
@@ -370,7 +378,8 @@ function renderIdentityList() {
     }).join('');
     
     var rankSelectHtml = '';
-    if (_currentLoginRole === 'founder') {
+    // Co-Founder và Founder được thay đổi Rank
+    if (lv >= 6) {
       rankSelectHtml = '<select class="rank-select" style="padding:2px; width:44px; text-align:center; text-align-last:center; appearance:auto;" onchange="updateIdentityRank(\''+esc(String(k))+'\', this.value)">' +
         '<option value="" title="No Rank" '+(currentRank===''||!currentRank?'selected':'')+'>➖</option>' +
         '<option value="secondary" title="Sub" '+(currentRank==='secondary'?'selected':'')+'>🔑</option>' +
@@ -411,7 +420,7 @@ function openLinkIdentity(devId) {
     select.disabled = true;
   } else {
     select.innerHTML = '<option value="">-- Select Profile</option>' + keys.map(function(k) {
-      var displayName = (_currentLoginRole === 'founder' && _identities[k].name) ? _identities[k].name : k;
+      var displayName = (lv === 7 && _identities[k].name) ? _identities[k].name : k;
       return '<option value="'+esc(String(k))+'">'+esc(String(displayName))+'</option>';
     }).join('');
     select.disabled = false;
@@ -583,6 +592,7 @@ function submitChangeSecret() {
 /* ── BLOCKED IP MANAGER ── */
 function blockIP(ip) {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4) { showToast('Access Denied. Head or higher required.'); return; }
   if (_isProtected && lv < 6) { showToast('System is protected. Action denied!'); return; }
   if (!db || !ip) return;
   var safeIp = ip.replace(/\./g, '-');
@@ -595,6 +605,7 @@ function blockIP(ip) {
 }
 function unblockIP(safeIp) {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4) { showToast('Access Denied. Head or higher required.'); return; }
   if (_isProtected && lv < 6) { showToast('System is protected. Action denied!'); return; }
   if (!db) return;
   db.ref('settings/blockedIPs/' + safeIp).remove(function(err) {

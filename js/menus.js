@@ -33,7 +33,9 @@ function toggleExcludeMenu(e)  {
 
 function toggleSwitchMenu(e) {
   e.stopPropagation();
-  if (sessionStorage.getItem('hun_known_founder') !== 'true') {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  // Admin(<4) chỉ được ngắm icon, sẽ bị chặn mở Menu nếu click vào (Trừ khi biết pass Founder)
+  if (lv < 4 && sessionStorage.getItem('hun_known_founder') !== 'true') {
     document.getElementById('admin-deny-overlay').classList.add('open');
     closeAllMenus();
     return;

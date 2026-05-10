@@ -47,7 +47,7 @@ function applyAdminModeUI() {
   _show('div-auth',   'cnt-auth');
   _show('div-profile','cnt-profile');
   
-  // Notification (CHỈ FOUNDER nhận được)
+  // Notification (CHỈ DUY NHẤT FOUNDER nhận được)
   if (lv === 7) {
     _show('div-noti', 'cnt-noti');
     fbListenNoti();
@@ -66,12 +66,19 @@ function applyAdminModeUI() {
 
   _hide('div-secret', 'cnt-secret');
 
-  // Switch Role (Head(4) trở lên hoặc đã biết pass Founder)
-  if (lv >= 4 || sessionStorage.getItem('hun_known_founder') === 'true') {
+  // Switch Role (Admin(3) trở lên sẽ nhìn thấy icon nhưng việc click được phân quyền ở menus.js)
+  if (lv >= 3 || sessionStorage.getItem('hun_known_founder') === 'true') {
     _show('div-switch', 'cnt-switch');
   } else {
     _hide('div-switch', 'cnt-switch');
   }
+
+  // Ẩn/hiện các nút Trash & Block IPs (Chỉ Head >= 4 mới thấy)
+  var trashBtns = document.querySelectorAll('button[onclick="openTrash()"]');
+  trashBtns.forEach(function(btn) { btn.style.display = (lv >= 4) ? 'flex' : 'none'; });
+
+  var blockMenuBtn = document.querySelector('button[onclick="openBlockManager()"]');
+  if (blockMenuBtn) blockMenuBtn.style.display = (lv >= 4) ? 'flex' : 'none';
 
   updateProfileIcon();
   updateProtectionUI();
@@ -119,7 +126,12 @@ function applyUserModeUI() {
 /* ── SWITCH ROLE ── */
 function switchRole(newRole) {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  if (lv < 4 && sessionStorage.getItem('hun_known_founder') !== 'true') { showToast('Access Denied'); return; }
+  // Dưới Head(<4) bị chặn truy cập Switch Role (Trừ khi biết pass founder)
+  if (lv < 4 && sessionStorage.getItem('hun_known_founder') !== 'true') { 
+    document.getElementById('admin-deny-overlay').classList.add('open');
+    closeAllMenus();
+    return; 
+  }
   
   if (_currentLoginRole === newRole) { showToast('Already in this role!'); return; }
   _currentLoginRole = newRole;
@@ -142,7 +154,7 @@ function switchRole(newRole) {
 /* ── PROTECTION UI ── */
 function updateProtectionUI() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  var isImmune = (lv >= 6); // Founder và Co-Founder miễn nhiễm
+  var isImmune = (lv >= 6); // Chỉ Founder và Co-Founder miễn nhiễm, Manager bị chặn
   
   var shieldText = document.getElementById('shield-status-text');
   var shieldBtn = document.getElementById('btn-toggle-shield');
@@ -188,7 +200,6 @@ function updateStatsUI() {
   setNum('login-outer-num', _vOuter);
   setNum('num-traffic',     _vOuter);
   
-  // Dropdown adjustments
   setNum('drop-views',      _vOuter);
   setNum('drop-unique',     _vReal);
   setNum('drop-views-g',    _vGuestOuter);
@@ -196,7 +207,6 @@ function updateStatsUI() {
   var totalAuth = _vNormal + _vSec + _vAdmin + _vHead + _vManager + _vCoFounder + _vFounder;
   setNum('num-auth', totalAuth);
   
-  // Update Dropdown Session Breakdown (Total | Unique | Guest Unique)
   setNum('drop-sub',        _vSec);
   setNum('drop-main',       _vNormal);
   setNum('drop-admin',      _vAdmin);
@@ -213,7 +223,6 @@ function updateStatsUI() {
   setNum('drop-cofounder-u',  _vUCoFounder);
   setNum('drop-founder-u',    _vUFounder);
 
-  // Guest Counters
   setNum('drop-sub-g',        _vGuestSec);
   setNum('drop-main-g',       _vGuestNormal);
   setNum('drop-admin-g',      _vGuestAdmin);
@@ -268,7 +277,6 @@ function doAdjustCounter() {
   db.ref('settings/counter_offsets/' + key).set(newOffset, function() { showToast('✓ Updated successfully!'); });
 }
 
-/* ── internal show/hide helpers ── */
 function _show(divId, cntId) {
   var d = document.getElementById(divId), c = document.getElementById(cntId);
   if (d) d.style.display = 'block';

@@ -70,8 +70,8 @@ function isLogExcluded(log) {
 function computeUniqueLogs() {
   var seen = {};
   var uLogs = [];
-  var seenG = {};      // Theo dõi first-seen riêng cho khoảng thời gian Guest
-  var gLogsRaw = [];   // Lưu trữ logs thô cho Guest
+  var seenG = {};      
+  var gLogsRaw = [];   
 
   var uNorm=new Set(), uSec=new Set(), uAdm=new Set(), uHead=new Set(), uMan=new Set(), uCo=new Set(), uFou=new Set();
   var uDevs=new Set();
@@ -87,13 +87,11 @@ function computeUniqueLogs() {
     var id = log.deviceId ? 'dev_' + log.deviceId : 'fp_' + (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
     var key = log.type + '_' + id;
 
-    // 1. UNIQUE LOGIC
     if (log.ts >= _UNIQUE_CUTOFF_TS) {
       if (!seen[key]) {
         seen[key] = true;
         uLogs.push(log);
       }
-      
       if (log.type === 'view') uDevs.add(id);
       else if (log.type === 'login_normal') uNorm.add(id);
       else if (log.type === 'login_secondary') uSec.add(id);
@@ -104,9 +102,7 @@ function computeUniqueLogs() {
       else if (log.type === 'login_founder') uFou.add(id);
     }
 
-    // 2. GUEST LOGIC (Filtered by cutoff timestamp)
     if (log.ts >= _GUEST_CUTOFF_TS) {
-      // Chỉ lấy lần xuất hiện đầu tiên của ID này KỂ TỪ SAU GUEST CUTOFF
       if (!seenG[key]) {
         seenG[key] = true;
         gLogsRaw.push(log);
@@ -122,7 +118,6 @@ function computeUniqueLogs() {
       else if (log.type === 'login_founder') gFou.add(id);
     }
 
-    // Identify roles and profiles for Guest Exclusion
     if (log.ts >= _UNIQUE_CUTOFF_TS) {
       var idenName = log.deviceId ? getIdentityName(log.deviceId) : null;
       var isExcludedByProfile = idenName && typeof _guestExcludedProfiles !== 'undefined' && _guestExcludedProfiles.indexOf(idenName) !== -1;
@@ -143,7 +138,6 @@ function computeUniqueLogs() {
 
       var isExcludedByRank = finalRank && typeof _guestExcludedRanks !== 'undefined' && _guestExcludedRanks.indexOf(finalRank) !== -1;
 
-      // Nếu nằm trong mảng những ô được tick -> Đưa vào danh sách loại trừ
       if (isExcludedByProfile || isExcludedByRank) {
         guestExcludedIds.add(id);
       }
@@ -152,14 +146,12 @@ function computeUniqueLogs() {
   
   _uniqueLogs = uLogs.sort(function(a,b) { return (b.ts||0) - (a.ts||0); });
   
-  // Tạo Guest Logs độc lập, chỉ lọc các ID nằm trong blacklist do user tick
   _guestLogs = gLogsRaw.filter(function(log) {
     var id = log.deviceId ? 'dev_' + log.deviceId : 'fp_' + (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
     if (guestExcludedIds.has(id)) return false;
     return true;
   }).sort(function(a,b) { return (b.ts||0) - (a.ts||0); });
 
-  // Calculate Guests counters (Đồng bộ tuyệt đối với Bảng Guest)
   var filterGuest = function(setObj) {
     var c = 0;
     setObj.forEach(function(id) { 
@@ -175,7 +167,6 @@ function computeUniqueLogs() {
   _vGuestManager = filterGuest(gMan);
   _vGuestCoFounder = filterGuest(gCo);
   _vGuestFounder = filterGuest(gFou);
-  
   _vGuestOuter = filterGuest(gDevs);
   
   if (typeof updateStatsUI === 'function') updateStatsUI();
@@ -434,7 +425,12 @@ function generateRowHtml(log) {
     
   var authBadgeStr = log.authVia ? '<span class="auth-via-label">via '+labelType('login_'+log.authVia).replace(/[^a-zA-Z\s-]/g, '').trim().toLowerCase()+'</span>' : '';
 
-  var delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log" onclick="deleteSingleLog(\''+String(log._k)+'\', \''+String(log.type)+'\', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  var delBtn = '';
+  // Chỉ hiện nút thùng rác Delete Log từ Rank Head(4) trở lên
+  if (lv >= 4) {
+    delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log" onclick="deleteSingleLog(\''+String(log._k)+'\', \''+String(log.type)+'\', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
+  }
   
   return '<tr><td>' + badgeHtml(log.type) + authBadgeStr + '</td><td><span style="color:var(--ink)">' + esc(dstr) + '</span></td><td>' + devIdStr + '</td><td><div class="cell-main">' + esc(browser) + '</div><div class="cell-sub">' + esc(device) + (os?' · '+esc(os):'') + '</div></td><td><div class="cell-loc">' + locHtml + postalStr + '</div><div class="cell-ip">🌐 ' + ipStr + (coordStr?'  '+coordStr:'') + '</div>' + (ispStr?'<div class="cell-isp">'+ispStr+(log.asn?' · '+esc(String(log.asn)):'')+'</div>':'') + '</td><td><div class="cell-sub">' + esc(extra) + '</div></td><td style="vertical-align:middle;">' + delBtn + '</td></tr>';
 }
@@ -529,6 +525,7 @@ function goPageG(n) { _pageG = n; renderGuestLogs(); }
 /* ── DELETE / TRASH ── */
 function deleteSingleLog(key, type, btnEl) {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4) { showToast('Access Denied'); return; }
   if (_isProtected && lv < 6) { showToast('System is protected. Action denied!'); return; }
   _pendingSingleDelete = { key: key, type: type, row: btnEl.closest('tr') };
   document.getElementById('confirm-title').textContent = 'Move Log to Trash?';
@@ -539,6 +536,7 @@ function deleteSingleLog(key, type, btnEl) {
 
 function doDeleteSingleLog() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4) return;
   if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   closeConfirm();
   if (!db || !_pendingSingleDelete) return;
@@ -561,6 +559,7 @@ function doDeleteSingleLog() {
 
 function deleteDeviceLogs(keysStr, btnEl) {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4) { showToast('Access Denied'); return; }
   if (_isProtected && lv < 6) { showToast('System is protected. Action denied!'); return; }
   try { _pendingDeleteKeys = JSON.parse(keysStr); } catch(e) { return; }
   _pendingDeleteRow = btnEl.closest('.ip-row');
@@ -572,6 +571,7 @@ function deleteDeviceLogs(keysStr, btnEl) {
 
 function doDeleteDeviceLogs() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4) return;
   if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   closeConfirm();
   if (!db || !_pendingDeleteKeys || !_pendingDeleteKeys.length) return;
@@ -591,6 +591,7 @@ function doDeleteDeviceLogs() {
 
 function openTrash() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4) { showToast('Access Denied'); return; }
   if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   document.getElementById('trash-overlay').classList.add('open');
   var listEl = document.getElementById('trash-list');
@@ -625,6 +626,7 @@ function closeTrash() { document.getElementById('trash-overlay').classList.remov
 
 function restoreLog(key) {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4) { showToast('Access Denied'); return; }
   if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
   db.ref('trash/logs/' + key).once('value', function(snap) {
     var data = snap.val(); if (!data) { showToast('Log not found!'); return; }
@@ -685,7 +687,7 @@ function buildDeviceMap(typeFilter) {
     if (devId && entry.devIds.indexOf(devId) === -1) entry.devIds.push(devId);
     if (log.ip && entry.ips.indexOf(log.ip) === -1)  entry.ips.push(log.ip);
     entry.total++;
-    // Đếm số liệu nhóm DỰA TRÊN log.type đã đóng băng
+    
     if (log.type === 'login_secondary') entry.sec++;
     if (log.type === 'login_normal')  entry.normal++;
     if (log.type === 'login_admin')   entry.admin++;
@@ -708,9 +710,9 @@ function renderIpStats() {
     var grid = document.getElementById('ip-stats-grid'); if (!grid) return;
     var cols = [
       { key:'all',       label:'All Users',  cls:'col-all',        numCls:'cnt-all',    barCls:'bar-all',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>' },
-      { key:'sec',       label:'🔑 Sub',     cls:'col-normal',    numCls:'cnt-normal', barCls:'bar-normal',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
-      { key:'normal',    label:'🔒 Main',    cls:'col-normal',    numCls:'cnt-normal', barCls:'bar-normal',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
-      { key:'admin',     label:'🌟 Admin',   cls:'col-admin',     numCls:'cnt-admin',  barCls:'bar-admin',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
+      { key:'sec',       label:'🔑 Sub',     cls:'col-normal',     numCls:'cnt-normal', barCls:'bar-normal',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+      { key:'normal',    label:'🔒 Main',    cls:'col-normal',     numCls:'cnt-normal', barCls:'bar-normal',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' },
+      { key:'admin',     label:'🌟 Admin',   cls:'col-admin',      numCls:'cnt-admin',  barCls:'bar-admin',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
       { key:'head',      label:'⚜️ Head',      cls:'col-head',      numCls:'cnt-admin',  barCls:'bar-head',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
       { key:'manager',   label:'🔱 Manager',   cls:'col-manager',   numCls:'cnt-admin',  barCls:'bar-manager',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>' },
       { key:'cofounder', label:'💎 Co-Founder',cls:'col-cofounder', numCls:'cnt-admin',  barCls:'bar-cofounder', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 4 8 11 2 4 5 16 19 16 22 4 16 11 12 4"></polygon><line x1="5" y1="20" x2="19" y2="20"></line></svg>' },
@@ -719,6 +721,8 @@ function renderIpStats() {
     var showKeys = _ipMode === 'all' ? ['all','sec','normal','admin','head','manager','cofounder','founder'] : [_ipMode];
     var filteredCols = cols.filter(function(c) { return showKeys.indexOf(c.key) !== -1; });
     var html = '';
+
+    var lv = ROLE_LEVEL[_currentLoginRole] || 1;
 
     filteredCols.forEach(function(col) {
       var map = buildDeviceMap(col.key);
@@ -757,10 +761,16 @@ function renderIpStats() {
         if (lastStr) html += '<div class="ip-last">🕐 '+esc(lastStr)+'</div>';
         html += '<div class="ip-bar-wrap"><div class="ip-bar '+col.barCls+'" style="width:'+barPct+'%"></div></div></div>';
         html += '<div class="ip-count-badge"><div class="ip-count-num '+col.numCls+'">'+count+'</div><div class="ip-count-label">times</div></div>';
+        
         var keysStr = JSON.stringify(entry.logKeys).replace(/"/g,'"');
         html += '<div style="display:flex;flex-direction:column;">';
-        html += '<button class="btn-del-ip allow-protected" title="Delete completely" data-keys="'+keysStr+'" onclick="deleteDeviceLogs(this.dataset.keys,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
-        if (entry.ips.length>0) html += '<button class="btn-block-ip allow-protected" title="Block this IP" onclick="blockIP(\''+esc(String(entry.ips[0]))+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></button>';
+        
+        // Chỉ hiện thùng rác và block từ Head trở lên
+        if (lv >= 4) {
+          html += '<button class="btn-del-ip allow-protected" title="Delete completely" data-keys="'+keysStr+'" onclick="deleteDeviceLogs(this.dataset.keys,this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
+          if (entry.ips.length>0) html += '<button class="btn-block-ip allow-protected" title="Block this IP" onclick="blockIP(\''+esc(String(entry.ips[0]))+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></button>';
+        }
+        
         html += '</div></div>';
       });
       html += '</div>';
