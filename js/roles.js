@@ -4,10 +4,13 @@
 
 function updateProfileIcon() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  document.getElementById('icon-prof-normal').style.display  = (lv <= 2) ? 'block' : 'none';
-  document.getElementById('icon-prof-admin').style.display   = (lv >= 3 && lv < 7) ? 'block' : 'none';
-  document.getElementById('icon-prof-founder').style.display = (lv === 7) ? 'block' : 'none';
-  
+  document.getElementById('icon-prof-normal').style.display    = (lv <= 2) ? 'block' : 'none';
+  document.getElementById('icon-prof-admin').style.display     = (lv === 3) ? 'block' : 'none';
+  document.getElementById('icon-prof-head').style.display      = (lv === 4) ? 'block' : 'none';
+  document.getElementById('icon-prof-manager').style.display   = (lv === 5) ? 'block' : 'none';
+  document.getElementById('icon-prof-cofounder').style.display = (lv === 6) ? 'block' : 'none';
+  document.getElementById('icon-prof-founder').style.display   = (lv === 7) ? 'block' : 'none';
+
   var pf = document.getElementById('cnt-profile');
   if (lv === 7) pf.style.color = 'var(--founder)';
   else if (lv === 6) pf.style.color = 'var(--cofounder)';
