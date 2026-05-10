@@ -46,6 +46,9 @@ document.addEventListener('keydown', function(e) {
     closeShieldModal(); closeBlockManager(); closeTrash(); closeAdminDenyModal();
     if(typeof closeIdentityManager === 'function') closeIdentityManager();
     if(typeof closeLinkIdentity === 'function') closeLinkIdentity();
+    if(typeof closeFlagNotify === 'function') closeFlagNotify();
+    if(typeof closeChangeFlagNotify === 'function') closeChangeFlagNotify();
+    if(typeof closeNotiTrash === 'function') closeNotiTrash();
   }
 
   // Enter confirms open dialogs

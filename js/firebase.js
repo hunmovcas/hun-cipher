@@ -20,7 +20,6 @@ function initFirebase() {
 
     db.ref('settings/identities').on('value', function(snap) {
       _identities = snap.val() || {};
-      // Tên Alias đổi thì render lại Log và tính lại lượng Guest
       if (document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
         if (typeof computeUniqueLogs === 'function') computeUniqueLogs();
         if (typeof renderLogs === 'function') {
@@ -66,6 +65,14 @@ function initFirebase() {
         currentNotes.footer  = snap.val().footer  || defaultNotes.footer;
         renderNotes();
       } else { db.ref('settings/notes_v2').set(currentNotes); }
+    });
+
+    db.ref('settings/flag_notify').on('value', function(snap) {
+      if (snap.exists()) {
+        currentFlagNotify.btnText = snap.val().btnText || snap.val().title || defaultFlagNotify.btnText;
+        currentFlagNotify.vi = snap.val().vi || defaultFlagNotify.vi;
+        currentFlagNotify.en = snap.val().en || defaultFlagNotify.en;
+      } else { db.ref('settings/flag_notify').set(currentFlagNotify); }
     });
 
     db.ref('settings/protection').on('value', function(snap) { _isProtected = !!snap.val(); updateProtectionUI(); });

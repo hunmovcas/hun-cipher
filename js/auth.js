@@ -11,7 +11,6 @@ function getIdentityRankByDevId(devId) {
     var profile = _identities[key];
     if (!profile) continue;
     
-    // Ép kiểu chống suy biến Array của Firebase
     var idsArray = [];
     if (Array.isArray(profile.ids)) {
       idsArray = profile.ids;
@@ -42,6 +41,18 @@ function toggleEye() {
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
   }
 }
+
+window.toggleDialogEye = function(inputId, btnId) {
+  var inp = document.getElementById(inputId);
+  var btn = document.getElementById(btnId);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+  } else {
+    inp.type = 'password';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+  }
+};
 
 /* ── FUZZY MATCH (1 char off) ── */
 async function isOneCharOff(val) {
@@ -92,7 +103,6 @@ async function checkPw() {
     
     if (pwRole === 'founder') sessionStorage.setItem('hun_known_founder', 'true');
 
-    // Chặn luồng, ép tải dữ liệu Identities sạch từ Firebase
     if (db) {
       var idSnap = await db.ref('settings/identities').once('value');
       _identities = idSnap.val() || {};
@@ -101,7 +111,6 @@ async function checkPw() {
     var devId = localStorage.getItem('hun_device_id');
     var assignedRank = getIdentityRankByDevId(devId);
     
-    // LOGIC DUAL TAGGING CHUẨN: So sánh Cấp bậc (ROLE_LEVEL)
     var newRole = pwRole;
     var finalAuthVia = null;
 
@@ -110,11 +119,9 @@ async function checkPw() {
       var pwLv = ROLE_LEVEL[pwRole] || 0;
       
       if (rankLv > pwLv) {
-        // Định danh có chức vụ CAO HƠN pass đang nhập (VD: Rank Co-Founder dùng Pass Sub)
         newRole = assignedRank;
         finalAuthVia = pwRole;
       } else {
-        // Định danh có chức vụ THẤP HƠN pass đang nhập -> Ưu tiên theo Pass
         newRole = pwRole;
         finalAuthVia = null;
       }
@@ -230,7 +237,6 @@ async function submitElevate() {
   var devId = localStorage.getItem('hun_device_id');
   var assignedRank = getIdentityRankByDevId(devId);
   
-  // Áp dụng chung logic Đẳng cấp như hàm checkPw
   var newRole = pwRole;
   var newAuthVia = null;
 
@@ -325,6 +331,11 @@ function openChangePw(type) {
   document.getElementById('pw-new').value                  = '';
   document.getElementById('pw-confirm').value              = '';
   document.getElementById('pw-change-err').style.display   = 'none';
+  
+  document.getElementById('pw-old').type = 'password';
+  document.getElementById('pw-new').type = 'password';
+  document.getElementById('pw-confirm').type = 'password';
+  
   if (type === 'founder') closeShieldModal();
   document.getElementById('pw-change-overlay').classList.add('open');
   closeAllMenus();
@@ -349,6 +360,23 @@ async function submitChangePw() {
   else if (_pwChangeType === 'secondary' && (oldHash === currentHashes.secondary || oldHash === currentHashes.normal))   isAuthorized = true;
   if (!isAuthorized) { errEl.textContent = 'Incorrect password or insufficient permissions'; errEl.style.display = 'block'; return; }
 
+  var pName = 'Unknown';
+  var devId = localStorage.getItem('hun_device_id');
+  if (devId) {
+    pName = devId; 
+    for (var key in _identities) {
+      var profile = _identities[key];
+      var idsArray = [];
+      if (Array.isArray(profile.ids)) idsArray = profile.ids;
+      else if (typeof profile.ids === 'object') idsArray = Object.values(profile.ids);
+      else if (Array.isArray(profile)) idsArray = profile;
+      if (idsArray.indexOf(devId) !== -1) {
+        pName = profile.name || key;
+        break;
+      }
+    }
+  }
+
   var newHash = await hash(newPw);
   if (db) {
     var updates = {}; updates['settings/passwords_v3/' + _pwChangeType] = newHash;
@@ -357,7 +385,7 @@ async function submitChangePw() {
       else {
         closeChangePw();
         showToast('✓ Password updated');
-        db.ref('notifications').push({ text: '🔑 Password changed: ' + _pwChangeType + ' | IP: ' + (window._myIP || 'Unknown'), ts: Date.now(), read: false });
+        db.ref('notifications').push({ text: '🔑 Password changed: ' + _pwChangeType + ' | Profile: ' + pName + ' | IP: ' + (window._myIP || 'Unknown'), ts: Date.now(), read: false });
       }
     });
   }

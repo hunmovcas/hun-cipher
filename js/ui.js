@@ -40,6 +40,57 @@ function renderWelcome() {
   if (welEl) welEl.innerHTML = esc(currentWelcome);
 }
 
+/* ── FLAG NOTIFICATION ── */
+function showFlagNotify() {
+  document.getElementById('btn-flag-confirm').textContent = currentFlagNotify.btnText || 'Hi !';
+  document.getElementById('flag-msg-vi').textContent = currentFlagNotify.vi;
+  document.getElementById('flag-msg-en').textContent = currentFlagNotify.en;
+  document.getElementById('flag-notify-overlay').classList.add('open');
+}
+
+function closeFlagNotify() {
+  document.getElementById('flag-notify-overlay').classList.remove('open');
+}
+
+function openChangeFlagNotify() {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
+  document.getElementById('flag-btn-input').value = currentFlagNotify.btnText || 'Hi !';
+  document.getElementById('flag-vi-input').value = currentFlagNotify.vi;
+  document.getElementById('flag-en-input').value = currentFlagNotify.en;
+  document.getElementById('flag-edit-overlay').classList.add('open');
+  closeAllMenus();
+}
+
+function closeChangeFlagNotify() {
+  document.getElementById('flag-edit-overlay').classList.remove('open');
+}
+
+function submitChangeFlagNotify() {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (_isProtected && lv < 6) { showToast('System is protected!'); return; }
+  
+  var btnText = document.getElementById('flag-btn-input').value.trim() || defaultFlagNotify.btnText;
+  var viText = document.getElementById('flag-vi-input').value.trim() || defaultFlagNotify.vi;
+  var enText = document.getElementById('flag-en-input').value.trim() || defaultFlagNotify.en;
+  
+  currentFlagNotify.btnText = btnText;
+  currentFlagNotify.vi = viText;
+  currentFlagNotify.en = enText;
+  
+  if (db) {
+    db.ref().update({ 
+      'settings/flag_notify/btnText': btnText,
+      'settings/flag_notify/vi': viText, 
+      'settings/flag_notify/en': enText 
+    }, function(err) {
+      if (err) showToast('⚠ Error!'); else { closeChangeFlagNotify(); showToast('✓ Updated successfully'); }
+    });
+  } else {
+    closeChangeFlagNotify();
+  }
+}
+
 /* ── EXCLUDE PROFILES UI ── */
 function renderExcludeProfilesList() {
   var container = document.getElementById('exclude-profiles-container');
@@ -319,12 +370,10 @@ function removeIdentity(key, displayName) {
 
 function updateIdentityRank(key, newRank) {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  // Co-Founder và Founder đều được Update Rank
   if (lv < 6) return;
   var profile = _identities[key];
   if (!profile) return;
   
-  // Chuẩn hóa Array trước khi lưu
   var idsArray = [];
   if (Array.isArray(profile.ids)) idsArray = profile.ids;
   else if (typeof profile.ids === 'object') idsArray = Object.values(profile.ids);
@@ -378,7 +427,6 @@ function renderIdentityList() {
     }).join('');
     
     var rankSelectHtml = '';
-    // Co-Founder và Founder được thay đổi Rank
     if (lv >= 6) {
       rankSelectHtml = '<select class="rank-select" style="padding:2px; width:44px; text-align:center; text-align-last:center; appearance:auto;" onchange="updateIdentityRank(\''+esc(String(k))+'\', this.value)">' +
         '<option value="" title="No Rank" '+(currentRank===''||!currentRank?'selected':'')+'>➖</option>' +

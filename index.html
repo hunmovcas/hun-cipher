@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Secret Cipher</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;800;900&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/animations.css">
   <link rel="stylesheet" href="css/layout.css">
@@ -15,6 +15,95 @@
     #log-table-u th.sortable:hover { background: #1e8449 !important; }
     #log-table-g th { border-right: 1px solid rgba(255,255,255,0.1); }
     #log-table-g th.sortable:hover { background: #c0392b !important; }
+    
+    /* ── REDESIGNED FLAG MODAL CSS ── */
+    .c-flag {
+        position: absolute;
+        width: 32px;
+        height: 22px;
+        background-color: #da251d;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 3 2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon fill='%23ffcd00' points='1.5,0.4 1.635,0.815 2.071,0.815 1.718,1.071 1.853,1.485 1.5,1.229 1.147,1.485 1.282,1.071 0.929,0.815 1.366,0.815'/%3E%3C/svg%3E");
+        background-size: 14px;
+        background-position: center;
+        background-repeat: no-repeat;
+        box-shadow: 2px 3px 6px rgba(0,0,0,0.6), inset 1px 1px 2px rgba(255,255,255,0.2);
+        border-radius: 1px;
+        z-index: 20;
+    }
+    .flag-board {
+        max-width: 520px;
+        width: 95%;
+        position: relative;
+        background: #5c1810;
+        background-image:
+            repeating-linear-gradient(to right, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px, transparent 1px, transparent 4px),
+            linear-gradient(135deg, #872616 0%, #3a0a03 100%);
+        border: 2px solid #2b0601;
+        border-radius: 6px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.9);
+        padding: 50px 48px 40px;
+        text-align: center;
+        color: #fdf6e3;
+    }
+    .flag-board::after {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%);
+        pointer-events: none; border-radius: 4px; z-index: 1;
+    }
+    .flag-msg-vi {
+        font-family: 'Lora', serif; /* Đã sửa sang font hỗ trợ TV */
+        font-style: italic;
+        font-size: 1.15rem;
+        color: #f7e6c6;
+        line-height: 1.6;
+        position: relative; z-index: 2;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+        text-align: justify;
+        text-align-last: left;
+    }
+    .flag-msg-en {
+        font-family: 'Lora', serif; /* Đã sửa sang font hỗ trợ TV */
+        font-size: 1.05rem;
+        color: #e3d2be;
+        line-height: 1.6;
+        position: relative; z-index: 2;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+        text-align: justify;
+        text-align-last: left;
+    }
+    .flag-divider {
+        width: 100%;
+        margin: 28px 0;
+        position: relative; z-index: 2;
+        display: flex; justify-content: center;
+    }
+    @keyframes pulseDiamond {
+        0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 2px #FFF6D9); }
+        50% { opacity: 1; filter: drop-shadow(0 0 8px #FFF6D9); }
+    }
+    .diamond-pulse {
+        animation: pulseDiamond 2s infinite ease-in-out;
+    }
+    .flag-btn-gold {
+        background: linear-gradient(to bottom, #fcebb6 0%, #d4a754 45%, #a67623 100%);
+        border: 2px solid #4a2908;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,255,255,0.7), inset 0 -3px 5px rgba(0,0,0,0.5);
+        border-radius: 8px;
+        color: #4a2908;
+        font-family: 'Lora', serif;
+        font-weight: 900;
+        font-size: 1.1rem;
+        padding: 12px 50px;
+        cursor: pointer;
+        letter-spacing: 2px;
+        position: relative; z-index: 2;
+        transition: all 0.15s;
+        text-shadow: 0 1px 1px rgba(255,255,255,0.4);
+    }
+    .flag-btn-gold:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -2px 3px rgba(0,0,0,0.5);
+    }
   </style>
 </head>
 <body>
@@ -70,8 +159,9 @@
       <div id="noti-dropdown" class="dropdown-menu">
         <div class="adm-section"><div class="adm-section-label">Recent Notifications</div></div>
         <div class="noti-list" id="noti-list"></div>
-        <div class="adm-section">
-          <button class="adm-item success allow-protected" onclick="markAllNotiRead(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Mark as read</button>
+        <div class="adm-section" style="display:flex;">
+          <button class="adm-item success allow-protected" style="flex:1" onclick="markAllNotiRead(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Mark read</button>
+          <button class="adm-item danger allow-protected" style="flex:1" onclick="openNotiTrash(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Trash</button>
         </div>
       </div>
     </div>
@@ -239,9 +329,9 @@
 
         <div class="adm-section">
           <div class="adm-section-label">Credentials</div>
-          <button class="adm-item edit allow-protected" onclick="openChangePw('normal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Update Main Key</button>
-          <button class="adm-item edit allow-protected" onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Update Sub Key</button>
-          <button class="adm-item danger admin-only allow-protected" style="display:none" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Update Admin Key</button>
+          <button class="adm-item edit allow-protected" onclick="openChangePw('normal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Main Pass</button>
+          <button class="adm-item edit allow-protected" onclick="openChangePw('secondary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Sub Pass</button>
+          <button class="adm-item danger admin-only allow-protected" style="display:none" onclick="openChangePw('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Change Admin Pass</button>
         </div>
         
         <div class="adm-section founder-only">
@@ -250,6 +340,7 @@
           <button class="adm-item edit" onclick="openChangeWelcome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Edit Banner</button>
           <button class="adm-item edit" onclick="openChangeNotes()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Edit Notes</button>
           <button class="adm-item edit" onclick="openChangePopup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Edit Popups</button>
+          <button class="adm-item edit" onclick="openChangeFlagNotify()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg> Edit Flag</button>
         </div>
         
         <div class="adm-section founder-only">
@@ -269,6 +360,14 @@
 </div>
 
 <div id="pw-screen">
+  <div id="vn-flag" style="position:absolute;top:16px;left:20px;cursor:pointer;width:34px;height:34px;border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,0.3);z-index:100;border:2px solid #fff;background-color:#da251d;display:flex;align-items:center;justify-content:center;transition:transform 0.2s;" onclick="showFlagNotify()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+      <rect width="3" height="2" fill="#da251d"/>
+      <g transform="translate(1.5, 0.94) scale(1.4) translate(-1.5, -0.94)">
+        <polygon fill="#ffcd00" points="1.5,0.4 1.635,0.815 2.071,0.815 1.718,1.071 1.853,1.485 1.5,1.229 1.147,1.485 1.282,1.071 0.929,0.815 1.366,0.815"/>
+      </g>
+    </svg>
+  </div>
   <div id="login-view-count" style="position:absolute;top:16px;right:20px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:bold;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
     <strong id="login-outer-num">0</strong>
@@ -285,8 +384,8 @@
         <h2>Enter Password</h2>
         <p class="pw-sub">This site is strictly private</p>
         <div class="pw-wrap">
-          <input type="password" id="pw-input" maxlength="30" placeholder="••••••" autocomplete="off">
-          <button id="pw-eye" onclick="toggleEye()" tabindex="-1">
+          <input type="password" id="pw-input" class="input-field" maxlength="30" placeholder="••••••" autocomplete="off" style="letter-spacing: 8px; text-indent: 8px;">
+          <button id="pw-eye" onclick="toggleEye()" tabindex="-1" style="position:absolute; right:12px; background:none; border:none; cursor:pointer; color:var(--muted); padding:4px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
           </button>
         </div>
@@ -507,6 +606,9 @@
 <div class="dialog-overlay" id="elevate-overlay"><div class="dialog-box"><h3 id="elevate-title">Elevate Privilege</h3><p id="elevate-desc" style="margin-bottom:16px;">Authenticate as Admin or Founder.</p><p id="elevate-err" style="color:var(--accent);display:none;font-weight:bold;margin-bottom:10px;">Incorrect password!</p><div class="form-group" style="margin-bottom:24px;"><input type="password" id="elevate-pw" class="input-field" placeholder="Admin or Founder Password..." autocomplete="off"></div><div class="dialog-actions" style="margin-top:0;"><button class="btn-dialog-yes btn-save" onclick="submitElevate()">Confirm</button><button class="btn-dialog-no" onclick="closeElevateModal()">Cancel</button></div></div></div>
 <div class="dialog-overlay" id="shield-overlay"><div class="dialog-box"><h3>System Protection</h3><p style="margin-bottom:12px;">Status: <strong id="shield-status-text" style="color:var(--muted);">DISABLED</strong></p><p id="shield-err" style="color:var(--accent);display:none;font-weight:bold;margin-bottom:10px;">Incorrect Founder password!</p><div class="form-group" style="margin-bottom:24px;"><input type="password" id="shield-pw" class="input-field allow-protected" placeholder="Founder Password..." autocomplete="off"></div><div class="dialog-actions" style="flex-wrap:wrap;flex-direction:column;gap:8px;margin-top:0;"><button class="btn-dialog-yes btn-save allow-protected" onclick="submitToggleShield()" id="btn-toggle-shield" style="width:100%;">Enable Protection</button><button class="btn-dialog-no allow-protected" style="width:100%;margin-top:4px;" onclick="closeShieldModal()">Close</button></div></div></div>
 <div class="dialog-overlay" id="trash-overlay"><div class="dialog-box" style="max-width:600px;width:95%;padding:24px;"><h3>Trash Bin 🗑️</h3><p style="font-size:11px;margin-bottom:16px;">Logs are kept here for 24 hours before permanent deletion.</p><div id="trash-list" style="max-height:300px;overflow-y:auto;text-align:left;font-family:'Space Mono',monospace;font-size:10px;border:1px solid var(--border);padding:8px;">Loading...</div><div class="dialog-actions"><button class="btn-dialog-no" onclick="closeTrash()">Close</button></div></div></div>
+
+<div class="dialog-overlay" id="noti-trash-overlay"><div class="dialog-box" style="max-width:500px;width:95%;padding:24px;"><h3>Notification Trash 🗑️</h3><p style="font-size:11px;margin-bottom:16px;">Deleted notifications are kept here for 7 days.</p><div id="noti-trash-list" style="max-height:300px;overflow-y:auto;text-align:left;font-family:'Nunito',sans-serif;border:1px solid var(--border);padding:8px;">Loading...</div><div class="dialog-actions"><button class="btn-dialog-no" onclick="closeNotiTrash()">Close</button></div></div></div>
+
 <div class="dialog-overlay" id="admin-deny-overlay"><div class="dialog-box deny-box"><div class="deny-header"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Access Denied</div><div class="deny-body"><div class="deny-icon">🚷</div><p style="font-weight:900;color:var(--ink);font-size:1.1rem;margin-bottom:6px;font-family:'Nunito',sans-serif;">RESTRICTED FEATURE</p><p style="color:var(--muted);font-size:0.9rem;margin-bottom:24px;">Please elevate to <strong>Founder</strong> to unlock this functionality.</p><div class="dialog-actions"><button class="btn-dialog-yes allow-protected" style="background:var(--orange);border-color:var(--orange);width:100%;box-shadow:4px 4px 0 rgba(180,83,9,0.3);" onclick="closeAdminDenyModal()">I Understand</button></div></div></div></div>
 <div class="dialog-overlay" id="block-overlay"><div class="dialog-box" style="max-width:450px;width:95%;padding:28px 24px 24px;"><h3>Blocked IPs 🚫</h3><p style="margin-bottom:12px">List of currently blocked IP addresses.</p><div id="block-list" style="max-height:250px;overflow-y:auto;text-align:left;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:11px;"></div><div class="dialog-actions"><button class="btn-dialog-no allow-protected" onclick="closeBlockManager()">Close</button></div></div></div>
 <div class="dialog-overlay" id="confirm-overlay"><div class="dialog-box"><h3 id="confirm-title">Confirm?</h3><p id="confirm-msg">This action <strong>cannot be undone</strong>.</p><div class="dialog-actions"><button class="btn-dialog-yes" id="confirm-yes">Confirm</button><button class="btn-dialog-no" onclick="closeConfirm()">Cancel</button></div></div></div>
@@ -515,7 +617,38 @@
 <div class="dialog-overlay" id="title-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Title</h3><div class="form-group"><label>Browser Tab Name</label><input type="text" id="tab-title-input" class="input-field" placeholder="The Secret Cipher"></div><div class="form-group"><label>Main Title</label><input type="text" id="main-title-input" class="input-field" placeholder="The Secret Cipher"></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeTitle()">Save</button><button class="btn-dialog-no" onclick="closeChangeTitle()">Cancel</button></div></div></div>
 <div class="dialog-overlay" id="notes-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Notes</h3><div class="form-group"><label>Tagline (Below title)</label><textarea id="note-tagline-input" class="input-field" style="min-height:50px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="form-group"><label>Footer (Bottom of page)</label><textarea id="note-footer-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeNotes()">Save</button><button class="btn-dialog-no" onclick="closeChangeNotes()">Cancel</button></div></div></div>
 <div class="dialog-overlay" id="popup-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Popups</h3><div class="form-group"><label>On completely wrong input</label><textarea id="popup-wrong-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="form-group"><label>On close input (1 character off)</label><textarea id="popup-close-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangePopup()">Save</button><button class="btn-dialog-no" onclick="closeChangePopup()">Cancel</button></div></div></div>
-<div class="dialog-overlay" id="pw-change-overlay"><div class="dialog-box"><h3 id="pw-change-title">Change password</h3><p id="pw-change-err" style="color:var(--accent);display:none;margin-bottom:10px;font-weight:bold;"></p><div class="form-group"><label>Current password</label><input type="password" id="pw-old" class="input-field allow-protected" placeholder="Enter current password..."></div><div class="form-group"><label>New password</label><input type="password" id="pw-new" class="input-field allow-protected" placeholder="Enter new password..."></div><div class="form-group"><label>Confirm new password</label><input type="password" id="pw-confirm" class="input-field allow-protected" placeholder="Confirm your new password..."></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save allow-protected" onclick="submitChangePw()">Save</button><button class="btn-dialog-no allow-protected" onclick="closeChangePw()">Cancel</button></div></div></div>
+
+<div class="dialog-overlay" id="pw-change-overlay"><div class="dialog-box"><h3 id="pw-change-title">Change password</h3><p id="pw-change-err" style="color:var(--accent);display:none;margin-bottom:10px;font-weight:bold;"></p>
+  <div class="form-group">
+    <label>Current password</label>
+    <div class="pw-dialog-wrap">
+      <input type="password" id="pw-old" class="input-field allow-protected" placeholder="Enter current password...">
+      <button id="eye-old" class="pw-dialog-eye allow-protected" onclick="toggleDialogEye('pw-old', 'eye-old')" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>New password</label>
+    <div class="pw-dialog-wrap">
+      <input type="password" id="pw-new" class="input-field allow-protected" placeholder="Enter new password...">
+      <button id="eye-new" class="pw-dialog-eye allow-protected" onclick="toggleDialogEye('pw-new', 'eye-new')" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Confirm new password</label>
+    <div class="pw-dialog-wrap">
+      <input type="password" id="pw-confirm" class="input-field allow-protected" placeholder="Confirm your new password...">
+      <button id="eye-confirm" class="pw-dialog-eye allow-protected" onclick="toggleDialogEye('pw-confirm', 'eye-confirm')" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </button>
+    </div>
+  </div>
+  <div class="dialog-actions"><button class="btn-dialog-yes btn-save allow-protected" onclick="submitChangePw()">Save</button><button class="btn-dialog-no allow-protected" onclick="closeChangePw()">Cancel</button></div>
+</div></div>
+
 <div class="dialog-overlay" id="hint-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Hints</h3><div class="form-group"><label>Hint 1 (For Main Pass)</label><textarea id="hint1-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="form-group"><label>Hint 2 (For Sub Pass)</label><textarea id="hint2-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeHints()">Save</button><button class="btn-dialog-no" onclick="closeChangeHints()">Cancel</button></div></div></div>
 <div class="dialog-overlay" id="secret-change-overlay"><div class="dialog-box" style="max-width:440px;"><h3>Edit Secret Messages</h3><div class="form-group"><label>Main Message</label><textarea id="secret-normal-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;" placeholder="Enter message..."></textarea></div><div class="form-group"><label>Sub Message</label><textarea id="secret-secondary-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;" placeholder="Enter message..."></textarea></div><div class="form-group"><label>Admin Message</label><textarea id="secret-admin-input" class="input-field" style="min-height:70px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;" placeholder="Enter message..."></textarea></div><div class="dialog-actions"><button class="btn-dialog-yes btn-save" onclick="submitChangeSecret()">Save</button><button class="btn-dialog-no" onclick="closeChangeSecret()">Cancel</button></div></div></div>
 <div class="dialog-overlay" id="secret-display-overlay"><div class="dialog-box"><h3 style="color:#e84393;">💌 Secret Message</h3><p>Copy this and follow the instructions!</p><div class="output-box allow-protected" id="secret-display-text" style="min-height:60px;margin-bottom:16px;font-weight:bold;cursor:pointer;text-align:center;"></div><div class="dialog-actions"><button class="btn-dialog-yes allow-protected" id="btn-secret-copy" style="background:#e84393;border-color:#e84393;" onclick="copySecretDisplay()">Copy</button><button class="btn-dialog-no allow-protected" onclick="closeSecretDisplay()">Close</button></div></div></div>
@@ -569,6 +702,136 @@
     <div class="dialog-actions" style="display:flex; justify-content:center; gap:12px; margin-top:0;">
       <button class="btn-dialog-yes btn-save allow-protected" style="padding:8px 24px;font-size:13px;border-radius:6px;" onclick="submitLinkIdentity()">Link Profile</button>
       <button class="btn-dialog-no allow-protected" style="padding:8px 24px;font-size:13px;border-radius:6px;" onclick="closeLinkIdentity()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="flag-notify-overlay">
+  <div class="flag-board">
+
+    <div class="c-flag" style="top: -10px; left: -10px; transform: rotate(-15deg);"></div>
+    <div class="c-flag" style="top: 5px; left: -15px; transform: rotate(10deg);"></div>
+    <div class="c-flag" style="top: -15px; left: 10px; transform: rotate(-5deg);"></div>
+    <div class="c-flag" style="top: -5px; left: 25px; transform: rotate(20deg);"></div>
+    <div class="c-flag" style="top: -15px; left: 40px; transform: rotate(-10deg);"></div>
+    <div class="c-flag" style="top: 20px; left: -12px; transform: rotate(25deg);"></div>
+    <div class="c-flag" style="top: 35px; left: -16px; transform: rotate(-8deg);"></div>
+    <div class="c-flag" style="top: 10px; left: 5px; transform: rotate(12deg);"></div>
+
+    <div class="c-flag" style="top: -15px; right: -10px; transform: rotate(15deg);"></div>
+    <div class="c-flag" style="top: 5px; right: -15px; transform: rotate(-10deg);"></div>
+    <div class="c-flag" style="top: -10px; right: 10px; transform: rotate(5deg);"></div>
+    <div class="c-flag" style="top: -5px; right: 25px; transform: rotate(-20deg);"></div>
+    <div class="c-flag" style="top: 15px; right: 0px; transform: rotate(18deg);"></div>
+    <div class="c-flag" style="top: 25px; right: -12px; transform: rotate(-25deg);"></div>
+    <div class="c-flag" style="top: 40px; right: -15px; transform: rotate(12deg);"></div>
+    <div class="c-flag" style="top: 10px; right: 40px; transform: rotate(-12deg);"></div>
+    <div class="c-flag" style="top: 35px; right: 8px; transform: rotate(-8deg);"></div>
+    <div class="c-flag" style="top: -15px; right: 50px; transform: rotate(22deg);"></div>
+    <div class="c-flag" style="top: 55px; right: -10px; transform: rotate(-18deg);"></div>
+    <div class="c-flag" style="top: 75px; right: -15px; transform: rotate(15deg);"></div>
+    <div class="c-flag" style="top: 50px; right: 10px; transform: rotate(8deg);"></div>
+    <div class="c-flag" style="top: 95px; right: -10px; transform: rotate(-22deg);"></div>
+    <div class="c-flag" style="top: 115px; right: -15px; transform: rotate(10deg);"></div>
+    <div class="c-flag" style="top: 135px; right: -5px; transform: rotate(-15deg);"></div>
+    <div class="c-flag" style="top: 155px; right: -12px; transform: rotate(22deg);"></div>
+
+    <div class="c-flag" style="bottom: -15px; left: -10px; transform: rotate(15deg);"></div>
+    <div class="c-flag" style="bottom: 5px; left: -15px; transform: rotate(-10deg);"></div>
+    <div class="c-flag" style="bottom: -10px; left: 10px; transform: rotate(25deg);"></div>
+    <div class="c-flag" style="bottom: -5px; left: 25px; transform: rotate(-18deg);"></div>
+    <div class="c-flag" style="bottom: 15px; left: -5px; transform: rotate(12deg);"></div>
+    <div class="c-flag" style="bottom: 25px; left: -15px; transform: rotate(-22deg);"></div>
+    <div class="c-flag" style="bottom: 45px; left: -10px; transform: rotate(8deg);"></div>
+    <div class="c-flag" style="bottom: 10px; left: 40px; transform: rotate(-12deg);"></div>
+    <div class="c-flag" style="bottom: 35px; left: 10px; transform: rotate(20deg);"></div>
+    <div class="c-flag" style="bottom: -15px; left: 50px; transform: rotate(-15deg);"></div>
+    <div class="c-flag" style="bottom: -10px; left: 70px; transform: rotate(18deg);"></div>
+    <div class="c-flag" style="bottom: -12px; left: 90px; transform: rotate(-8deg);"></div>
+    <div class="c-flag" style="bottom: -8px; left: 110px; transform: rotate(15deg);"></div>
+    <div class="c-flag" style="bottom: -14px; left: 130px; transform: rotate(-12deg);"></div>
+    <div class="c-flag" style="bottom: -6px; left: 150px; transform: rotate(22deg);"></div>
+    <div class="c-flag" style="bottom: 65px; left: -12px; transform: rotate(-15deg);"></div>
+    <div class="c-flag" style="bottom: 85px; left: -8px; transform: rotate(12deg);"></div>
+    <div class="c-flag" style="bottom: 105px; left: -15px; transform: rotate(-20deg);"></div>
+    <div class="c-flag" style="bottom: 130px; left: -10px; transform: rotate(10deg);"></div>
+
+    <div class="c-flag" style="bottom: -15px; right: -10px; transform: rotate(-15deg);"></div>
+    <div class="c-flag" style="bottom: 5px; right: -15px; transform: rotate(10deg);"></div>
+    <div class="c-flag" style="bottom: -5px; right: 10px; transform: rotate(-25deg);"></div>
+    <div class="c-flag" style="bottom: -10px; right: 30px; transform: rotate(18deg);"></div>
+    <div class="c-flag" style="bottom: 20px; right: -12px; transform: rotate(-5deg);"></div>
+    <div class="c-flag" style="bottom: 10px; right: 15px; transform: rotate(12deg);"></div>
+    <div class="c-flag" style="bottom: 40px; right: -10px; transform: rotate(22deg);"></div>
+    <div class="c-flag" style="bottom: -12px; right: 50px; transform: rotate(-8deg);"></div>
+    <div class="c-flag" style="bottom: -8px; right: 70px; transform: rotate(15deg);"></div>
+    <div class="c-flag" style="bottom: -15px; right: 90px; transform: rotate(-20deg);"></div>
+    <div class="c-flag" style="bottom: 60px; right: -14px; transform: rotate(18deg);"></div>
+    <div class="c-flag" style="bottom: 80px; right: -8px; transform: rotate(-12deg);"></div>
+
+    <div class="c-flag" style="top: -10px; left: 35%; transform: rotate(14deg);"></div>
+    <div class="c-flag" style="top: -12px; left: 55%; transform: rotate(-18deg);"></div>
+    <div class="c-flag" style="top: -8px; left: 75%; transform: rotate(8deg);"></div>
+
+    <div class="c-flag" style="top: 30%; left: -12px; transform: rotate(-22deg);"></div>
+    <div class="c-flag" style="top: 45%; left: -10px; transform: rotate(15deg);"></div>
+    <div class="c-flag" style="top: 60%; left: -14px; transform: rotate(-10deg);"></div>
+
+    <div id="flag-msg-vi" class="flag-msg-vi"></div>
+    
+    <div class="flag-divider">
+        <svg width="80%" height="40" viewBox="0 0 400 40" preserveAspectRatio="xMidYMid meet" style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));">
+            <defs>
+                <linearGradient id="goldGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="rgba(212,175,55,0)"/>
+                    <stop offset="25%" stop-color="#D4AF37"/>
+                    <stop offset="50%" stop-color="#FFF6D9"/>
+                    <stop offset="75%" stop-color="#D4AF37"/>
+                    <stop offset="100%" stop-color="rgba(212,175,55,0)"/>
+                </linearGradient>
+            </defs>
+            <line x1="0" y1="20" x2="150" y2="20" stroke="url(#goldGlow)" stroke-width="1.5" />
+            <line x1="250" y1="20" x2="400" y2="20" stroke="url(#goldGlow)" stroke-width="1.5" />
+            
+            <path d="M150,20 C160,20 165,5 180,5 C195,5 190,35 200,35 C210,35 205,5 220,5 C235,5 240,20 250,20" fill="none" stroke="url(#goldGlow)" stroke-width="2" />
+            
+            <path d="M165,20 C175,35 185,35 200,20 C215,5 225,5 235,20" fill="none" stroke="#e3c285" stroke-width="1" opacity="0.8"/>
+            
+            <polygon class="diamond-pulse" points="200,13 204,20 200,27 196,20" fill="#FFF6D9" />
+            <polygon points="150,17 152,20 150,23 148,20" fill="#D4AF37" />
+            <polygon points="250,17 252,20 250,23 248,20" fill="#D4AF37" />
+        </svg>
+    </div>
+    
+    <div id="flag-msg-en" class="flag-msg-en"></div>
+    
+    <div class="dialog-actions" style="margin-top:40px; justify-content:center;">
+      <button id="btn-flag-confirm" class="flag-btn-gold" onclick="closeFlagNotify()">HI !</button>
+    </div>
+
+    <div style="position:absolute; bottom:15px; right:15px; font-size: 24px; animation: sparkle 2s infinite; z-index:25; opacity: 0.8; color: #fff;">✨</div>
+
+  </div>
+</div>
+
+<div class="dialog-overlay" id="flag-edit-overlay">
+  <div class="dialog-box" style="max-width:480px;">
+    <h3>Edit Flag Notice</h3>
+    <div class="form-group">
+      <label>Button Text</label>
+      <input type="text" id="flag-btn-input" class="input-field" placeholder="Hi !">
+    </div>
+    <div class="form-group">
+      <label>Vietnamese Text</label>
+      <textarea id="flag-vi-input" class="input-field" style="min-height:90px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea>
+    </div>
+    <div class="form-group">
+      <label>English Text</label>
+      <textarea id="flag-en-input" class="input-field" style="min-height:90px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;"></textarea>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-dialog-yes btn-save" onclick="submitChangeFlagNotify()">Save</button>
+      <button class="btn-dialog-no" onclick="closeChangeFlagNotify()">Cancel</button>
     </div>
   </div>
 </div>

@@ -25,6 +25,12 @@ var defaultTabTitle  = "Secret Cipher";
 var defaultMainTitle = "The <em>Secret</em><br>Cipher";
 var defaultWelcome   = "🎏 ✿ WELCOME TO MY PAGE ✿ 🎏";
 
+var defaultFlagNotify = {
+  btnText: "Hi !",
+  vi: "Founder của trang web là người Việt Nam. Ngôn ngữ chính hiện tại được dùng là Tiếng Anh nhằm quốc tế hóa hệ thống vì Founder có nhiều người bạn nước ngoài. Tuy nhiên, bạn có thể tìm hiểu rõ về website thông qua [tính năng sắp ra mắt]",
+  en: "The Founder of this website is Vietnamese. English is currently the primary language to internationalize the platform and better connect with the Founder's global network of friends. However, you can learn more about the site through our [upcoming feature]."
+};
+
 // Populated at runtime from Firebase
 var currentHashes     = { normal: '', secondary: '', admin: '', founder: '' };
 var currentHints      = Object.assign({}, defaultHints);
@@ -34,3 +40,4 @@ var currentSecretMsgs = Object.assign({}, defaultSecretMsgs);
 var currentTabTitle   = defaultTabTitle;
 var currentMainTitle  = defaultMainTitle;
 var currentWelcome    = defaultWelcome;
+var currentFlagNotify = Object.assign({}, defaultFlagNotify);
