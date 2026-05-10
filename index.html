@@ -13,6 +13,8 @@
   <style>
     #log-table-u th { border-right: 1px solid rgba(255,255,255,0.1); }
     #log-table-u th.sortable:hover { background: #1e8449 !important; }
+    #log-table-g th { border-right: 1px solid rgba(255,255,255,0.1); }
+    #log-table-g th.sortable:hover { background: #c0392b !important; }
   </style>
 </head>
 <body>
@@ -401,6 +403,45 @@
       </table>
     </div>
     <div class="log-pagination allow-protected" id="log-pagination-u"></div>
+
+    <div class="ip-stats-header" style="margin-bottom: 12px; margin-top: 36px;">
+      <div class="ip-stats-title" style="color:#e74c3c;">Guest Logins</div>
+    </div>
+    <div class="log-filters">
+      <button class="filter-btn active allow-protected" onclick="setFilterG('all')"          id="fg-all">All</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterG('view')"         id="fg-view">👁 Page view</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterG('login_secondary')" id="fg-sec">🔑 Sub</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterG('login_normal')" id="fg-normal">🔒 Main</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterG('login_admin')"  id="fg-admin">🌟 Admin</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterG('login_head')"   id="fg-head">⚜️ Head</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterG('login_manager')"id="fg-manager">🔱 Manager</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterG('login_cofounder')" id="fg-cofounder">💎 Co-Founder</button>
+      <button class="filter-btn allow-protected"        onclick="setFilterG('login_founder')"id="fg-founder">👑 Founder</button>
+      <span class="log-count" id="log-count-g"></span>
+    </div>
+    <div class="log-search-row">
+      <input type="text" id="log-search-g" class="allow-protected" placeholder="Filter by ID, Name, IP, city..." oninput="renderGuestLogs()">
+      <div class="log-date-group">
+        <label>From</label><input type="date" class="date-inp allow-protected" id="date-from-g" onchange="renderGuestLogs()">
+        <label>to</label>  <input type="date" class="date-inp allow-protected" id="date-to-g"   onchange="renderGuestLogs()">
+      </div>
+    </div>
+    <div class="log-table-wrap" style="border-color:#e74c3c; box-shadow:6px 6px 0 rgba(231,76,60,0.3);">
+      <div class="log-status" id="log-status-g"><span class="spin">⟳</span> Loading...</div>
+      <table class="log-table" id="log-table-g" style="display:none">
+        <thead style="background:#e74c3c;"><tr>
+          <th style="width:110px; background:#e74c3c;">Type</th>
+          <th style="width:145px; background:#e74c3c;" class="sortable sort-desc allow-protected" id="thg-ts" onclick="toggleSortG('ts')">Timestamp <span class="sort-arrow"></span></th>
+          <th style="width:115px; background:#e74c3c;">Identity</th>
+          <th style="width:160px; background:#e74c3c;" class="sortable allow-protected" id="thg-br" onclick="toggleSortG('br')">Browser · OS <span class="sort-arrow"></span></th>
+          <th style="background:#e74c3c;">Location · IP · ISP</th>
+          <th style="width:110px; background:#e74c3c;">Misc</th>
+          <th style="width:40px;text-align:center; background:#e74c3c;">Act</th>
+        </tr></thead>
+        <tbody id="log-body-g"></tbody>
+      </table>
+    </div>
+    <div class="log-pagination allow-protected" id="log-pagination-g"></div>
 
     <div class="ip-stats-section" id="ip-stats-section" style="margin-top: 36px;">
       <div class="ip-stats-header">

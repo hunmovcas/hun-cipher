@@ -22,6 +22,7 @@ var _blockedIPs = {};
 var _isProtected = false;
 var _allLogs = [];
 var _uniqueLogs = [];
+var _guestLogs = [];
 var _allNoti = [];
 
 // System Counters & Offsets
@@ -38,10 +39,11 @@ var _vGuestOuter = 0;
 // Time Cutoffs for analytics (0 = all time)
 var _CUTOFF_TS = 0;
 var _UNIQUE_CUTOFF_TS = 0;
-var _GUEST_CUTOFF_TS = new Date('2026-05-05T14:44:00+07:00').getTime(); // Mốc thời gian đếm Guest
+var _GUEST_CUTOFF_TS = new Date('2026-05-05T14:44:00+07:00').getTime();
 
 // Tables & Filters
 var _perPage = 15;
+
 var _page = 1;
 var _sortField = 'ts';
 var _sortDir = 'desc';
@@ -51,6 +53,11 @@ var _pageU = 1;
 var _sortFieldU = 'ts';
 var _sortDirU = 'desc';
 var _filterU = 'all';
+
+var _pageG = 1;
+var _sortFieldG = 'ts';
+var _sortDirG = 'desc';
+var _filterG = 'all';
 
 var _excludedRanks = [];
 var _excludedProfiles = [];

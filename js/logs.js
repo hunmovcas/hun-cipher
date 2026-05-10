@@ -33,13 +33,14 @@ function updateExclusions() {
       btn.innerHTML = '🚫 Exclude Profiles';
     }
   }
-  _page = 1; _pageU = 1;
+  _page = 1; _pageU = 1; _pageG = 1;
   renderLogs(); renderUniqueLogs(); renderIpStats();
 }
 
 function updateGuestExclusions() {
   _guestExcludedRanks = Array.from(document.querySelectorAll('#auth-dropdown input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
   computeUniqueLogs();
+  if (typeof renderGuestLogs === 'function') renderGuestLogs();
 }
 
 function isLogExcluded(log) {
@@ -68,6 +69,9 @@ function isLogExcluded(log) {
 function computeUniqueLogs() {
   var seen = {};
   var uLogs = [];
+  var seenG = {};      // Theo dõi first-seen riêng cho khoảng thời gian Guest
+  var gLogsRaw = [];   // Lưu trữ logs thô cho Guest
+
   var uNorm=new Set(), uSec=new Set(), uAdm=new Set(), uHead=new Set(), uMan=new Set(), uCo=new Set(), uFou=new Set();
   var uDevs=new Set();
 
@@ -75,19 +79,20 @@ function computeUniqueLogs() {
   var gDevs=new Set();
 
   var guestExcludedIds = new Set();
-  var guestExcludeDevsTraffic = new Set();
 
   var sorted = _allLogs.slice().sort(function(a,b) { return (a.ts||0) - (b.ts||0); });
+  
   sorted.forEach(function(log) {
+    var id = log.deviceId ? 'dev_' + log.deviceId : 'fp_' + (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
+    var key = log.type + '_' + id;
+
+    // 1. UNIQUE LOGIC
     if (log.ts >= _UNIQUE_CUTOFF_TS) {
-      var id = log.deviceId ? 'dev_' + log.deviceId : 'fp_' + (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
-      var key = log.type + '_' + id;
       if (!seen[key]) {
         seen[key] = true;
         uLogs.push(log);
       }
       
-      // Standard sets
       if (log.type === 'view') uDevs.add(id);
       else if (log.type === 'login_normal') uNorm.add(id);
       else if (log.type === 'login_secondary') uSec.add(id);
@@ -96,45 +101,64 @@ function computeUniqueLogs() {
       else if (log.type === 'login_manager') uMan.add(id);
       else if (log.type === 'login_cofounder') uCo.add(id);
       else if (log.type === 'login_founder') uFou.add(id);
+    }
 
-      // Guest sets (Filtered by cutoff timestamp)
-      if (log.ts >= _GUEST_CUTOFF_TS) {
-        if (log.type === 'view') gDevs.add(id);
-        else if (log.type === 'login_normal') gNorm.add(id);
-        else if (log.type === 'login_secondary') gSec.add(id);
-        else if (log.type === 'login_admin') gAdm.add(id);
-        else if (log.type === 'login_head') gHead.add(id);
-        else if (log.type === 'login_manager') gMan.add(id);
-        else if (log.type === 'login_cofounder') gCo.add(id);
-        else if (log.type === 'login_founder') gFou.add(id);
+    // 2. GUEST LOGIC (Filtered by cutoff timestamp)
+    if (log.ts >= _GUEST_CUTOFF_TS) {
+      // Chỉ lấy lần xuất hiện đầu tiên của ID này KỂ TỪ SAU GUEST CUTOFF
+      if (!seenG[key]) {
+        seenG[key] = true;
+        gLogsRaw.push(log);
       }
 
-      // Identify roles for Guest Exclusion
-      var passRole = log.type.replace('login_', '');
+      if (log.type === 'view') gDevs.add(id);
+      else if (log.type === 'login_normal') gNorm.add(id);
+      else if (log.type === 'login_secondary') gSec.add(id);
+      else if (log.type === 'login_admin') gAdm.add(id);
+      else if (log.type === 'login_head') gHead.add(id);
+      else if (log.type === 'login_manager') gMan.add(id);
+      else if (log.type === 'login_cofounder') gCo.add(id);
+      else if (log.type === 'login_founder') gFou.add(id);
+    }
+
+    // Identify roles for Guest Exclusion (Dựa hoàn toàn vào tick box)
+    if (log.ts >= _UNIQUE_CUTOFF_TS) {
       var idenRank = getIdentityRankByDevId(log.deviceId);
+      var passRole = (log.type !== 'view') ? log.type.replace('login_', '') : null;
       var finalRank = passRole;
-      if (idenRank && idenRank !== passRole && log.type !== 'view') {
-        var rLv = ROLE_LEVEL[idenRank] || 0;
-        var pLv = ROLE_LEVEL[passRole] || 0;
-        if (rLv > pLv) finalRank = idenRank;
+      
+      if (idenRank) {
+        if (!passRole) {
+            finalRank = idenRank;
+        } else {
+            var rLv = ROLE_LEVEL[idenRank] || 0;
+            var pLv = ROLE_LEVEL[passRole] || 0;
+            if (rLv > pLv) finalRank = idenRank;
+        }
       }
 
-      if (log.type !== 'view' && typeof _guestExcludedRanks !== 'undefined' && _guestExcludedRanks.indexOf(finalRank) !== -1) {
+      // Nếu finalRank của thiết bị nằm trong mảng những ô được tick -> Đưa vào danh sách loại trừ
+      if (finalRank && typeof _guestExcludedRanks !== 'undefined' && _guestExcludedRanks.indexOf(finalRank) !== -1) {
         guestExcludedIds.add(id);
-      }
-
-      if (finalRank === 'founder' || idenRank === 'founder') {
-        guestExcludeDevsTraffic.add(id);
       }
     }
   });
   
   _uniqueLogs = uLogs.sort(function(a,b) { return (b.ts||0) - (a.ts||0); });
   
-  // Calculate Guests by filtering out devices that fall under excluded ranks from the Guest-specific sets
+  // Tạo Guest Logs độc lập, chỉ lọc các ID nằm trong blacklist do user tick
+  _guestLogs = gLogsRaw.filter(function(log) {
+    var id = log.deviceId ? 'dev_' + log.deviceId : 'fp_' + (log.ip||'')+'|'+(log.device||'')+'|'+(log.os||'')+'|'+(log.browser||'')+'|'+(log.screen||'');
+    if (guestExcludedIds.has(id)) return false;
+    return true;
+  }).sort(function(a,b) { return (b.ts||0) - (a.ts||0); });
+
+  // Calculate Guests counters (Đồng bộ tuyệt đối với Bảng Guest)
   var filterGuest = function(setObj) {
     var c = 0;
-    setObj.forEach(function(id) { if (!guestExcludedIds.has(id)) c++; });
+    setObj.forEach(function(id) { 
+      if (!guestExcludedIds.has(id)) c++; 
+    });
     return c;
   };
 
@@ -146,9 +170,7 @@ function computeUniqueLogs() {
   _vGuestCoFounder = filterGuest(gCo);
   _vGuestFounder = filterGuest(gFou);
   
-  var cView = 0;
-  gDevs.forEach(function(id) { if (!guestExcludeDevsTraffic.has(id)) cView++; });
-  _vGuestOuter = cView;
+  _vGuestOuter = filterGuest(gDevs);
   
   if (typeof updateStatsUI === 'function') updateStatsUI();
 }
@@ -169,7 +191,7 @@ function loadLogs() {
     _allLogs.reverse();
     computeUniqueLogs();
     statusEl.style.display = 'none';
-    _page = 1; _pageU = 1;
+    _page = 1; _pageU = 1; _pageG = 1;
     renderLogs(); renderUniqueLogs(); renderIpStats();
   }, function(err) { statusEl.innerHTML = '⚠ Error: ' + err.message; });
 }
@@ -234,6 +256,38 @@ function getFilteredUniqueLogs() {
   }).sort(function(a, b) {
     var va = a[_sortFieldU]||'', vb = b[_sortFieldU]||'';
     if (_sortDirU === 'asc') return va > vb ? 1 : va < vb ? -1 : 0;
+    return va < vb ? 1 : va > vb ? -1 : 0;
+  });
+}
+
+function getFilteredGuestLogs() {
+  var search   = (document.getElementById('log-search-g').value || '').toLowerCase().trim();
+  var dateFrom = document.getElementById('date-from-g').value;
+  var dateTo   = document.getElementById('date-to-g').value;
+  return _guestLogs.filter(function(l) {
+    if (isLogExcluded(l)) return false;
+    if (_filterG !== 'all' && l.type !== _filterG) return false;
+    if (search) {
+      var idName = l.deviceId ? getIdentityName(l.deviceId) : '';
+      var coordCombo = (l.latitude && l.longitude) ? l.latitude+','+l.longitude : '';
+      var hay = [l.deviceId||'', idName||'', l.ip||'', l.city||'', l.district||'', l.region||'', l.country||'',
+                 l.latitude||'', l.longitude||'', coordCombo,
+                 l.isp||'', l.browser||'', l.device||'', l.os||'', l.ua||'', l.tz||'', l.lang||'',
+                 l.screen||'', labelType(l.type), l.authVia ? labelType('login_'+l.authVia) : ''].join(' ').toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    if (dateFrom || dateTo) {
+      var dObj = new Date(l.ts);
+      if (!isNaN(dObj.getTime())) {
+        var ds = dObj.toISOString().slice(0,10);
+        if (dateFrom && ds < dateFrom) return false;
+        if (dateTo && ds > dateTo) return false;
+      } else { return false; }
+    }
+    return true;
+  }).sort(function(a, b) {
+    var va = a[_sortFieldG]||'', vb = b[_sortFieldG]||'';
+    if (_sortDirG === 'asc') return va > vb ? 1 : va < vb ? -1 : 0;
     return va < vb ? 1 : va > vb ? -1 : 0;
   });
 }
@@ -328,6 +382,29 @@ function toggleSortU(field) {
   renderUniqueLogs();
 }
 
+/* ── GUEST LOGS EVENTS ── */
+function setFilterG(type) {
+  _filterG = type; _pageG = 1;
+  ['all','view','login_secondary','login_normal','login_admin','login_head','login_manager','login_cofounder','login_founder'].forEach(function(t) {
+    var id = 'fg-' + (t==='login_normal'?'normal':t==='login_secondary'?'sec':t==='login_admin'?'admin':t==='login_head'?'head':t==='login_manager'?'manager':t==='login_cofounder'?'cofounder':t==='login_founder'?'founder':t);
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', t === type);
+  });
+  renderGuestLogs();
+}
+
+function toggleSortG(field) {
+  if (_sortFieldG === field) _sortDirG = _sortDirG==='desc'?'asc':'desc';
+  else { _sortFieldG = field; _sortDirG = 'desc'; }
+  ['ts','br'].forEach(function(f) {
+    var th = document.getElementById('thg-'+f);
+    if (!th) return;
+    th.classList.remove('sort-asc','sort-desc');
+    if (f === _sortFieldG) th.classList.add('sort-' + _sortDirG);
+  });
+  renderGuestLogs();
+}
+
 /* ── RENDER TABLES ── */
 function generateRowHtml(log) {
   var dObj = new Date(log.ts);
@@ -388,16 +465,40 @@ function renderUniqueLogs() {
     if (list.length === 0) {
       statusEl.innerHTML = 'No matching records found'; statusEl.style.display = 'block'; tableEl.style.display = 'none';
       document.getElementById('log-pagination-u').innerHTML = '';
+    } else {
+      var totalPages = Math.ceil(list.length / _perPage);
+      if (_pageU > totalPages) _pageU = Math.max(1, totalPages);
+      var start = (_pageU-1)*_perPage, end = Math.min(start+_perPage, list.length), pageList = list.slice(start, end);
+
+      tbody.innerHTML = pageList.map(generateRowHtml).join('');
+      tableEl.style.display = 'table'; statusEl.style.display = 'none';
+      renderPagination(totalPages, list.length, start, end, 'log-pagination-u', 'goPageU', _pageU);
+    }
+    
+    if (typeof renderGuestLogs === 'function') renderGuestLogs();
+  } catch (err) { console.error("renderUniqueLogs Error:", err); }
+}
+
+function renderGuestLogs() {
+  try {
+    var list = getFilteredGuestLogs();
+    var countEl = document.getElementById('log-count-g');
+    if (countEl) countEl.textContent = list.length + ' records';
+    var tbody = document.getElementById('log-body-g'), tableEl = document.getElementById('log-table-g'), statusEl = document.getElementById('log-status-g');
+    if (!tbody) return;
+    if (list.length === 0) {
+      statusEl.innerHTML = 'No matching records found'; statusEl.style.display = 'block'; tableEl.style.display = 'none';
+      document.getElementById('log-pagination-g').innerHTML = '';
       return;
     }
     var totalPages = Math.ceil(list.length / _perPage);
-    if (_pageU > totalPages) _pageU = Math.max(1, totalPages);
-    var start = (_pageU-1)*_perPage, end = Math.min(start+_perPage, list.length), pageList = list.slice(start, end);
+    if (_pageG > totalPages) _pageG = Math.max(1, totalPages);
+    var start = (_pageG-1)*_perPage, end = Math.min(start+_perPage, list.length), pageList = list.slice(start, end);
 
     tbody.innerHTML = pageList.map(generateRowHtml).join('');
     tableEl.style.display = 'table'; statusEl.style.display = 'none';
-    renderPagination(totalPages, list.length, start, end, 'log-pagination-u', 'goPageU', _pageU);
-  } catch (err) { console.error("renderUniqueLogs Error:", err); }
+    renderPagination(totalPages, list.length, start, end, 'log-pagination-g', 'goPageG', _pageG);
+  } catch (err) { console.error("renderGuestLogs Error:", err); }
 }
 
 function renderPagination(total, count, start, end, containerId, fnName, currentPage) {
@@ -417,6 +518,7 @@ function renderPagination(total, count, start, end, containerId, fnName, current
 
 function goPage(n) { _page = n; renderLogs(); }
 function goPageU(n) { _pageU = n; renderUniqueLogs(); }
+function goPageG(n) { _pageG = n; renderGuestLogs(); }
 
 /* ── DELETE / TRASH ── */
 function deleteSingleLog(key, type, btnEl) {
