@@ -712,4 +712,65 @@ window.restoreExclusionsUI = function() {
     }
   }
   // Profile checkboxes will be automatically checked when their menus are generated
+
+   /* ── MERGE MOON + FOUNDER PROFILE ── */
+window.openMergeMoonProfile = function(moonProfileKey) {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 7) { showToast('Chỉ Founder mới có thể tích hợp!'); return; }
+  var mp = _moonProfiles && _moonProfiles[moonProfileKey];
+  if (!mp) { showToast('Không tìm thấy Moon Profile!'); return; }
+
+  // Tìm Founder profile đang gom cùng IDs không
+  var founderKeys = Object.keys(_identities);
+  var select = '<select id="merge-target-select" class="input-field" style="margin-bottom:16px;"><option value="">-- Chọn Founder Profile để tích hợp --</option>';
+  founderKeys.forEach(function(k) {
+    select += '<option value="'+esc(k)+'">'+esc(_identities[k].name || k)+'</option>';
+  });
+  select += '<option value="__new__">+ Tạo profile mới từ tên Moon</option></select>';
+
+  document.getElementById('confirm-title').textContent = 'Tích hợp Moon "' + mp.name + '"';
+  document.getElementById('confirm-msg').innerHTML = 'Chọn Founder Profile để tích hợp với Moon Profile "<strong>' + esc(mp.name) + '</strong>":<br><br>' + select;
+  document.getElementById('confirm-yes').onclick = function() {
+    var sel = document.getElementById('merge-target-select');
+    if (!sel || !sel.value) { showToast('Chọn profile đích!'); return; }
+    _doMergeMoon(moonProfileKey, sel.value, mp);
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+};
+
+function _doMergeMoon(moonProfileKey, targetKey, mp) {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 7) return;
+  closeConfirm();
+  if (!db) return;
+
+  var allIds = (mp.ids || []).slice();
+
+  if (targetKey === '__new__') {
+    // Tạo Founder profile mới, đánh dấu merged
+    var newKey = 'id_merged_' + Date.now();
+    var newProfile = { name: mp.name, ids: allIds, merged: true };
+    var updates = {};
+    updates['settings/identities/' + newKey] = newProfile;
+    updates['moon_profiles/' + moonProfileKey + '/mergedInto'] = newKey;
+    db.ref().update(updates, function(err) {
+      if (!err) { showToast('✓ Đã tích hợp thành profile mới: ' + mp.name); }
+    });
+  } else {
+    // Tích hợp vào Founder profile có sẵn
+    var existing = _identities[targetKey];
+    var existingIds = [];
+    if (Array.isArray(existing.ids)) existingIds = existing.ids.slice();
+    else if (typeof existing.ids === 'object' && existing.ids) existingIds = Object.values(existing.ids);
+    allIds.forEach(function(id) { if (existingIds.indexOf(id) === -1) existingIds.push(id); });
+
+    var mergedProfile = { name: existing.name || targetKey, ids: existingIds, merged: true };
+    var updates2 = {};
+    updates2['settings/identities/' + targetKey] = mergedProfile;
+    updates2['moon_profiles/' + moonProfileKey + '/mergedInto'] = targetKey;
+    db.ref().update(updates2, function(err) {
+      if (!err) { showToast('✓ Đã tích hợp Moon Profile vào: ' + (existing.name || targetKey)); }
+    });
+  }
+}
 };

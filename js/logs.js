@@ -2,18 +2,51 @@
    LOGS — loadLogs, renderLogs, renderIpStats, trash, delete, export
    ══════════════════════════════════════════ */
 
-/* ── HELPER IDENTITY ── */
+/* ── HELPER IDENTITY (Ưu tiên: merged(vàng) > founder-set(xanh lá) > moon-auto(xanh dương) > raw) ── */
 function getIdentityName(devId) {
   if (!devId) return devId;
   if (_currentLoginRole !== 'founder') return devId;
 
+  // Ưu tiên 1: merged (Founder tích hợp - màu vàng)
   for (var key in _identities) {
     var profile = _identities[key];
-    var idsArray = (profile && profile.ids) ? profile.ids : (Array.isArray(profile) ? profile : []);
-    if (idsArray.indexOf(devId) !== -1) {
-      return profile.name || key;
+    var idsArray = [];
+    if (Array.isArray(profile.ids)) idsArray = profile.ids;
+    else if (typeof profile.ids === 'object' && profile.ids) idsArray = Object.values(profile.ids);
+    else if (Array.isArray(profile)) idsArray = profile;
+    if (idsArray.indexOf(devId) !== -1 && profile.merged) {
+      return (profile.name || key) + '\x00merged';
     }
   }
+
+  // Ưu tiên 2: founder-set (Founder đặt thủ công - màu xanh lá)
+  for (var key2 in _identities) {
+    var profile2 = _identities[key2];
+    var idsArray2 = [];
+    if (Array.isArray(profile2.ids)) idsArray2 = profile2.ids;
+    else if (typeof profile2.ids === 'object' && profile2.ids) idsArray2 = Object.values(profile2.ids);
+    else if (Array.isArray(profile2)) idsArray2 = profile2;
+    if (idsArray2.indexOf(devId) !== -1 && !profile2.merged) {
+      return (profile2.name || key2) + '\x00founder';
+    }
+  }
+
+  // Ưu tiên 3: moon-profile (nhiều device cùng tên - màu xanh dương)
+  if (_moonProfiles) {
+    for (var pk in _moonProfiles) {
+      var mp = _moonProfiles[pk];
+      var mpIds = mp.ids || [];
+      if (mpIds.indexOf(devId) !== -1) {
+        return mp.name + '\x00moon';
+      }
+    }
+  }
+
+  // Ưu tiên 4: moon-user đơn (màu xanh dương)
+  if (_moonUsers && _moonUsers[devId] && _moonUsers[devId].name) {
+    return _moonUsers[devId].name + '\x00moon';
+  }
+
   return devId;
 }
 
@@ -423,24 +456,42 @@ function generateRowHtml(log) {
   var ipStr = log.ip ? esc(String(log.ip)) : '–', ispStr = log.isp ? esc(String(log.isp)) : '';
   var coordStr = (log.latitude && log.longitude) ? '<a href="https://maps.google.com/?q='+log.latitude+','+log.longitude+'" target="_blank" style="color:var(--accent2);font-size:8px;text-decoration:none;" title="View map">🗺 '+String(log.latitude).slice(0,8)+','+String(log.longitude).slice(0,8)+'</a>' : '';
   var extra = [log.tz, log.screen].filter(Boolean).map(String).join(' · ');
-  
-  var mappedName = log.deviceId ? getIdentityName(log.deviceId) : null;
+
+  /* ── XỬ LÝ TÊN HIỂN THỊ (3 màu: vàng=merged, xanh lá=founder, xanh dương=moon) ── */
+  var rawMapped = log.deviceId ? getIdentityName(log.deviceId) : null;
+  var mappedName = rawMapped, nameType = 'raw';
+  if (rawMapped && rawMapped.indexOf('\x00') !== -1) {
+    var parts = rawMapped.split('\x00');
+    mappedName = parts[0];
+    nameType = parts[1];
+  }
   var isIden = mappedName && mappedName !== log.deviceId;
-  var devIdStr = log.deviceId ? 
-    '<span class="dev-badge" style="' + (isIden ? 'background:rgba(39,174,96,0.1);color:#27ae60;border-color:rgba(39,174,96,0.3);' : '') + '">' + 
-    (isIden ? '👤 ' : '') + esc(String(mappedName)) + '</span>' + 
+
+  var nameColor = '', nameBg = '', nameBorder = '';
+  if (nameType === 'merged') {
+    nameColor = '#b8860b'; nameBg = 'rgba(212,175,55,0.15)'; nameBorder = 'rgba(184,134,11,0.4)';
+  } else if (nameType === 'founder') {
+    nameColor = '#27ae60'; nameBg = 'rgba(39,174,96,0.1)'; nameBorder = 'rgba(39,174,96,0.3)';
+  } else if (nameType === 'moon') {
+    nameColor = '#2980b9'; nameBg = 'rgba(41,128,185,0.1)'; nameBorder = 'rgba(41,128,185,0.3)';
+  }
+
+  var nameIcon = nameType === 'merged' ? '⭐ ' : nameType === 'founder' ? '👤 ' : nameType === 'moon' ? '🌙 ' : '';
+
+  var devIdStr = log.deviceId ?
+    '<span class="dev-badge" style="' + (isIden ? 'background:'+nameBg+';color:'+nameColor+';border-color:'+nameBorder+';' : '') + '">' +
+    (isIden ? nameIcon : '') + esc(String(mappedName)) + '</span>' +
     ' <span style="cursor:pointer;font-size:10px;opacity:0.6;vertical-align:middle;margin-left:4px;" onclick="openLinkIdentity(\''+esc(String(log.deviceId))+'\')" title="Link to Profile">🔗</span>'
     : '<span style="color:var(--muted);font-style:italic">Unknown</span>';
-    
+
   var authBadgeStr = log.authVia ? '<span class="auth-via-label">via '+labelType('login_'+log.authVia).replace(/[^a-zA-Z\s-]/g, '').trim().toLowerCase()+'</span>' : '';
 
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   var delBtn = '';
-  // Chỉ hiện nút thùng rác Delete Log từ Rank Head(4) trở lên
   if (lv >= 4) {
     delBtn = '<button class="btn-del-ip allow-protected" style="margin:0 auto" title="Delete log" onclick="deleteSingleLog(\''+String(log._k)+'\', \''+String(log.type)+'\', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
   }
-  
+
   return '<tr><td>' + badgeHtml(log.type) + authBadgeStr + '</td><td><span style="color:var(--ink)">' + esc(dstr) + '</span></td><td>' + devIdStr + '</td><td><div class="cell-main">' + esc(browser) + '</div><div class="cell-sub">' + esc(device) + (os?' · '+esc(os):'') + '</div></td><td><div class="cell-loc">' + locHtml + postalStr + '</div><div class="cell-ip">🌐 ' + ipStr + (coordStr?'  '+coordStr:'') + '</div>' + (ispStr?'<div class="cell-isp">'+ispStr+(log.asn?' · '+esc(String(log.asn)):'')+'</div>':'') + '</td><td><div class="cell-sub">' + esc(extra) + '</div></td><td style="vertical-align:middle;">' + delBtn + '</td></tr>';
 }
 

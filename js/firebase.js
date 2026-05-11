@@ -28,6 +28,14 @@ function initFirebase() {
       }
     });
 
+    // Lắng nghe Moon Users & Profiles
+    db.ref('moon_users').on('value', function(snap) {
+      _moonUsers = snap.val() || {};
+    });
+    db.ref('moon_profiles').on('value', function(snap) {
+      _moonProfiles = snap.val() || {};
+    });
+
     db.ref('settings/passwords_v3').on('value', function(snap) {
       if (snap.exists() && snap.val().founder) {
         currentHashes.normal    = snap.val().normal;

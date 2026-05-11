@@ -77,6 +77,197 @@
         position: relative; z-index: 2;
         display: flex; justify-content: center;
     }
+    /* ══ NÚT CẦU VỒNG ══ */
+    @keyframes rainbowShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes rainbowGlow {
+      0%, 100% { box-shadow: 0 0 8px 2px rgba(255,100,100,0.7), 3px 3px 0 var(--ink); }
+      25%  { box-shadow: 0 0 8px 2px rgba(100,255,100,0.7), 3px 3px 0 var(--ink); }
+      50%  { box-shadow: 0 0 8px 2px rgba(100,100,255,0.7), 3px 3px 0 var(--ink); }
+      75%  { box-shadow: 0 0 8px 2px rgba(255,200,0,0.7), 3px 3px 0 var(--ink); }
+    }
+    .btn-rainbow {
+      flex: 0 0 48px;
+      height: 48px;
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      background: linear-gradient(270deg, #ff0080,#ff8c00,#ffee00,#00ff80,#00cfff,#7b2fff,#ff0080);
+      background-size: 400% 400%;
+      animation: rainbowShift 3s ease infinite, rainbowGlow 3s ease infinite;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      transition: transform .15s;
+      padding: 0;
+    }
+    .btn-rainbow:hover { transform: scale(1.12) rotate(-5deg); }
+    .btn-rainbow:active { transform: scale(0.95); }
+
+    /* ══ TRANG MOON ══ */
+    #moon-screen {
+      position: fixed; inset: 0; z-index: 9000;
+      background: var(--bg);
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    #moon-screen::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%232980b9' opacity='0.05'/%3E%3C/svg%3E");
+      background-size: 30px 30px; pointer-events: none;
+    }
+    .moon-container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 760px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0;
+    }
+    #moon-step1 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      gap: 0;
+    }
+    .moon-tos-card {
+      background: var(--card);
+      border: 2px solid var(--ink);
+      box-shadow: 6px 6px 0 var(--ink);
+      padding: 28px 24px 22px;
+      max-width: 540px;
+      width: 100%;
+      text-align: left;
+      box-sizing: border-box;
+    }
+    .moon-tos-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.3rem; font-weight: 900;
+      color: var(--ink);
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .moon-tos-body {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.92rem; line-height: 1.75;
+      color: var(--ink);
+      margin-bottom: 24px;
+      border-left: 3px solid #2980b9;
+      padding-left: 16px;
+    }
+    .moon-tos-body strong { color: #2980b9; }
+    .moon-tos-body em { color: var(--accent); font-style: normal; font-weight: 800; }
+    .moon-tos-footer {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .moon-tos-footer label {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'Nunito', sans-serif; font-size: 0.88rem;
+      font-weight: 800; color: var(--ink); cursor: pointer;
+      margin-bottom: 0;
+      text-transform: none; letter-spacing: 0;
+    }
+    #moon-tos-check { width: 16px; height: 16px; cursor: pointer; accent-color: #2980b9; }
+    #moon-tos-err {
+      display: none; color: var(--accent);
+      font-family: 'Nunito', sans-serif; font-size: 0.82rem;
+      font-weight: 800; margin-top: 8px;
+    }
+    .moon-back-link {
+      margin-top: 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px; color: var(--muted);
+      cursor: pointer; letter-spacing: 1px;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .moon-back-link:hover { color: var(--ink); }
+    #moon-step2 {
+      display: none;
+      flex-direction: row;
+      gap: 32px;
+      width: 100%;
+      align-items: stretch;
+    }
+    .moon-guide-mini {
+      flex: 1 1 260px;
+      background: var(--card);
+      border: 2px solid var(--ink);
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 28px 24px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px; line-height: 1.8;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .moon-guide-mini .guide-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px; font-weight: 900;
+      color: #2980b9; margin-bottom: 18px;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      border-bottom: 2px solid rgba(41,128,185,0.15);
+      padding-bottom: 10px;
+    }
+    .moon-login-box {
+      flex: 0 0 340px;
+      background: var(--card);
+      border: 2px solid var(--ink);
+      box-shadow: 8px 8px 0 var(--ink);
+      padding: 44px 40px 36px;
+      display: flex; flex-direction: column;
+      justify-content: center; text-align: center;
+    }
+    .moon-login-box h2 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.5rem; font-weight: 900;
+      color: var(--ink); margin-bottom: 6px;
+    }
+    .moon-login-sub {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem; color: var(--muted);
+      font-weight: 600; letter-spacing: .3px;
+    }
+    #moon-login-err {
+      display: none; color: var(--accent);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.85rem; font-weight: 800;
+      margin-bottom: 10px; text-align: center;
+      animation: popAlert 0.3s forwards;
+    }
+    #moon-founder-section { display: none; margin-top: 10px; }
+    #moon-content {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      gap: 0;
+    }
+    .moon-content-card {
+      background: var(--card);
+      border: 2px solid var(--ink);
+      box-shadow: 6px 6px 0 var(--ink);
+      padding: 40px 36px;
+      max-width: 500px; width: 100%;
+      text-align: center;
+    }
+    .moon-content-card h2 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.6rem; font-weight: 900;
+      color: #2980b9; margin-bottom: 10px;
+    }
+    .moon-content-card p {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem; color: var(--muted);
+      line-height: 1.7;
+    }
+    @media (max-width: 640px) {
+      #moon-step2 { flex-direction: column; }
+      .moon-login-box { flex: unset; }
+    }
     @keyframes pulseDiamond {
         0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 2px #FFF6D9); }
         50% { opacity: 1; filter: drop-shadow(0 0 8px #FFF6D9); }
@@ -393,12 +584,142 @@
           </button>
         </div>
         <div class="pw-err" id="pw-err">Incorrect password</div>
-        <button class="btn btn-main btn-pw allow-protected" onclick="checkPw()">Confirm →</button>
+        <div style="display:flex; gap:10px; margin-top:auto; align-items:stretch;">
+          <button class="btn-rainbow" onclick="goToMoon()" title="🌙 Trang Mô tả">🌟</button>
+          <button class="btn btn-main btn-pw allow-protected" style="flex:1; margin-top:0;" onclick="checkPw()">Confirm →</button>
+        </div>
         <div id="admin-badge">🌟 ADMIN / FOUNDER MODE</div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ════════════════════════════════════════
+     MOON SCREEN — Trang Mô tả / Đăng nhập ingame
+     ════════════════════════════════════════ -->
+<div id="moon-screen">
+  <!-- Nút quay lại -->
+  <div style="position:absolute;top:14px;left:16px;z-index:10;">
+    <button class="nav-btn" onclick="goToAC()" title="Quay lại trang chủ" style="width:auto;padding:4px 10px;gap:6px;display:flex;align-items:center;color:var(--muted);border:1px solid var(--border);border-radius:4px;background:var(--card);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;">
+      ← Quay lại
+    </button>
+  </div>
+  <!-- Nút Founder ẩn góc phải -->
+  <div style="position:absolute;top:14px;right:16px;z-index:10;">
+    <button onclick="openMoonFounderOverlay()" title="Founder" style="background:none;border:none;cursor:pointer;font-size:18px;opacity:0.18;transition:opacity .2s;padding:4px;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='0.18'">👑</button>
+  </div>
+
+  <!-- Overlay nhập mật khẩu Founder (trong Moon) -->
+  <div id="moon-founder-overlay" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(26,26,46,.6);backdrop-filter:blur(3px);align-items:center;justify-content:center;">
+    <div style="background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:36px 32px 28px;max-width:360px;width:90%;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:10px;">👑</div>
+      <h3 style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.3rem;color:var(--ink);margin-bottom:6px;">Founder Access</h3>
+      <p style="font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--muted);margin-bottom:20px;">Nhập mật khẩu Founder để tiếp tục.</p>
+      <p id="moon-founder-overlay-err" style="display:none;color:var(--accent);font-family:'Nunito',sans-serif;font-size:0.85rem;font-weight:800;margin-bottom:10px;">Sai mật khẩu Founder!</p>
+      <div class="pw-wrap" style="margin-bottom:16px;">
+        <input type="password"
+               id="moon-founder-pw"
+               class="input-field"
+               placeholder="••••••"
+               autocomplete="off"
+               style="width:100%;font-weight:800;font-size:1.4rem;letter-spacing:8px;padding:14px 48px 14px 16px;text-align:center;"
+               onkeydown="if(event.key==='Enter')submitMoonLogin();if(event.key==='Escape')closeMoonFounderOverlay();">
+        <button onclick="toggleMoonFounderEye()" tabindex="-1" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;" id="moon-founder-eye">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-main allow-protected" style="flex:1;padding:12px;font-size:0.95rem;" onclick="submitMoonLogin()">Xác nhận →</button>
+        <button class="btn btn-ghost allow-protected" style="padding:12px 16px;" onclick="closeMoonFounderOverlay()">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="moon-container">
+
+    <!-- BƯỚC 1: Bảng điều khoản -->
+    <div id="moon-step1" style="display:flex;flex-direction:column;align-items:center;width:100%;gap:0;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:2.2rem;margin-bottom:6px;">🌙</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;">Trang Mô tả</div>
+        <h2 style="font-family:'Nunito',sans-serif;font-size:1.5rem;font-weight:900;color:var(--ink);margin-top:6px;">Trước khi bắt đầu</h2>
+      </div>
+
+      <div class="moon-tos-card">
+        <div class="moon-tos-title">📋 Hướng dẫn sử dụng</div>
+        <div class="moon-tos-body">
+          Bạn cần nhập <strong>ingame</strong> để đăng nhập. Bạn nhập tên giả cũng được, yên tâm tôi không thể biết bạn là ai. Tuy nhiên, bạn cần <em>đồng nhất việc điền tên trong mỗi lần đăng nhập</em>. Nếu mỗi lần đăng nhập bạn lại điền một tên khác nhau, hệ thống sẽ coi bạn như một kẻ hoạt động trái phép và chặn IP. Nếu muốn đổi tên, bạn cần gửi yêu cầu thực hiện ở mục <em>[update sau]</em>.<br><br>
+          <strong>Đặc biệt:</strong> Nếu bạn đặt ingame theo đúng định dạng chuẩn được tôi thiết lập sẵn: tên đệm+tên thật+họ, bạn sẽ được xác minh danh tính để có cơ hội gia nhập chế độ gia phả biến thái cùng với hàng ngàn quyền năng bất ngờ. Ví dụ, tên đầy đủ của bạn là Trần Đào Cam Chanh, hãy đặt ingame là <em>[camchanhtran]</em>.
+        </div>
+        <div class="moon-tos-footer">
+          <label>
+            <input type="checkbox" id="moon-tos-check">
+            Tôi đã đọc kĩ điều khoản sử dụng
+          </label>
+          <button class="btn btn-main" style="padding:7px 16px;font-size:0.82rem;margin:0;margin-left:auto;" onclick="showMoonStep2()">Tiếp tục →</button>
+        </div>
+        <div id="moon-tos-err">Vui lòng tick vào ô đồng ý trước!</div>
+      </div>
+
+    </div>
+
+    <!-- BƯỚC 2: Layout đăng nhập -->
+    <div id="moon-step2" style="display:none;flex-direction:row;gap:32px;width:100%;align-items:stretch;">
+      
+      <!-- Cột trái: Hướng dẫn thu gọn -->
+      <div class="moon-guide-mini">
+        <div class="guide-title">🌙 Hướng dẫn</div>
+        <div style="margin-bottom:12px;line-height:1.9;">📌 Nhập <strong>ingame</strong> để đăng nhập vào hệ thống.</div>
+        <div style="margin-bottom:12px;line-height:1.9;">⚠️ Tên phải <strong>nhất quán</strong> qua mỗi lần — đổi tên = bị chặn IP.</div>
+        <div style="margin-bottom:12px;line-height:1.9;">🔤 Phân biệt <strong>HOA / thường / ký tự đặc biệt</strong>.</div>
+        <div style="margin-bottom:0;line-height:1.9;">✨ Định dạng chuẩn: <strong>tên đệm + tên + họ</strong><br>→ VD: <em style="color:#2980b9;font-style:normal;font-weight:800;">camchanhtran</em></div>
+        <div style="color:var(--muted);font-size:10px;margin-top:18px;line-height:1.7;border-top:1px solid var(--border);padding-top:12px;font-family:'Nunito',sans-serif;">Đặt đúng định dạng chuẩn để được xác minh danh tính và nhận các quyền hạn đặc biệt.</div>
+      </div>
+
+      <!-- Cột phải: Ô đăng nhập (đồng nhất với AC) -->
+      <div class="moon-login-box">
+        <div style="font-size:2.4rem;line-height:1;margin-bottom:18px;">🌙</div>
+        <h2 style="margin-bottom:28px;">Nhập Ingame</h2>
+
+        <div id="moon-login-err"></div>
+
+        <div class="pw-wrap" style="margin-bottom:14px;">
+          <input type="text"
+                 id="moon-name-input"
+                 class="input-field"
+                 placeholder="· · · · · · ·"
+                 autocomplete="off"
+                 style="width:100%;font-weight:800;font-size:1.15rem;letter-spacing:4px;padding:14px 16px;text-align:center;font-family:'Space Mono',monospace;"
+                 onkeydown="if(event.key==='Enter')submitMoonLogin()">
+        </div>
+
+        <div class="pw-err" id="moon-name-err" style="display:none;margin-bottom:8px;">Vui lòng nhập tên ingame!</div>
+
+        <button id="moon-login-btn" class="btn btn-main btn-pw allow-protected" style="width:100%;margin-top:4px;" onclick="submitMoonLogin()">
+          Đăng Nhập →
+        </button>
+
+        <div class="moon-back-link" onclick="showMoonStep1()" style="margin-top:18px;display:block;">← Quay lại điều khoản</div>
+      </div>
+    </div>
+
+    <!-- Nội dung sau khi đăng nhập (placeholder) -->
+    <div id="moon-content" style="display:none;flex-direction:column;align-items:center;width:100%;gap:0;">
+      <div class="moon-content-card">
+        <div style="font-size:3rem;margin-bottom:12px;">🎉</div>
+        <h2>Xin chào, <span id="moon-welcome-name" style="color:#2980b9;"></span>!</h2>
+        <p style="margin-top:10px;">Bạn đã đăng nhập thành công vào hệ thống.<br>Nội dung trang này sẽ được cập nhật sớm.</p>
+        <div style="margin-top:28px;padding:16px;background:rgba(41,128,185,0.07);border:1px dashed #2980b9;font-family:'Space Mono',monospace;font-size:11px;color:#2980b9;text-align:left;">
+          🌙 Tên đã đăng ký: <strong id="moon-content-name"></strong><br>
+          📊 Hoạt động của bạn đã được ghi nhận.
+        </div>
+        <button class="btn btn-ghost" style="margin-top:20px;width:100%;" onclick="goToAC()">← Quay lại trang chủ</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- ════ END MOON SCREEN ════ -->
 
 <div id="log-screen">
   <div class="log-wrap">
@@ -851,6 +1172,240 @@
   </div>
 </div>
 
+<!-- ════════════════════════════════════════
+     MOON ADMIN SCREEN
+     ════════════════════════════════════════ -->
+<style>
+  #moon-admin-screen {
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(41,128,185,.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(41,128,185,.03) 0%, transparent 50%);
+  }
+  #moon-admin-screen::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%232980b9' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 30px 30px;
+    pointer-events: none; z-index: 0;
+  }
+  .moon-nav-btn {
+    width: 44px; height: 44px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    cursor: pointer;
+    font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .18s cubic-bezier(.34,1.56,.64,1);
+    color: var(--muted);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
+    position: relative;
+  }
+  .moon-nav-btn:hover {
+    border-color: var(--ink);
+    transform: scale(1.1);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  .moon-nav-btn.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+    transform: scale(1.05);
+  }
+  .moon-nav-btn .moon-nav-tooltip {
+    display: none;
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%; transform: translateY(-50%);
+    background: var(--ink); color: var(--card);
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px; font-weight: 800;
+    padding: 4px 10px;
+    white-space: nowrap;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .moon-nav-btn:hover .moon-nav-tooltip { display: block; }
+  /* moon-role-badge removed — dùng .cnt như trang Sun */
+</style>
+
+<div id="moon-admin-screen" style="display:none;position:fixed;inset:0;z-index:8500;flex-direction:column;">
+
+  <!-- TOP BAR -->
+  <div style="position:fixed;top:12px;left:14px;z-index:10000;display:flex;align-items:center;gap:6px;">
+    <!-- Undo: quay lại trang đăng nhập ingame -->
+    <button class="nav-btn" id="moon-admin-undo" onclick="goFromMoonAdminToLogin()" title="Quay lại đăng nhập">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+    </button>
+    <button class="nav-btn" disabled title="Tiến" style="opacity:.25;cursor:default;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+    </button>
+    <button class="nav-btn" title="Tải lại" onclick="showToast('✓ Đã làm mới!')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 2.13-5.87L9 8"/></svg>
+    </button>
+  </div>
+
+  <!-- Role icon góc phải (giống trang Sun) -->
+  <div style="position:fixed;top:12px;right:14px;z-index:10000;display:flex;align-items:center;gap:4px;">
+    <div class="cnt" id="moon-admin-role-icon" style="cursor:default;user-select:none;font-size:14px;" title="Vai trò hiện tại">👑</div>
+  </div>
+
+  <!-- MAIN: LEFT NAV + RIGHT CONTENT -->
+  <div style="position:relative;z-index:1;display:flex;flex:1;overflow:hidden;">
+
+    <!-- LEFT NAV — căn giữa dọc -->
+    <div style="width:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;gap:14px;flex-shrink:0;">
+
+      <!-- Icon 1: Dấu hỏi -->
+      <button class="moon-nav-btn active" id="moon-nav-guide" onclick="switchMoonAdminSection('guide')" title="">
+        <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+          <path d="M8.5 8.5 C8.5 4.5 15.5 4 15.8 8.5 C16 11 12 12 12 15"
+        fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="19.5" r="1.3" fill="currentColor"/>
+        </svg>
+        <span class="moon-nav-tooltip">Hướng dẫn chơi</span>
+      </button>
+
+      <!-- Icon 2: Loa cầm tay -->
+      <button class="moon-nav-btn" id="moon-nav-news" onclick="switchMoonAdminSection('news')" title="">
+        <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+          <!-- Hộp loa -->
+          <path d="M4 9.5 L4 14.5 L8 14.5 L8 9.5 Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <!-- Nón loa -->
+          <path d="M8 8 L17 5 L17 19 L8 16 Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <!-- Tay cầm trụ rỗng -->
+          <rect x="4.5" y="14.5" width="3" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <ellipse cx="6" cy="14.5" rx="1.5" ry="0.6" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <!-- 3 sóng âm đậm → nhạt -->
+          <path d="M19 8.5 Q21.5 12 19 15.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+            opacity="1" />
+          <path d="M20.5 6.5 Q24 12 20.5 17.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            opacity="0.6" />
+          <path d="M22 4.5 Q26.5 12 22 19.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"
+            opacity="0.35" />
+        </svg>
+        <span class="moon-nav-tooltip">Bảng tin tức</span>
+      </button>
+
+      <!-- Icon 3: Bóng đèn -->
+      <button class="moon-nav-btn" id="moon-nav-suggest" onclick="switchMoonAdminSection('suggest')" title="">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+          stroke-linejoin="round" width="22" height="22">
+          <!-- Thân bóng đèn: đầu thon -->
+          <path d="M9.3 15.5 C7.8 14 7 12.3 7 10.5 A5 5 0 0 1 17 10.5 C17 12.3 16.2 14 14.7 15.5 Z" />
+          <!-- Cây đèn: 4 gạch giảm dần -->
+          <line x1="9.3" y1="15.5" x2="14.7" y2="15.5" />
+          <line x1="9.6" y1="17.2" x2="14.4" y2="17.2" />
+          <line x1="10.2" y1="18.9" x2="13.8" y2="18.9" />
+          <line x1="10.8" y1="20.6" x2="13.2" y2="20.6" />
+          <!-- Tia sáng trên -->
+          <line x1="12" y1="1.5" x2="12" y2="3.8" />
+          <!-- Tia sáng trái trên -->
+          <line x1="4.8" y1="4.8" x2="6.4" y2="6.4" />
+          <!-- Tia sáng trái -->
+          <line x1="1.5" y1="12" x2="3.8" y2="12" />
+          <!-- Tia sáng phải trên -->
+          <line x1="19.2" y1="4.8" x2="17.6" y2="6.4" />
+          <!-- Tia sáng phải -->
+          <line x1="22.5" y1="12" x2="20.2" y2="12" />
+        </svg>
+        <span class="moon-nav-tooltip">Gợi ý</span>
+      </button>
+
+      <!-- Icon 4: Văn tự cổ -->
+      <button class="moon-nav-btn" id="moon-nav-origin" onclick="switchMoonAdminSection('origin')" title="">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <!-- Khung sách -->
+        <path d="M6 4 C6 3 6.8 2 8 2 L20 2 C21.2 2 22 3 22 4 L22 20 C22 21 21.2 22 20 22 L8 22"/>
+        <path d="M8 2 C6 2 5 3 5 4 L5 20 C5 21.5 6 22 8 22 C10 22 11 21.5 11 20 L11 4 C11 3 10 2 8 2 Z"/>
+        <!-- Chữ nguệch ngoạc dòng 1 -->
+        <path d="M13.5 7 L14.5 5.8 L16 7.2 L17.5 6 L19 7 L20 5.8" stroke-width="1.2"/>
+        <!-- Dòng 2 -->
+        <path d="M13.5 11 L15 9.8 L16.5 11.2 L18 10 L19.5 11" stroke-width="1.2"/>
+        <!-- Dòng 3 -->
+        <path d="M13.5 15 L14.8 13.8 L16.2 15.2 L17.5 14 L19 15 L20 13.8" stroke-width="1.2"/>
+        <!-- Dòng 4 ngắn -->
+        <path d="M13.5 19 L15 17.8 L16.5 19.2 L18 18" stroke-width="1.2"/>
+        </svg>
+        <span class="moon-nav-tooltip">Nguồn gốc</span>
+      </button>
+
+      <!-- Icon 5: Bút lông chim gấp khúc rõ ràng -->
+      <button class="moon-nav-btn" id="moon-nav-rename" onclick="switchMoonAdminSection('rename')" title="">
+        <svg viewBox="0 0 24 24" width="22" height="22">
+          <path fill="currentColor" d="M 19.5 2 C 11.5 3 6.5 10 7.5 17 L 8.5 17 C 9 14.5 10 13 11.5 12 L 9.5 11.5 C 12.5 9.5 14.5 8 15.5 7 L 13 6 C 16.5 4 18.5 2.5 19.5 2 Z" />
+          
+          <rect fill="currentColor" x="5.5" y="17" width="6" height="1.2" rx="0.5" />
+          
+          <path fill="currentColor" d="M 4.5 18.8 C 4.5 18.5 4.8 18.5 5.5 18.5 L 11.5 18.5 C 12.2 18.5 12.5 18.5 12.5 18.8 L 12.5 22 C 12.5 23 12 23.5 10.5 23.5 L 6.5 23.5 C 5 23.5 4.5 23 4.5 22 Z" />
+          
+          <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M 12.5 19.8 C 14.5 19.8 14.5 22.2 12.5 22.2" />
+        </svg>
+        <span class="moon-nav-tooltip">Đổi Ingame</span>
+      </button>
+
+    </div>
+`
+    <!-- RIGHT CONTENT AREA -->
+    <div style="flex:1;overflow-y:auto;padding:40px 56px 60px;">
+
+      <!-- SECTION: Hướng dẫn chơi -->
+      <div id="moon-section-guide" style="display:flex;flex-direction:column;max-width:660px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">📖 Hướng dẫn chơi</div>
+        <h2 style="font-family:'Nunito',sans-serif;font-size:2rem;font-weight:900;color:var(--ink);margin-bottom:24px;letter-spacing:-.5px;">Bắt đầu từ đây</h2>
+        <div style="background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:32px;font-family:'Nunito',sans-serif;font-size:0.95rem;line-height:1.9;color:var(--ink);">
+          Nội dung hướng dẫn sẽ được cập nhật sớm.
+        </div>
+      </div>
+
+      <!-- SECTION: Bảng tin tức -->
+      <div id="moon-section-news" style="display:none;flex-direction:column;max-width:660px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">📰 Bảng tin tức</div>
+        <h2 style="font-family:'Nunito',sans-serif;font-size:2rem;font-weight:900;color:var(--ink);margin-bottom:24px;letter-spacing:-.5px;">Tin tức mới nhất</h2>
+        <div style="background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:32px;font-family:'Nunito',sans-serif;font-size:0.95rem;line-height:1.9;color:var(--ink);">
+          Chưa có tin tức nào. Hãy quay lại sau!
+        </div>
+      </div>
+
+      <!-- SECTION: Gợi ý -->
+      <div id="moon-section-suggest" style="display:none;flex-direction:column;max-width:660px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">💡 Gợi ý</div>
+        <h2 style="font-family:'Nunito',sans-serif;font-size:2rem;font-weight:900;color:var(--ink);margin-bottom:24px;letter-spacing:-.5px;">Đề xuất &amp; Góp ý</h2>
+        <div style="background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:32px;font-family:'Nunito',sans-serif;font-size:0.95rem;line-height:1.9;color:var(--ink);">
+          Tính năng gợi ý sẽ sớm được mở.
+        </div>
+      </div>
+
+      <!-- SECTION: Nguồn gốc -->
+      <div id="moon-section-origin" style="display:none;flex-direction:column;max-width:660px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">🌿 Nguồn gốc</div>
+        <h2 style="font-family:'Nunito',sans-serif;font-size:2rem;font-weight:900;color:var(--ink);margin-bottom:24px;letter-spacing:-.5px;">Câu chuyện</h2>
+        <div style="background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:32px;font-family:'Nunito',sans-serif;font-size:0.95rem;line-height:1.9;color:var(--ink);">
+          Lịch sử và nguồn gốc sẽ được kể tại đây.
+        </div>
+      </div>
+
+      <!-- SECTION: Đổi ingame -->
+      <div id="moon-section-rename" style="display:none;flex-direction:column;max-width:500px;">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">✏️ Đổi Ingame</div>
+        <h2 style="font-family:'Nunito',sans-serif;font-size:2rem;font-weight:900;color:var(--ink);margin-bottom:24px;letter-spacing:-.5px;">Yêu cầu đổi tên</h2>
+        <div style="background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:32px;">
+          <p style="font-family:'Nunito',sans-serif;font-size:0.92rem;color:var(--muted);margin-bottom:20px;line-height:1.75;">Tính năng này cho phép bạn gửi yêu cầu đổi tên ingame. Founder sẽ xem xét và xử lý trong thời gian sớm nhất.</p>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">Tính năng sắp ra mắt</div>
+          <div style="height:3px;background:linear-gradient(90deg,#2980b9,transparent);border-radius:2px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- ════ END MOON ADMIN SCREEN ════ -->
+
 <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-app-compat.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-database-compat.min.js"></script>
 
@@ -867,6 +1422,7 @@
 <script src="js/logs.js"></script>
 <script src="js/firebase.js"></script>
 <script src="js/app.js"></script>
+<script src="js/moon.js"></script>
 
 </body>
 </html>

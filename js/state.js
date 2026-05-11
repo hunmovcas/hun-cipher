@@ -9,6 +9,12 @@ var _currentLoginRole = 'normal';
 var _authVia = null;
 var _isAdmin = false;
 
+// Moon Page State
+var _moonLoggedIn = false;
+var _moonUserName = '';
+var _moonUsers = {};     // { deviceId: { name, firstSeen } }
+var _moonProfiles = {};  // { key: { name, ids, type } }
+
 // Navigation & Cipher
 var _mode = 'd';
 var _hist = [];
