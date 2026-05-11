@@ -126,43 +126,6 @@ async function submitMoonLogin() {
   var name = normalizeMoonName(rawName);
   var errEl = document.getElementById('moon-login-err');
 
-  var founderPwInput = document.getElementById('moon-founder-pw');
-  var founderPwVal = founderPwInput ? founderPwInput.value.toLowerCase().trim() : '';
-
-  if (founderPwVal) {
-    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(founderPwVal));
-    var hash = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
-    if (hash === currentHashes.founder) {
-      _loggedIn = true;
-      _originalRole = 'founder';
-      _currentLoginRole = 'founder';
-      _isAdmin = true;
-      sessionStorage.setItem('hun_known_founder', 'true');
-      if (db) {
-        var idSnap = await db.ref('settings/identities').once('value');
-        _identities = idSnap.val() || {};
-      }
-      closeMoonFounderOverlay();
-      fbIncrement('login_founder', null);
-      fbListenAll();
-      document.getElementById('moon-screen').style.display = 'none';
-      showMoonAdminScreen('founder');
-      showToast('✓ Xin chào Founder!');
-      return;
-    } else {
-      var overlayErr = document.getElementById('moon-founder-overlay-err');
-      if (overlayErr) {
-        overlayErr.style.display = 'block';
-        setTimeout(function () { overlayErr.style.display = 'none'; }, 2500);
-      } else {
-        errEl.textContent = 'Sai mật khẩu Founder!';
-        errEl.style.display = 'block';
-        setTimeout(function () { errEl.style.display = 'none'; }, 2500);
-      }
-      return;
-    }
-  }
-
   if (!name) {
     errEl.textContent = 'Vui lòng nhập tên ingame của bạn!';
     errEl.style.display = 'block';
@@ -325,11 +288,11 @@ function showMoonAdminScreen(role) {
 
   /* ── Hiện / ẩn Switch Role ── */
   var lv = ROLE_LEVEL[role] || 1;
-  var sw  = document.getElementById('moon-cnt-switch');
+  var sw = document.getElementById('moon-cnt-switch');
   var swD = document.getElementById('moon-div-switch');
   if (sw && swD) {
     var showSwitch = lv >= 3 || sessionStorage.getItem('hun_known_founder') === 'true';
-    sw.style.display  = showSwitch ? 'flex' : 'none';
+    sw.style.display = showSwitch ? 'flex' : 'none';
     swD.style.display = showSwitch ? 'block' : 'none';
   }
 
@@ -845,3 +808,56 @@ document.addEventListener('click', function (e) {
     }).observe(sunProf, { subtree: true, childList: true, attributes: true, attributeFilter: ['style'] });
   }
 })();
+
+async function submitMoonFounder() {
+  const pwInput = document.getElementById('moon-founder-pw').value.toLowerCase().trim();
+  const errEl = document.getElementById('moon-founder-overlay-err');
+
+  if (!pwInput) {
+    errEl.innerText = 'Vui lòng nhập mật khẩu!';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Mã hóa mật khẩu bằng SHA-256 để so sánh với currentHashes trên Firebase
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwInput));
+  var hash = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+
+  if (hash === currentHashes.founder) {
+    // Đúng pass -> Đóng overlay và dọn dẹp
+    errEl.style.display = 'none';
+    document.getElementById('moon-founder-pw').value = '';
+    closeMoonFounderOverlay();
+
+    // Cập nhật đúng các biến State của hệ thống
+    _loggedIn = true;
+    _originalRole = 'founder';
+    _currentLoginRole = 'founder';
+    _isAdmin = true;
+    sessionStorage.setItem('hun_known_founder', 'true');
+
+    // Load dữ liệu identities từ DB (giống logic Sun)
+    if (db) {
+      var idSnap = await db.ref('settings/identities').once('value');
+      _identities = idSnap.val() || {};
+    }
+
+    // QUAN TRỌNG NHẤT: Ẩn màn hình Sun Login đang đè lên trên (vì z-index 9000 > 8500)
+    var pwScreen = document.getElementById('pw-screen');
+    if (pwScreen) pwScreen.style.display = 'none';
+
+    // Chuyển luồng hiển thị sang Moon Admin
+    document.getElementById('moon-screen').style.display = 'none';
+    showMoonAdminScreen('founder');
+
+    // Bật lắng nghe Log và ghi Traffic
+    fbIncrement('login_founder', null);
+    fbListenAll();
+    showToast('✓ Xin chào Founder!');
+  } else {
+    // Sai pass
+    errEl.innerText = 'Sai mật khẩu Founder!';
+    errEl.style.display = 'block';
+    setTimeout(function () { errEl.style.display = 'none'; }, 2500);
+  }
+}

@@ -627,13 +627,13 @@
                placeholder="••••••"
                autocomplete="off"
                style="width:100%;font-weight:800;font-size:1.4rem;letter-spacing:8px;padding:14px 48px 14px 16px;text-align:center;"
-               onkeydown="if(event.key==='Enter')submitMoonLogin();if(event.key==='Escape')closeMoonFounderOverlay();">
+               onkeydown="if(event.key==='Enter')submitMoonFounder();if(event.key==='Escape')closeMoonFounderOverlay();">
         <button onclick="toggleMoonFounderEye()" tabindex="-1" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;" id="moon-founder-eye">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
         </button>
       </div>
       <div style="display:flex;gap:10px;">
-        <button class="btn btn-main allow-protected" style="flex:1;padding:12px;font-size:0.95rem;" onclick="submitMoonLogin()">Xác nhận →</button>
+        <button class="btn btn-main allow-protected" style="flex:1;padding:12px;font-size:0.95rem;" onclick="submitMoonFounder()">Xác nhận →</button>
         <button class="btn btn-ghost allow-protected" style="padding:12px 16px;" onclick="closeMoonFounderOverlay()">✕</button>
       </div>
     </div>
