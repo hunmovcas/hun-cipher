@@ -512,6 +512,10 @@
 
       <div id="profile-dropdown" class="dropdown-menu">
 
+        <div style="padding:10px 16px 10px;border-bottom:1px solid var(--border);text-align:center;">
+          <span style="font-size:18px;line-height:1;">☀️</span>
+        </div>
+
         <div class="adm-section protected-only" style="display:none">
           <div class="adm-section-label">System Logs</div>
           <button class="adm-item allow-protected" onclick="admGoLog(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> Traffic & Analytics</button>
@@ -574,7 +578,7 @@
         <div id="pw-hints-display" class="pw-hints-box"></div>
       </div>
       <div class="pw-right pw-box">
-        <div class="pw-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#c8861a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><rect x="3" y="11" width="18" height="11" rx="2" fill="rgba(200,134,26,0.08)"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="pw-icon" style="font-size:44px;line-height:1;">☀️</div>
         <h2>Enter Password</h2>
         <p class="pw-sub">This site is strictly private</p>
         <div class="pw-wrap">
@@ -647,9 +651,14 @@
 
       <div class="moon-tos-card">
         <div class="moon-tos-title">📋 Hướng dẫn sử dụng</div>
-        <div class="moon-tos-body">
-          Bạn cần nhập <strong>ingame</strong> để đăng nhập. Bạn nhập tên giả cũng được, yên tâm tôi không thể biết bạn là ai. Tuy nhiên, bạn cần <em>đồng nhất việc điền tên trong mỗi lần đăng nhập</em>. Nếu mỗi lần đăng nhập bạn lại điền một tên khác nhau, hệ thống sẽ coi bạn như một kẻ hoạt động trái phép và chặn IP. Nếu muốn đổi tên, bạn cần gửi yêu cầu thực hiện ở mục <em>[update sau]</em>.<br><br>
-          <strong>Đặc biệt:</strong> Nếu bạn đặt ingame theo đúng định dạng chuẩn được tôi thiết lập sẵn: tên đệm+tên thật+họ, bạn sẽ được xác minh danh tính để có cơ hội gia nhập chế độ gia phả biến thái cùng với hàng ngàn quyền năng bất ngờ. Ví dụ, tên đầy đủ của bạn là Trần Đào Cam Chanh, hãy đặt ingame là <em>[camchanhtran]</em>.
+        <div class="moon-tos-body" id="moon-guide-long-display">
+          Bạn cần nhập <strong>ingame</strong> để đăng nhập. Bạn nhập tên giả cũng được, yên tâm tôi không thể biết bạn là ai.
+          Tuy nhiên, bạn cần <em>đồng nhất việc điền tên trong mỗi lần đăng nhập</em>. Nếu mỗi lần đăng nhập bạn lại điền một
+          tên khác nhau, hệ thống sẽ coi bạn như một kẻ hoạt động trái phép và chặn IP. Nếu muốn đổi tên, bạn cần gửi yêu cầu
+          thực hiện ở mục <em>[tính năng sắp ra mắt]</em>.<br><br>
+          <strong>Đặc biệt:</strong> Nếu bạn đặt ingame theo đúng định dạng chuẩn được tôi thiết lập sẵn: tên đệm+tên thật+họ,
+          bạn sẽ được xác minh danh tính để có cơ hội gia nhập chế độ gia phả biến thái cùng với hàng ngàn quyền năng bất ngờ.
+          Ví dụ, tên đầy đủ của bạn là Trần Đào Cam Chanh, hãy đặt ingame là <em>[camchanhtran]</em>.
         </div>
         <div class="moon-tos-footer">
           <label>
@@ -668,12 +677,14 @@
       
       <!-- Cột trái: Hướng dẫn thu gọn -->
       <div class="moon-guide-mini">
-        <div class="guide-title">🌙 Hướng dẫn</div>
-        <div style="margin-bottom:12px;line-height:1.9;">📌 Nhập <strong>ingame</strong> để đăng nhập vào hệ thống.</div>
-        <div style="margin-bottom:12px;line-height:1.9;">⚠️ Tên phải <strong>nhất quán</strong> qua mỗi lần — đổi tên = bị chặn IP.</div>
-        <div style="margin-bottom:12px;line-height:1.9;">🔤 Phân biệt <strong>HOA / thường / ký tự đặc biệt</strong>.</div>
-        <div style="margin-bottom:0;line-height:1.9;">✨ Định dạng chuẩn: <strong>tên đệm + tên + họ</strong><br>→ VD: <em style="color:#2980b9;font-style:normal;font-weight:800;">camchanhtran</em></div>
-        <div style="color:var(--muted);font-size:10px;margin-top:18px;line-height:1.7;border-top:1px solid var(--border);padding-top:12px;font-family:'Nunito',sans-serif;">Đặt đúng định dạng chuẩn để được xác minh danh tính và nhận các quyền hạn đặc biệt.</div>
+        <div class="guide-title" id="moon-guide-short-title">🌙 Hướng dẫn</div>
+        <div id="moon-guide-short-display" style="font-family:'Nunito',sans-serif;font-size:13px;line-height:1.8;color:var(--ink);font-weight:700;">
+          <div style="margin-bottom:12px;line-height:1.9;">📌 Nhập <strong>ingame</strong> để đăng nhập vào hệ thống.</div>
+          <div style="margin-bottom:12px;line-height:1.9;">⚠️ Tên phải <strong>nhất quán</strong> qua mỗi lần — đổi tên = bị chặn IP.</div>
+          <div style="margin-bottom:12px;line-height:1.9;">🔤 Phân biệt <strong>HOA / thường / ký tự đặc biệt</strong>.</div>
+          <div style="margin-bottom:0;line-height:1.9;">✨ Định dạng chuẩn: <strong>tên đệm + tên + họ</strong><br>→ VD: <em style="color:#2980b9;font-style:normal;font-weight:800;">camchanhtran</em></div>
+          <div style="color:var(--muted);font-size:10px;margin-top:18px;line-height:1.7;border-top:1px solid var(--border);padding-top:12px;font-family:'Nunito',sans-serif;">Đặt đúng định dạng chuẩn để được xác minh danh tính và nhận các quyền hạn đặc biệt.</div>
+        </div>
       </div>
 
       <!-- Cột phải: Ô đăng nhập (đồng nhất với AC) -->
@@ -1247,9 +1258,19 @@
     </button>
   </div>
 
-  <!-- Role icon góc phải (giống trang Sun) -->
+  <!-- Role icon góc phải Moon Admin -->
   <div style="position:fixed;top:12px;right:14px;z-index:10000;display:flex;align-items:center;gap:4px;">
-    <div class="cnt" id="moon-admin-role-icon" style="cursor:default;user-select:none;font-size:14px;" title="Vai trò hiện tại">👑</div>
+    <div id="moon-admin-role-wrap" style="position:relative;display:inline-block;">
+      <div id="moon-admin-role-icon"
+        style="cursor:pointer;user-select:none;font-size:18px;width:32px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:background .15s;"
+        title="Menu quản trị" onclick="toggleMoonAdminMenu(event)" onmouseover="this.style.background='rgba(138,127,110,.1)'"
+        onmouseout="this.style.background='transparent'">
+        🌙
+      </div>
+      <div id="moon-admin-dropdown"
+        style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);width:max-content;min-width:220px;z-index:10001;max-height:75vh;overflow-y:auto;">
+      </div>
+    </div>
   </div>
 
   <!-- MAIN: LEFT NAV + RIGHT CONTENT -->
@@ -1350,7 +1371,7 @@
       </button>
 
     </div>
-`
+
     <!-- RIGHT CONTENT AREA -->
     <div style="flex:1;overflow-y:auto;padding:40px 56px 60px;">
 
@@ -1405,6 +1426,50 @@
   </div>
 </div>
 <!-- ════ END MOON ADMIN SCREEN ════ -->
+
+<!-- Dialog: Sửa Bảng Hướng Dẫn Dài (moon-step1) -->
+<div class="dialog-overlay" id="moon-edit-guide-overlay">
+  <div class="dialog-box" style="max-width:560px;width:95%;padding:32px 28px 24px;">
+    <h3 style="margin-bottom:6px;">✏️ Sửa Bảng Hướng Dẫn Dài</h3>
+    <p style="margin-bottom:20px;font-size:12px;color:var(--muted);">Hỗ trợ HTML cơ bản: &lt;strong&gt;, &lt;em&gt;, &lt;br&gt;</p>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Tiêu đề bảng (title ở moon-tos-title)</label>
+      <input type="text" id="moon-guide-long-title-input" class="input-field" placeholder="📋 Hướng dẫn sử dụng">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>Nội dung chính (hỗ trợ HTML)</label>
+      <textarea id="moon-guide-long-body-input" class="input-field"
+        style="min-height:160px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;line-height:1.7;"
+        placeholder="Nhập nội dung hướng dẫn..."></textarea>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-dialog-yes btn-save allow-protected" onclick="submitMoonEditGuide()">Lưu</button>
+      <button class="btn-dialog-no allow-protected" onclick="closeMoonEditGuide()">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog: Sửa Bảng Tóm Tắt (moon-step2 guide-mini) -->
+<div class="dialog-overlay" id="moon-edit-guide-short-overlay">
+  <div class="dialog-box" style="max-width:560px;width:95%;padding:32px 28px 24px;">
+    <h3 style="margin-bottom:6px;">✏️ Sửa Bảng Tóm Tắt</h3>
+    <p style="margin-bottom:20px;font-size:12px;color:var(--muted);">Hỗ trợ HTML cơ bản: &lt;strong&gt;, &lt;em&gt;, &lt;br&gt;</p>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Tiêu đề bảng (guide-title)</label>
+      <input type="text" id="moon-guide-short-title-input" class="input-field" placeholder="🌙 Hướng dẫn">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>Nội dung tóm tắt (hỗ trợ HTML)</label>
+      <textarea id="moon-guide-short-body-input" class="input-field"
+        style="min-height:160px;font-size:12px;font-family:'Nunito',sans-serif;resize:vertical;line-height:1.7;"
+        placeholder="Nhập nội dung tóm tắt..."></textarea>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-dialog-yes btn-save allow-protected" onclick="submitMoonEditGuideShort()">Lưu</button>
+      <button class="btn-dialog-no allow-protected" onclick="closeMoonEditGuideShort()">Hủy</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-app-compat.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-database-compat.min.js"></script>

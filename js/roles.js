@@ -115,6 +115,7 @@ function applyUserModeUI() {
   _show('div-secret',  'cnt-secret');
   _show('div-elevate', 'cnt-elevate');
   _show('div-profile', 'cnt-profile');
+  _show('div-sun','cnt-sun');
 
   if (sessionStorage.getItem('hun_known_founder') === 'true') {
     _show('div-switch', 'cnt-switch');
