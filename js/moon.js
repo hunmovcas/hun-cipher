@@ -34,18 +34,31 @@ function toggleMoonFounderEye() {
   }
 }
 
-/* ── CHUYỂN TRANG AC → MOON ── */
+// Hàm mở giao diện Moon (khi ấn nút Cầu vồng)
 function goToMoon() {
-  document.getElementById('pw-screen').style.display = 'none';
-  var moonScreen = document.getElementById('moon-screen');
-  moonScreen.style.display = 'flex';
-  moonScreen.style.opacity = '0';
-  setTimeout(function () {
-    moonScreen.style.transition = 'opacity .4s';
-    moonScreen.style.opacity = '1';
-  }, 10);
-  loadMoonContent();
-  showMoonStep1();
+  // Hiển thị màn hình Moon
+  document.getElementById('moon-screen').style.display = 'flex';
+
+  // Kiểm tra xem trình duyệt này đã từng đồng ý điều khoản chưa
+  const hasAccepted = localStorage.getItem('moonTosAccepted');
+
+  if (hasAccepted === 'true') {
+    // Nếu đã đồng ý -> Bỏ qua bước 1, nhảy thẳng sang bước 2
+    document.getElementById('moon-step1').style.display = 'none';
+    document.getElementById('moon-step2').style.display = 'flex';
+    // Tự động focus vào ô nhập tên cho tiện
+    setTimeout(() => {
+      document.getElementById('moon-name-input').focus();
+    }, 100);
+  } else {
+    // Nếu chưa đồng ý (hoặc máy mới) -> Hiện bước 1
+    document.getElementById('moon-step1').style.display = 'flex';
+    document.getElementById('moon-step2').style.display = 'none';
+
+    // Reset lại trạng thái checkbox và lỗi
+    document.getElementById('moon-tos-check').checked = false;
+    document.getElementById('moon-tos-err').style.display = 'none';
+  }
 }
 
 /* ── QUAY LẠI TRANG AC ── */
@@ -65,25 +78,40 @@ function goToAC() {
   }, 300);
 }
 
-/* ── BƯỚC 1: Hiển thị bảng hướng dẫn ── */
+// Hàm xử lý khi ấn "<- Quay lại điều khoản" ở Bước 2
 function showMoonStep1() {
+  // Đưa giao diện về lại bước 1
   document.getElementById('moon-step1').style.display = 'flex';
   document.getElementById('moon-step2').style.display = 'none';
-  document.getElementById('moon-tos-check').checked = false;
+
+  // Chú ý: Ở đây ta KHÔNG xóa localStorage. 
+  // Trạng thái 'đã đồng ý' vẫn được giữ, nhưng vì user chủ động bấm "quay lại" 
+  // nên ta cứ cho họ xem lại. Lần tắt đi mở lại sau, nó vẫn sẽ tự nhảy vào bước 2.
 }
 
-/* ── BƯỚC 2: Hiển thị giao diện đăng nhập ── */
+// Hàm xử lý khi ấn nút "Tiếp tục ->" ở Bước 1
 function showMoonStep2() {
-  if (!document.getElementById('moon-tos-check').checked) {
-    document.getElementById('moon-tos-err').style.display = 'block';
-    setTimeout(function () { document.getElementById('moon-tos-err').style.display = 'none'; }, 2000);
+  const check = document.getElementById('moon-tos-check');
+  const err = document.getElementById('moon-tos-err');
+
+  // Kiểm tra xem đã tick chưa
+  if (!check.checked) {
+    err.style.display = 'block';
     return;
   }
+
+  // Đã tick -> Ẩn thông báo lỗi (nếu đang hiện)
+  err.style.display = 'none';
+
+  // LƯU TRẠNG THÁI VÀO TRÌNH DUYỆT (Chỉ áp dụng cho máy/trình duyệt này)
+  localStorage.setItem('moonTosAccepted', 'true');
+
+  // Chuyển giao diện
   document.getElementById('moon-step1').style.display = 'none';
   document.getElementById('moon-step2').style.display = 'flex';
-  setTimeout(function () {
-    var inp = document.getElementById('moon-name-input');
-    if (inp) inp.focus();
+
+  setTimeout(() => {
+    document.getElementById('moon-name-input').focus();
   }, 100);
 }
 
@@ -292,12 +320,30 @@ function showMoonAdminScreen(role) {
   var screen = document.getElementById('moon-admin-screen');
   if (!screen) return;
 
-  var roleIcons = { founder: '👑', cofounder: '💎', manager: '🔱', head: '⚜️', admin: '🌟', normal: '🔒', secondary: '🔑' };
-  var roleColors = { founder: 'var(--founder)', cofounder: 'var(--cofounder)', manager: 'var(--manager)', head: 'var(--head)', admin: 'var(--orange)', normal: 'var(--accent2)', secondary: 'var(--accent2)' };
-  var iconEl = document.getElementById('moon-admin-role-icon');
-  if (iconEl) {
-    iconEl.textContent = roleIcons[role] || '🌟';
-    iconEl.style.color = roleColors[role] || 'var(--accent2)';
+  /* ── Cập nhật icon role (dùng span con giống Sun) ── */
+  _updateMoonRoleIconByRole(role);
+
+  /* ── Hiện / ẩn Switch Role ── */
+  var lv = ROLE_LEVEL[role] || 1;
+  var sw  = document.getElementById('moon-cnt-switch');
+  var swD = document.getElementById('moon-div-switch');
+  if (sw && swD) {
+    var showSwitch = lv >= 3 || sessionStorage.getItem('hun_known_founder') === 'true';
+    sw.style.display  = showSwitch ? 'flex' : 'none';
+    swD.style.display = showSwitch ? 'block' : 'none';
+  }
+
+  /* ── Hiện Noti (chỉ Founder lv7) ── */
+  var noti = document.getElementById('moon-cnt-noti');
+  var notiD = document.getElementById('moon-div-noti');
+  if (noti && notiD) {
+    var showNoti = lv === 7;
+    noti.style.display = showNoti ? 'flex' : 'none';
+    notiD.style.display = showNoti ? 'block' : 'none';
+    if (showNoti) {
+      if (typeof fbListenNoti === 'function') fbListenNoti();
+      syncMoonNotiBadge();
+    }
   }
 
   /* ── Cập nhật menu dropdown theo quyền ── */
@@ -409,37 +455,6 @@ function goFromMoonAdminToAC() {
     }, 300);
   }
 }
-
-/* ── TOGGLE MOON ADMIN DROPDOWN ── */
-var _moonAdminMenuOpen = false;
-function toggleMoonAdminMenu(e) {
-  e.stopPropagation();
-  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  if (lv < 3) {
-    showToast('Cần quyền Admin trở lên!');
-    return;
-  }
-  _moonAdminMenuOpen = !_moonAdminMenuOpen;
-  var dd = document.getElementById('moon-admin-dropdown');
-  if (!dd) return;
-  if (_moonAdminMenuOpen) {
-    /* Render nội dung menu trước khi show */
-    _renderMoonAdminDropdown(_currentLoginRole);
-    dd.style.display = 'block';
-  } else {
-    dd.style.display = 'none';
-  }
-}
-
-document.addEventListener('click', function (e) {
-  if (_moonAdminMenuOpen) {
-    var wrap = document.getElementById('moon-admin-role-wrap');
-    if (wrap && wrap.contains(e.target)) return;
-    _moonAdminMenuOpen = false;
-    var dd = document.getElementById('moon-admin-dropdown');
-    if (dd) dd.style.display = 'none';
-  }
-});
 
 /* ══════════════════════════════════════════
    DEFAULT CONTENT
@@ -613,3 +628,220 @@ window.getMoonDisplayName = function (deviceId) {
     return { name: _moonUsers[deviceId].name, type: 'moon' };
   return { name: deviceId, type: 'raw' };
 };
+
+/* ═══════════════════════════════════════════
+   MOON — Switch Role & Notifications mirror
+   ═══════════════════════════════════════════ */
+
+/** Cập nhật icon role Moon theo role string — đồng nhất với Sun */
+function _updateMoonRoleIconByRole(role) {
+  var ids = ['secondary', 'normal', 'admin', 'head', 'manager', 'cofounder', 'founder', 'default'];
+  ids.forEach(function (r) {
+    var el = document.getElementById('moon-icon-prof-' + r);
+    if (el) el.style.display = 'none';
+  });
+  var map = {
+    secondary: 'secondary', normal: 'normal', admin: 'admin',
+    head: 'head', manager: 'manager', cofounder: 'cofounder', founder: 'founder'
+  };
+  var key = map[role] || 'default';
+  var target = document.getElementById('moon-icon-prof-' + key);
+  if (target) target.style.display = 'inline';
+
+  var roleColors = {
+    founder: 'var(--founder)', cofounder: 'var(--cofounder)', manager: 'var(--manager)',
+    head: 'var(--head)', admin: 'var(--orange)', normal: 'var(--accent2)', secondary: 'var(--accent2)'
+  };
+  var cnt = document.getElementById('moon-admin-role-icon');
+  if (cnt) cnt.style.color = roleColors[role] || 'var(--ink)';
+}
+
+function updateMoonRoleIcon() {
+  _updateMoonRoleIconByRole(_currentLoginRole || '');
+}
+
+function switchRoleMoon(newRole) {
+  var currentLv = ROLE_LEVEL[_currentLoginRole] || 1;
+  // Chặn quyền truy cập nếu dưới Head và không có pass Founder
+  if (currentLv < 4 && sessionStorage.getItem('hun_known_founder') !== 'true') {
+    document.getElementById('admin-deny-overlay').classList.add('open');
+    closeAllMoonMenus();
+    return;
+  }
+  if (_currentLoginRole === newRole) { showToast('Already in this role!'); return; }
+
+  // Cập nhật State nội bộ, KHÔNG gọi switchRole() của trang Sun để tránh lộn xộn UI
+  _currentLoginRole = newRole;
+  var newLv = ROLE_LEVEL[newRole] || 1;
+  _isAdmin = (newLv >= 3);
+
+  closeAllMoonMenus();
+  setTimeout(function () {
+    updateMoonRoleIcon();
+    updateMoonSwitchVisibility();
+    _renderMoonAdminDropdown(_currentLoginRole);
+
+    var noti = document.getElementById('moon-cnt-noti');
+    var notiD = document.getElementById('moon-div-noti');
+    if (noti && notiD) {
+      var showNoti = newLv === 7;
+      noti.style.display = showNoti ? 'flex' : 'none';
+      notiD.style.display = showNoti ? 'block' : 'none';
+      if (showNoti) {
+        if (typeof fbListenNoti === 'function') fbListenNoti();
+        syncMoonNotiBadge();
+      }
+    }
+  }, 100);
+  showToast('✓ Switched role to ' + newRole.toUpperCase() + '!');
+}
+
+/* ── Moon menu state ── */
+var _moonSwitchOpen = false, _moonNotiOpen = false, _moonAdminMenuOpen = false;
+
+function closeAllMoonMenus() {
+  _moonSwitchOpen = _moonNotiOpen = _moonAdminMenuOpen = false;
+  ['moon-switch-dropdown', 'moon-noti-dropdown', 'moon-admin-dropdown'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  });
+}
+
+function _moonToggleCore(stateVar, menuId) {
+  var wasOpen = window[stateVar];
+  closeAllMoonMenus();
+  if (!wasOpen) {
+    window[stateVar] = true;
+    var el = document.getElementById(menuId);
+    if (el) el.classList.add('open');
+  }
+}
+
+function toggleMoonSwitchMenu(e) {
+  e.stopPropagation();
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 4 && sessionStorage.getItem('hun_known_founder') !== 'true') {
+    document.getElementById('admin-deny-overlay').classList.add('open');
+    closeAllMoonMenus();
+    return;
+  }
+  _moonToggleCore('_moonSwitchOpen', 'moon-switch-dropdown');
+}
+
+function toggleMoonNoti(e) {
+  e.stopPropagation();
+  var wasOpen = _moonNotiOpen;
+  closeAllMoonMenus();
+  if (!wasOpen) {
+    _moonNotiOpen = true;
+    var el = document.getElementById('moon-noti-dropdown');
+    if (el) el.classList.add('open');
+    renderMoonNotiList();
+  }
+}
+
+/* ── toggleMoonAdminMenu: duy nhất 1 bản, render dropdown rồi mở ── */
+function toggleMoonAdminMenu(e) {
+  e.stopPropagation();
+  var wasOpen = _moonAdminMenuOpen;
+  closeAllMoonMenus();
+  if (!wasOpen) {
+    _renderMoonAdminDropdown(_currentLoginRole);
+    _moonAdminMenuOpen = true;
+    var dd = document.getElementById('moon-admin-dropdown');
+    if (dd) dd.classList.add('open');
+  }
+}
+
+/** Render danh sách thông báo Moon — dùng chung _allNoti với Sun */
+function renderMoonNotiList() {
+  var listEl = document.getElementById('moon-noti-list');
+  if (!listEl) return;
+  if (_allNoti.length === 0) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:10.5px;">Không có thông báo mới</div>';
+    return;
+  }
+  listEl.innerHTML = _allNoti.map(function (n) {
+    var d = new Date(n.ts);
+    var timeStr = d.toLocaleDateString('en-US') + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    return '<div class="noti-item ' + (n.read ? '' : 'unread') + '">' +
+      '<div>' + esc(n.text) + '</div>' +
+      '<div class="noti-time">' + timeStr + '</div>' +
+      '<button style="position:absolute;right:8px;top:12px;background:none;border:none;cursor:pointer;color:rgba(192,57,43,0.5);padding:4px;" title="Delete" onclick="deleteNoti(\'' + String(n._k) + '\',event)">✖</button>' +
+      '</div>';
+  }).join('');
+}
+
+/** syncMoonNotiBadge — luôn đọc từ _allNoti (cùng nguồn với Sun) */
+function syncMoonNotiBadge() {
+  var unread = _allNoti.filter(function (n) { return !n.read; }).length;
+  var moonNum = document.getElementById('moon-num-noti');
+  var cntNoti = document.getElementById('moon-cnt-noti');
+  if (!moonNum) return;
+  if (unread > 0) {
+    moonNum.textContent = unread;
+    moonNum.style.display = 'inline-block';
+    if (cntNoti) cntNoti.style.color = '#e74c3c';
+  } else {
+    moonNum.style.display = 'none';
+    if (cntNoti) cntNoti.style.color = 'var(--accent)';
+  }
+  if (_moonNotiOpen) renderMoonNotiList();
+}
+
+/** markAllMoonNotiRead — gọi thẳng hàm Sun (cùng Firebase ref) */
+function markAllMoonNotiRead(e) {
+  e && e.stopPropagation();
+  if (typeof markAllNotiRead === 'function') markAllNotiRead(e);
+}
+
+function openMoonNotiTrash(e) {
+  e && e.stopPropagation();
+  closeAllMoonMenus();
+  if (typeof openNotiTrash === 'function') openNotiTrash(e);
+}
+
+function updateMoonSwitchVisibility() {
+  var sw = document.getElementById('moon-cnt-switch');
+  var div = document.getElementById('moon-div-switch');
+  if (!sw || !div) return;
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  var show = lv >= 3 || sessionStorage.getItem('hun_known_founder') === 'true';
+  sw.style.display = show ? 'flex' : 'none';
+  div.style.display = show ? 'block' : 'none';
+}
+
+/* ── Đóng Moon menus khi click ngoài #moon-counters ── */
+document.addEventListener('click', function (e) {
+  var mc = document.getElementById('moon-counters');
+  if (mc && !mc.contains(e.target)) {
+    closeAllMoonMenus();
+  }
+});
+
+/* ── Sync Moon ← Firebase (fbListenNoti ghi vào _allNoti, Moon đọc cùng biến) ── */
+(function patchMoonSync() {
+  /* Quan sát badge Sun để cập nhật Moon badge */
+  var sunBadge = document.getElementById('num-noti');
+  if (sunBadge) {
+    new MutationObserver(function () {
+      syncMoonNotiBadge();
+    }).observe(sunBadge, { childList: true, characterData: true, subtree: true, attributes: true });
+  }
+  /* Quan sát noti-list Sun: khi Sun re-render → Moon cũng re-render */
+  var sunList = document.getElementById('noti-list');
+  if (sunList) {
+    new MutationObserver(function () {
+      syncMoonNotiBadge();
+      if (_moonNotiOpen) renderMoonNotiList();
+    }).observe(sunList, { childList: true, subtree: true });
+  }
+  /* Quan sát cnt-profile Sun để sync role icon khi switchRole từ Sun */
+  var sunProf = document.getElementById('cnt-profile');
+  if (sunProf) {
+    new MutationObserver(function () {
+      updateMoonRoleIcon();
+      updateMoonSwitchVisibility();
+    }).observe(sunProf, { subtree: true, childList: true, attributes: true, attributeFilter: ['style'] });
+  }
+})();

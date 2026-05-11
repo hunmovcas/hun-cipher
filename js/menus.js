@@ -6,7 +6,13 @@ var _profileOpen = false, _trafficOpen = false, _authOpen = false, _notiOpen = f
 
 function closeAllMenus() {
   _profileOpen = _trafficOpen = _authOpen = _notiOpen = _switchOpen = _excludeMenuOpen = false;
-  document.querySelectorAll('.dropdown-menu.open').forEach(function(el) { el.classList.remove('open'); });
+  // Chỉ đóng Sun dropdowns, không đóng Moon dropdowns
+  var moonDropdownIds = ['moon-switch-dropdown', 'moon-noti-dropdown', 'moon-admin-dropdown'];
+  document.querySelectorAll('.dropdown-menu.open').forEach(function(el) {
+    if (moonDropdownIds.indexOf(el.id) === -1) {
+      el.classList.remove('open');
+    }
+  });
 }
 
 function toggleMenu(e, menuVarName, menuId) {

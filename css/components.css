@@ -9,7 +9,7 @@
 .dropdown-menu.open { display: block; }
 
 /* ── NOTIFICATIONS DROPDOWN ── */
-#noti-dropdown { width: 280px; }
+#noti-dropdown, #moon-noti-dropdown { width: 280px; }
 .noti-list { max-height: 250px; overflow-y: auto; text-align: left; }
 .noti-item { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.85rem; font-family: 'Nunito', sans-serif; position: relative; padding-right: 30px; }
 .noti-item.unread { background: rgba(192,57,43,.05); font-weight: 800; border-left: 3px solid var(--accent); }

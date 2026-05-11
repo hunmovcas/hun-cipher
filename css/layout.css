@@ -165,3 +165,23 @@ footer span { color: var(--accent); }
   .btn { text-align: center; }
   .toast { font-size: 0.95rem; padding: 14px 28px; bottom: 30px; }
 }
+
+/* ── MOON COUNTERS — đồng nhất visual với Sun counters ── */
+#moon-cnt-noti    { color: var(--accent); cursor: pointer; pointer-events: all; position: relative; }
+#moon-cnt-noti svg { opacity: .8; transition: opacity .2s; }
+#moon-cnt-noti .cnum { opacity: 1; font-weight: bold; background: var(--accent); color: white; padding: 0 4px; border-radius: 6px; font-size: 8px; }
+#moon-cnt-noti:hover svg { opacity: 1; }
+
+#moon-cnt-switch  { color: var(--founder); cursor: pointer; pointer-events: all; position: relative; }
+#moon-cnt-switch span { opacity: .8; transition: opacity .2s, transform .2s; }
+#moon-cnt-switch:hover span { opacity: 1; transform: scale(1.15); }
+
+#moon-div-switch  { width: 1px; height: 12px; background: rgba(138,127,110,.3); }
+#moon-div-noti    { width: 1px; height: 12px; background: rgba(138,127,110,.3); }
+#moon-div-profile { width: 1px; height: 12px; background: rgba(138,127,110,.3); }
+
+#moon-admin-role-icon { cursor: pointer; pointer-events: all; position: relative; }
+#moon-admin-role-icon:hover { opacity: 0.8; }
+
+/* Moon switch dropdown — đồng nhất với Sun */
+#moon-switch-dropdown { border-radius: 16px; padding: 24px 20px !important; box-shadow: 0 10px 40px rgba(0,0,0,0.12) !important; border: 2px solid var(--border) !important; background: linear-gradient(to bottom, var(--card), #ffffff) !important; }

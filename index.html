@@ -1258,18 +1258,69 @@
     </button>
   </div>
 
-  <!-- Role icon góc phải Moon Admin -->
-  <div style="position:fixed;top:12px;right:14px;z-index:10000;display:flex;align-items:center;gap:4px;">
-    <div id="moon-admin-role-wrap" style="position:relative;display:inline-block;">
-      <div id="moon-admin-role-icon"
-        style="cursor:pointer;user-select:none;font-size:18px;width:32px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:background .15s;"
-        title="Menu quản trị" onclick="toggleMoonAdminMenu(event)" onmouseover="this.style.background='rgba(138,127,110,.1)'"
-        onmouseout="this.style.background='transparent'">
-        🌙
+  <!-- Thanh công cụ góc phải Moon Admin — đồng nhất hoàn toàn với #counters Sun -->
+  <div id="moon-counters" style="position:fixed;top:12px;right:14px;z-index:10000;display:flex;flex-direction:column;align-items:flex-end;gap:4px;user-select:none;">
+    <div class="cnt-row">
+
+      <div class="cnt-div" id="moon-div-switch" style="display:none;"></div>
+      <div class="cnt" id="moon-cnt-switch" title="Switch Role" onclick="toggleMoonSwitchMenu(event)" style="display:none;">
+        <span style="font-size:12.5px;cursor:pointer;">🎭</span>
+        <div id="moon-switch-dropdown" class="dropdown-menu" style="text-align:center;width:max-content;min-width:260px;padding:24px 10px!important;">
+          <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:bold;letter-spacing:4px;color:var(--muted);margin-bottom:20px;">SWITCH ROLE</div>
+          <div style="display:flex;justify-content:center;gap:16px;align-items:center;flex-wrap:wrap;">
+            <span class="switch-icon" onclick="switchRoleMoon('secondary')" title="Sub Pass">🔑</span>
+            <span class="switch-icon" onclick="switchRoleMoon('normal')"    title="Main Pass">🔒</span>
+            <span class="switch-icon" style="color:var(--orange);"    onclick="switchRoleMoon('admin')"      title="Admin">🌟</span>
+            <span class="switch-icon" style="color:var(--head);"      onclick="switchRoleMoon('head')"       title="Head">⚜️</span>
+            <span class="switch-icon" style="color:var(--manager);"   onclick="switchRoleMoon('manager')"    title="Manager">🔱</span>
+            <span class="switch-icon" style="color:var(--cofounder);" onclick="switchRoleMoon('cofounder')"  title="Co-Founder">💎</span>
+            <span class="switch-icon" style="color:var(--founder);"   onclick="switchRoleMoon('founder')"    title="Founder">👑</span>
+          </div>
+        </div>
       </div>
-      <div id="moon-admin-dropdown"
-        style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);width:max-content;min-width:220px;z-index:10001;max-height:75vh;overflow-y:auto;">
+
+      <div class="cnt-div" id="moon-div-noti" style="display:none;"></div>
+      <div class="cnt" id="moon-cnt-noti" title="System Notifications" onclick="toggleMoonNoti(event)" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+          stroke-linejoin="round" width="12" height="12">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        <span class="cnum" id="moon-num-noti" style="display:none">0</span>
+        <div id="moon-noti-dropdown" class="dropdown-menu">
+          <div class="adm-section">
+            <div class="adm-section-label">THÔNG BÁO MỚI</div>
+          </div>
+          <div class="noti-list" id="moon-noti-list"></div>
+          <div class="adm-section" style="display:flex;">
+            <button class="adm-item success allow-protected" style="flex:1" onclick="markAllMoonNotiRead(event)"><svg
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg> Đã đọc</button>
+            <button class="adm-item danger allow-protected" style="flex:1" onclick="openMoonNotiTrash(event)"><svg
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              </svg> Thùng rác</button>
+          </div>
+        </div>
       </div>
+
+      <div class="cnt-div" id="moon-div-profile" style="display:block;"></div>
+      <div class="cnt" id="moon-admin-role-icon" title="Menu quản trị" onclick="toggleMoonAdminMenu(event)" style="position:relative;">
+        <span id="moon-icon-prof-secondary" style="display:none;font-size:12px;line-height:1;">🔑</span>
+        <span id="moon-icon-prof-normal"    style="display:none;font-size:12px;line-height:1;">🔒</span>
+        <span id="moon-icon-prof-admin"     style="display:none;font-size:12px;line-height:1;">🌟</span>
+        <span id="moon-icon-prof-head"      style="display:none;font-size:12px;line-height:1;">⚜️</span>
+        <span id="moon-icon-prof-manager"   style="display:none;font-size:12px;line-height:1;">🔱</span>
+        <span id="moon-icon-prof-cofounder" style="display:none;font-size:12px;line-height:1;">💎</span>
+        <span id="moon-icon-prof-founder"   style="display:none;font-size:12px;line-height:1;">👑</span>
+        <span id="moon-icon-prof-default"   style="font-size:12px;line-height:1;">🌙</span>
+        <div id="moon-admin-dropdown" class="dropdown-menu"></div>
+      </div>
+
     </div>
   </div>
 
