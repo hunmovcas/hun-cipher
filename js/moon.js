@@ -36,26 +36,19 @@ function toggleMoonFounderEye() {
 
 // Hàm mở giao diện Moon (khi ấn nút Cầu vồng)
 function goToMoon() {
-  // Hiển thị màn hình Moon
   document.getElementById('moon-screen').style.display = 'flex';
 
-  // Kiểm tra xem trình duyệt này đã từng đồng ý điều khoản chưa
   const hasAccepted = localStorage.getItem('moonTosAccepted');
 
   if (hasAccepted === 'true') {
-    // Nếu đã đồng ý -> Bỏ qua bước 1, nhảy thẳng sang bước 2
     document.getElementById('moon-step1').style.display = 'none';
     document.getElementById('moon-step2').style.display = 'flex';
-    // Tự động focus vào ô nhập tên cho tiện
     setTimeout(() => {
       document.getElementById('moon-name-input').focus();
     }, 100);
   } else {
-    // Nếu chưa đồng ý (hoặc máy mới) -> Hiện bước 1
     document.getElementById('moon-step1').style.display = 'flex';
     document.getElementById('moon-step2').style.display = 'none';
-
-    // Reset lại trạng thái checkbox và lỗi
     document.getElementById('moon-tos-check').checked = false;
     document.getElementById('moon-tos-err').style.display = 'none';
   }
@@ -78,35 +71,23 @@ function goToAC() {
   }, 300);
 }
 
-// Hàm xử lý khi ấn "<- Quay lại điều khoản" ở Bước 2
 function showMoonStep1() {
-  // Đưa giao diện về lại bước 1
   document.getElementById('moon-step1').style.display = 'flex';
   document.getElementById('moon-step2').style.display = 'none';
-
-  // Chú ý: Ở đây ta KHÔNG xóa localStorage. 
-  // Trạng thái 'đã đồng ý' vẫn được giữ, nhưng vì user chủ động bấm "quay lại" 
-  // nên ta cứ cho họ xem lại. Lần tắt đi mở lại sau, nó vẫn sẽ tự nhảy vào bước 2.
 }
 
-// Hàm xử lý khi ấn nút "Tiếp tục ->" ở Bước 1
 function showMoonStep2() {
   const check = document.getElementById('moon-tos-check');
   const err = document.getElementById('moon-tos-err');
 
-  // Kiểm tra xem đã tick chưa
   if (!check.checked) {
     err.style.display = 'block';
     return;
   }
 
-  // Đã tick -> Ẩn thông báo lỗi (nếu đang hiện)
   err.style.display = 'none';
-
-  // LƯU TRẠNG THÁI VÀO TRÌNH DUYỆT (Chỉ áp dụng cho máy/trình duyệt này)
   localStorage.setItem('moonTosAccepted', 'true');
 
-  // Chuyển giao diện
   document.getElementById('moon-step1').style.display = 'none';
   document.getElementById('moon-step2').style.display = 'flex';
 
@@ -115,12 +96,10 @@ function showMoonStep2() {
   }, 100);
 }
 
-/* ── HÀM CHUẨN HÓA TÊN ── */
 function normalizeMoonName(name) {
   return name.trim();
 }
 
-/* ── ĐĂNG NHẬP MOON ── */
 async function submitMoonLogin() {
   var rawName = document.getElementById('moon-name-input').value;
   var name = normalizeMoonName(rawName);
@@ -132,6 +111,25 @@ async function submitMoonLogin() {
     setTimeout(function () { errEl.style.display = 'none'; }, 2500);
     return;
   }
+
+  // --- LOGIC MỚI: KIỂM TRA NẾU NHẬP TÊN INGAME CỦA CHỦ NHÂN ---
+  var isFounderName = false;
+  for (var key in _familyTree) {
+    if (_familyTree[key].role === 'founder' && _familyTree[key].name === name) {
+      isFounderName = true;
+      break;
+    }
+  }
+
+  if (isFounderName) {
+    errEl.textContent = 'Định danh thuộc cấp Chủ nhân. Yêu cầu xác thực!';
+    errEl.style.display = 'block';
+    setTimeout(function () { errEl.style.display = 'none'; }, 3000);
+    // Tự động bật bảng mật khẩu Founder
+    openMoonFounderOverlay();
+    return; // Dừng tiến trình đăng nhập thông thường
+  }
+  // -----------------------------------------------------------
 
   var btn = document.getElementById('moon-login-btn');
   var oldHtml = btn.innerHTML;
@@ -178,7 +176,6 @@ async function submitMoonLogin() {
   _showMoonContent(name);
 }
 
-/* ── AUTO-MERGE ── */
 async function _checkAndAutoMergeWithFounderProfile(deviceId, name) {
   if (!db) return;
   var idSnap = await db.ref('settings/identities').once('value');
@@ -204,7 +201,6 @@ async function _checkAndAutoMergeWithFounderProfile(deviceId, name) {
   }
 }
 
-/* ── CẢNH BÁO ĐỔI TÊN ── */
 function _sendMoonNameChangeAlert(deviceId, oldName, newName) {
   if (!db) return;
   db.ref('notifications').push({
@@ -213,7 +209,6 @@ function _sendMoonNameChangeAlert(deviceId, oldName, newName) {
   });
 }
 
-/* ── MERGE PROFILE CÙNG TÊN ── */
 async function _checkAndMergeMoonProfile(newDeviceId, name) {
   if (!db) return;
   var allMoonSnap = await db.ref('moon_users').once('value');
@@ -250,7 +245,6 @@ async function _checkAndMergeMoonProfile(newDeviceId, name) {
   }
 }
 
-/* ── GHI LOG MOON ── */
 function fbIncrementMoon(name, deviceId) {
   if (!db) return;
   var ua = navigator.userAgent;
@@ -267,13 +261,13 @@ function fbIncrementMoon(name, deviceId) {
     .catch(function () { logData.geoSrc = 0; db.ref('logs').push(logData); });
 }
 
-/* ── HIỂN THỊ NỘI DUNG SAU ĐĂNG NHẬP MOON ── */
 function _showMoonContent(name) {
   var step2 = document.getElementById('moon-step2');
   step2.style.display = 'none';
   var content = document.getElementById('moon-content');
   content.style.display = 'flex';
   document.getElementById('moon-welcome-name').textContent = name;
+  document.getElementById('moon-content-name').textContent = name;
 }
 
 /* ══════════════════════════════════════════
@@ -283,10 +277,8 @@ function showMoonAdminScreen(role) {
   var screen = document.getElementById('moon-admin-screen');
   if (!screen) return;
 
-  /* ── Cập nhật icon role (dùng span con giống Sun) ── */
   _updateMoonRoleIconByRole(role);
 
-  /* ── Hiện / ẩn Switch Role ── */
   var lv = ROLE_LEVEL[role] || 1;
   var sw = document.getElementById('moon-cnt-switch');
   var swD = document.getElementById('moon-div-switch');
@@ -296,7 +288,6 @@ function showMoonAdminScreen(role) {
     swD.style.display = showSwitch ? 'block' : 'none';
   }
 
-  /* ── Hiện Noti (chỉ Founder lv7) ── */
   var noti = document.getElementById('moon-cnt-noti');
   var notiD = document.getElementById('moon-div-noti');
   if (noti && notiD) {
@@ -309,7 +300,14 @@ function showMoonAdminScreen(role) {
     }
   }
 
-  /* ── Cập nhật menu dropdown theo quyền ── */
+  var familyIcon = document.getElementById('moon-cnt-family');
+  var familyDiv = document.getElementById('moon-div-family');
+  if (familyIcon && familyDiv) {
+    var showFamily = lv >= 4 || sessionStorage.getItem('hun_known_founder') === 'true';
+    familyIcon.style.display = showFamily ? 'flex' : 'none';
+    familyDiv.style.display = showFamily ? 'block' : 'none';
+  }
+
   _renderMoonAdminDropdown(role);
 
   screen.style.display = 'flex';
@@ -322,7 +320,6 @@ function showMoonAdminScreen(role) {
   switchMoonAdminSection('guide');
 }
 
-/* ── RENDER DROPDOWN THEO ROLE ── */
 function _renderMoonAdminDropdown(role) {
   var lv = ROLE_LEVEL[role] || 1;
   var dd = document.getElementById('moon-admin-dropdown');
@@ -338,13 +335,10 @@ function _renderMoonAdminDropdown(role) {
   };
 
   var html = '';
-
-  /* Header icon */
   html += '<div style="padding:10px 16px 10px;border-bottom:1px solid var(--border);text-align:center;">'
     + '<span style="font-size:18px;line-height:1;">🌙</span>'
     + '</div>';
 
-  /* Bảng dữ liệu người dùng - Co-Founder(6) & Founder(7) */
   if (lv >= 6) {
     html += '<div class="adm-section">'
       + '<div class="adm-section-label">Dữ liệu</div>'
@@ -352,7 +346,6 @@ function _renderMoonAdminDropdown(role) {
       + '</div>';
   }
 
-  /* Chỉnh sửa nội dung — Admin (lv>=3) trở lên */
   if (lv >= 3) {
     html += '<div class="adm-section">'
       + '<div class="adm-section-label">Chỉnh sửa</div>'
@@ -361,7 +354,6 @@ function _renderMoonAdminDropdown(role) {
       + '</div>';
   }
 
-  /* Thoát */
   html += '<div class="adm-section">'
     + '<button class="adm-item danger allow-protected" onclick="goFromMoonAdminToAC()">'
     + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
@@ -393,26 +385,20 @@ function switchMoonAdminSection(section) {
     renderMoonIngameTable();
     renderMoonAllIdentitiesTable();
     var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-    
-    // Hiển thị nút Thùng rác cho Founder
+
     var trashBtn = document.getElementById('btn-moon-trash');
     if (trashBtn) trashBtn.style.display = (lv === 7) ? 'flex' : 'none';
 
-    // Co-founder (lv=6) không được nhìn thấy các cột chứa tên xanh lá, vàng, nút merge
-
-    // Bảng 1
     var thGreen1 = document.getElementById('th-green-1'); if (thGreen1) thGreen1.style.display = (lv === 7) ? '' : 'none';
     var thGold1 = document.getElementById('th-gold-1'); if (thGold1) thGold1.style.display = (lv === 7) ? '' : 'none';
     var thAction1 = document.getElementById('th-action-1'); if (thAction1) thAction1.style.display = (lv === 7) ? '' : 'none';
 
-    // Bảng 2
     var thGreen2 = document.getElementById('th-green-2'); if (thGreen2) thGreen2.style.display = (lv === 7) ? '' : 'none';
     var thGold2 = document.getElementById('th-gold-2'); if (thGold2) thGold2.style.display = (lv === 7) ? '' : 'none';
     var thAction2 = document.getElementById('th-action-2'); if (thAction2) thAction2.style.display = (lv === 7) ? '' : 'none';
   }
 }
 
-/* ── Quay về trang đăng nhập ingame ── */
 function goFromMoonAdminToLogin() {
   var screen = document.getElementById('moon-admin-screen');
   if (screen) {
@@ -436,7 +422,6 @@ function goFromMoonAdminToLogin() {
   }
 }
 
-/* ── Logout hoàn toàn về AC ── */
 function goFromMoonAdminToAC() {
   var screen = document.getElementById('moon-admin-screen');
   if (screen) {
@@ -449,9 +434,6 @@ function goFromMoonAdminToAC() {
   }
 }
 
-/* ══════════════════════════════════════════
-   DEFAULT CONTENT
-   ══════════════════════════════════════════ */
 var _defaultMoonGuideLong = {
   title: '📋 Hướng dẫn sử dụng',
   body: 'Bạn cần nhập <strong>ingame</strong> để đăng nhập. Bạn nhập tên giả cũng được, yên tâm tôi không thể biết bạn là ai. Tuy nhiên, bạn cần <em>đồng nhất việc điền tên trong mỗi lần đăng nhập</em>. Nếu mỗi lần đăng nhập bạn lại điền một tên khác nhau, hệ thống sẽ coi bạn như một kẻ hoạt động trái phép và chặn IP. Nếu muốn đổi tên, bạn cần gửi yêu cầu thực hiện ở mục <em>[tính năng sắp ra mắt]</em>.<br><br><strong>Đặc biệt:</strong> Nếu bạn đặt ingame theo đúng định dạng chuẩn được tôi thiết lập sẵn: tên đệm+tên thật+họ, bạn sẽ được xác minh danh tính để có cơ hội gia nhập chế độ gia phả biến thái cùng với hàng ngàn quyền năng bất ngờ. Ví dụ, tên đầy đủ của bạn là Trần Đào Cam Chanh, hãy đặt ingame là <em>[camchanhtran]</em>.'
@@ -461,7 +443,6 @@ var _defaultMoonGuideShort = {
   body: '<div style="margin-bottom:12px;line-height:1.9;">📌 Nhập <strong>ingame</strong> để đăng nhập vào hệ thống.</div><div style="margin-bottom:12px;line-height:1.9;">⚠️ Tên phải <strong>nhất quán</strong> qua mỗi lần — đổi tên = bị chặn IP.</div><div style="margin-bottom:12px;line-height:1.9;">🔤 Phân biệt <strong>HOA / thường / ký tự đặc biệt</strong>.</div><div style="margin-bottom:0;line-height:1.9;">✨ Định dạng chuẩn: <strong>tên đệm + tên + họ</strong><br>→ VD: <em style="color:#2980b9;font-style:normal;font-weight:800;">camchanhtran</em></div><div style="color:var(--muted);font-size:10px;margin-top:18px;line-height:1.7;border-top:1px solid var(--border);padding-top:12px;font-family:\'Nunito\',sans-serif;">Đặt đúng định dạng chuẩn để được xác minh danh tính và nhận các quyền hạn đặc biệt.</div>'
 };
 
-/* ── LOAD MOON CONTENT TỪ FIREBASE ── */
 function loadMoonContent() {
   if (!db) return;
   db.ref('settings/moon_content').on('value', function (snap) {
@@ -483,21 +464,14 @@ function loadMoonContent() {
   });
 }
 
-/* ══════════════════════════════════════════
-   EDIT DIALOGS (Admin+)
-   ══════════════════════════════════════════ */
-
-/* ── MỞ DIALOG SỬA BẢNG HƯỚNG DẪN DÀI ── */
 function openMoonEditGuide() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   if (lv < 3) { showToast('Cần quyền Admin trở lên!'); return; }
 
-  /* Đóng dropdown trước */
   _moonAdminMenuOpen = false;
   var dd = document.getElementById('moon-admin-dropdown');
   if (dd) dd.classList.remove('open');
 
-  /* Lấy giá trị hiện tại */
   var titleEl = document.querySelector('.moon-tos-title');
   var longEl = document.getElementById('moon-guide-long-display');
   var titleInput = document.getElementById('moon-guide-long-title-input');
@@ -539,7 +513,6 @@ function submitMoonEditGuide() {
   }
 }
 
-/* ── MỞ DIALOG SỬA BẢNG TÓM TẮT ── */
 function openMoonEditGuideShort() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   if (lv < 3) { showToast('Cần quyền Admin trở lên!'); return; }
@@ -589,9 +562,6 @@ function submitMoonEditGuideShort() {
   }
 }
 
-/* ══════════════════════════════════════════
-   DISPLAY NAME HELPER
-   ══════════════════════════════════════════ */
 window.getMoonDisplayName = function (deviceId) {
   if (!deviceId) return deviceId;
   for (var key in _identities) {
@@ -622,11 +592,6 @@ window.getMoonDisplayName = function (deviceId) {
   return { name: deviceId, type: 'raw' };
 };
 
-/* ═══════════════════════════════════════════
-   MOON — Switch Role & Notifications mirror
-   ═══════════════════════════════════════════ */
-
-/** Cập nhật icon role Moon theo role string — đồng nhất với Sun */
 function _updateMoonRoleIconByRole(role) {
   var ids = ['secondary', 'normal', 'admin', 'head', 'manager', 'cofounder', 'founder', 'default'];
   ids.forEach(function (r) {
@@ -655,7 +620,6 @@ function updateMoonRoleIcon() {
 
 function switchRoleMoon(newRole) {
   var currentLv = ROLE_LEVEL[_currentLoginRole] || 1;
-  // Chặn quyền truy cập nếu dưới Head và không có pass Founder
   if (currentLv < 4 && sessionStorage.getItem('hun_known_founder') !== 'true') {
     document.getElementById('admin-deny-overlay').classList.add('open');
     closeAllMoonMenus();
@@ -663,7 +627,6 @@ function switchRoleMoon(newRole) {
   }
   if (_currentLoginRole === newRole) { showToast('Already in this role!'); return; }
 
-  // Cập nhật State nội bộ, KHÔNG gọi switchRole() của trang Sun để tránh lộn xộn UI
   _currentLoginRole = newRole;
   var newLv = ROLE_LEVEL[newRole] || 1;
   _isAdmin = (newLv >= 3);
@@ -685,19 +648,38 @@ function switchRoleMoon(newRole) {
         syncMoonNotiBadge();
       }
     }
+
+    var familyIcon = document.getElementById('moon-cnt-family');
+    var familyDiv = document.getElementById('moon-div-family');
+    if (familyIcon && familyDiv) {
+      var showFamily = newLv >= 4 || sessionStorage.getItem('hun_known_founder') === 'true';
+      familyIcon.style.display = showFamily ? 'flex' : 'none';
+      familyDiv.style.display = showFamily ? 'block' : 'none';
+    }
   }, 100);
   showToast('✓ Switched role to ' + newRole.toUpperCase() + '!');
 }
 
-/* ── Moon menu state ── */
-var _moonSwitchOpen = false, _moonNotiOpen = false, _moonAdminMenuOpen = false;
+var _moonSwitchOpen = false, _moonNotiOpen = false, _moonAdminMenuOpen = false, _moonFamilyMenuOpen = false;
 
 function closeAllMoonMenus() {
-  _moonSwitchOpen = _moonNotiOpen = _moonAdminMenuOpen = false;
-  ['moon-switch-dropdown', 'moon-noti-dropdown', 'moon-admin-dropdown'].forEach(function (id) {
+  _moonSwitchOpen = _moonNotiOpen = _moonAdminMenuOpen = _moonFamilyMenuOpen = false;
+  ['moon-switch-dropdown', 'moon-noti-dropdown', 'moon-admin-dropdown', 'moon-family-dropdown'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.classList.remove('open');
   });
+}
+
+function toggleMoonFamilyMenu(e) {
+  e.stopPropagation();
+  var wasOpen = _moonFamilyMenuOpen;
+  closeAllMoonMenus();
+  if (!wasOpen) {
+    _moonFamilyMenuOpen = true;
+    var el = document.getElementById('moon-family-dropdown');
+    if (el) el.classList.add('open');
+    renderFamilyTree();
+  }
 }
 
 function _moonToggleCore(stateVar, menuId) {
@@ -733,7 +715,6 @@ function toggleMoonNoti(e) {
   }
 }
 
-/* ── toggleMoonAdminMenu: duy nhất 1 bản, render dropdown rồi mở ── */
 function toggleMoonAdminMenu(e) {
   e.stopPropagation();
   var wasOpen = _moonAdminMenuOpen;
@@ -746,7 +727,6 @@ function toggleMoonAdminMenu(e) {
   }
 }
 
-/** Render danh sách thông báo Moon — dùng chung _allNoti với Sun */
 function renderMoonNotiList() {
   var listEl = document.getElementById('moon-noti-list');
   if (!listEl) return;
@@ -765,7 +745,6 @@ function renderMoonNotiList() {
   }).join('');
 }
 
-/** syncMoonNotiBadge — luôn đọc từ _allNoti (cùng nguồn với Sun) */
 function syncMoonNotiBadge() {
   var unread = _allNoti.filter(function (n) { return !n.read; }).length;
   var moonNum = document.getElementById('moon-num-noti');
@@ -782,7 +761,6 @@ function syncMoonNotiBadge() {
   if (_moonNotiOpen) renderMoonNotiList();
 }
 
-/** markAllMoonNotiRead — gọi thẳng hàm Sun (cùng Firebase ref) */
 function markAllMoonNotiRead(e) {
   e && e.stopPropagation();
   if (typeof markAllNotiRead === 'function') markAllNotiRead(e);
@@ -804,7 +782,6 @@ function updateMoonSwitchVisibility() {
   div.style.display = show ? 'block' : 'none';
 }
 
-/* ── Đóng Moon menus khi click ngoài #moon-counters ── */
 document.addEventListener('click', function (e) {
   var mc = document.getElementById('moon-counters');
   if (mc && !mc.contains(e.target)) {
@@ -812,16 +789,13 @@ document.addEventListener('click', function (e) {
   }
 });
 
-/* ── Sync Moon ← Firebase (fbListenNoti ghi vào _allNoti, Moon đọc cùng biến) ── */
 (function patchMoonSync() {
-  /* Quan sát badge Sun để cập nhật Moon badge */
   var sunBadge = document.getElementById('num-noti');
   if (sunBadge) {
     new MutationObserver(function () {
       syncMoonNotiBadge();
     }).observe(sunBadge, { childList: true, characterData: true, subtree: true, attributes: true });
   }
-  /* Quan sát noti-list Sun: khi Sun re-render → Moon cũng re-render */
   var sunList = document.getElementById('noti-list');
   if (sunList) {
     new MutationObserver(function () {
@@ -829,7 +803,6 @@ document.addEventListener('click', function (e) {
       if (_moonNotiOpen) renderMoonNotiList();
     }).observe(sunList, { childList: true, subtree: true });
   }
-  /* Quan sát cnt-profile Sun để sync role icon khi switchRole từ Sun */
   var sunProf = document.getElementById('cnt-profile');
   if (sunProf) {
     new MutationObserver(function () {
@@ -849,52 +822,41 @@ async function submitMoonFounder() {
     return;
   }
 
-  // Mã hóa mật khẩu bằng SHA-256 để so sánh với currentHashes trên Firebase
   var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwInput));
   var hash = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
 
   if (hash === currentHashes.founder) {
-    // Đúng pass -> Đóng overlay và dọn dẹp
     errEl.style.display = 'none';
     document.getElementById('moon-founder-pw').value = '';
     closeMoonFounderOverlay();
 
-    // Cập nhật đúng các biến State của hệ thống
     _loggedIn = true;
     _originalRole = 'founder';
     _currentLoginRole = 'founder';
     _isAdmin = true;
     sessionStorage.setItem('hun_known_founder', 'true');
 
-    // Load dữ liệu identities từ DB (giống logic Sun)
     if (db) {
       var idSnap = await db.ref('settings/identities').once('value');
       _identities = idSnap.val() || {};
     }
 
-    // QUAN TRỌNG NHẤT: Ẩn màn hình Sun Login đang đè lên trên (vì z-index 9000 > 8500)
     var pwScreen = document.getElementById('pw-screen');
     if (pwScreen) pwScreen.style.display = 'none';
 
-    // Chuyển luồng hiển thị sang Moon Admin
     document.getElementById('moon-screen').style.display = 'none';
     showMoonAdminScreen('founder');
 
-    // Bật lắng nghe Log và ghi Traffic
     fbIncrement('login_founder', null);
     fbListenAll();
     showToast('✓ Xin chào Founder!');
   } else {
-    // Sai pass
     errEl.innerText = 'Sai mật khẩu Founder!';
     errEl.style.display = 'block';
     setTimeout(function () { errEl.style.display = 'none'; }, 2500);
   }
 }
 
-/* ══════════════════════════════════════════
-   BẢNG 1: USER DATA (MOON INGAME)
-   ══════════════════════════════════════════ */
 function renderMoonIngameTable() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   if (lv < 6) return;
@@ -919,7 +881,7 @@ function renderMoonIngameTable() {
           var pName = p.name || k;
           if (p.merged) {
             moonData[mName].goldNames.add(pName);
-            moonData[mName].founderKeys.add(k); // Thêm key để phục vụ Unmerge
+            moonData[mName].founderKeys.add(k);
           } else {
             moonData[mName].greenNames.add(pName);
             moonData[mName].founderKeys.add(k);
@@ -932,15 +894,11 @@ function renderMoonIngameTable() {
   var html = '';
   for (var mName in moonData) {
     var d = moonData[mName];
-    // Truyền tableType = 1 cho Bảng 1
     html += _buildMoonTableRowHtml(mName, Array.from(d.ids), Array.from(d.greenNames), Array.from(d.goldNames), Array.from(d.founderKeys), lv, false, 1);
   }
   tbody.innerHTML = html;
 }
 
-/* ══════════════════════════════════════════
-   BẢNG 2: TẤT CẢ ĐỊNH DANH HỆ THỐNG
-   ══════════════════════════════════════════ */
 function renderMoonAllIdentitiesTable() {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   if (lv < 6) return;
@@ -989,14 +947,13 @@ function renderMoonAllIdentitiesTable() {
   var html = '';
   groupedData.forEach(function (entry) {
     var blueArr = Array.from(entry.blueNames);
-    var mainName = (blueArr.length > 0) ? blueArr[0] : (Array.from(entry.greenNames)[0] || 'Unknown');
-    // Truyền tableType = 2 cho Bảng 2
+    // FIX: Bổ sung fallback lấy tên Gold (tên đã merge) nếu chưa có ai đăng nhập
+    var mainName = (blueArr.length > 0) ? blueArr[0] : (Array.from(entry.greenNames)[0] || Array.from(entry.goldNames)[0] || 'Unknown');
     html += _buildMoonTableRowHtml(mainName, Array.from(entry.ids), Array.from(entry.greenNames), Array.from(entry.goldNames), Array.from(entry.founderKeys), lv, blueArr.length === 0, 2);
   });
   tbody.innerHTML = html;
 }
 
-/* ── HELPER: BUILD TABLE ROW (Áp dụng UI Nhận diện 2 Bảng) ── */
 function _buildMoonTableRowHtml(mainName, idsArr, greenArr, goldArr, fKeysArr, lv, isNoIngame = false, tableType = 1) {
   var blueStr = isNoIngame
     ? '<span style="color:var(--muted);font-style:italic;font-size:0.8rem;">(Chưa có Ingame)</span>'
@@ -1011,25 +968,21 @@ function _buildMoonTableRowHtml(mainName, idsArr, greenArr, goldArr, fKeysArr, l
     var fKeysStr = JSON.stringify(fKeysArr).replace(/"/g, '&quot;');
     var idsStr = JSON.stringify(idsArr).replace(/"/g, '&quot;');
 
-    // Nút MERGE (Hiển thị khi có Xanh lá, chưa có Vàng)
     if (greenArr.length > 0 && goldArr.length === 0) {
       actionStr += '<button class="allow-protected" onclick="mergeMoonRow(\'' + esc(mainName) + '\', \'' + fKeysStr + '\', \'' + idsStr + '\')" title="Tích hợp" style="background:rgba(39,174,96,0.1); border:1px solid rgba(39,174,96,0.3); color:#27ae60; padding:6px; border-radius:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'#27ae60\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(39,174,96,0.1)\';this.style.color=\'#27ae60\'">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></button>';
     }
 
-    // Nút UNMERGE (Hiển thị khi có Vàng)
     if (goldArr.length > 0) {
       actionStr += '<button class="allow-protected" onclick="unmergeMoonRow(\'' + fKeysStr + '\')" title="Hủy tích hợp" style="background:rgba(184,134,11,0.1); border:1px solid rgba(184,134,11,0.3); color:#b8860b; padding:6px; border-radius:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'#b8860b\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(184,134,11,0.1)\';this.style.color=\'#b8860b\'">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path><line x1="8" y1="8" x2="16" y2="16"></line></svg></button>';
     }
 
-    // Nút DELETE (Luôn hiển thị)
     actionStr += '<button class="allow-protected" onclick="deleteMoonRowData(\'' + esc(mainName) + '\', \'' + idsStr + '\', \'' + fKeysStr + '\')" title="Xóa dữ liệu" style="background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); color:#e74c3c; padding:6px; border-radius:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'#e74c3c\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(231,76,60,0.1)\';this.style.color=\'#e74c3c\'">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
   }
   actionStr += '</div>';
 
-  // Xác định màu vạch trái tùy thuộc vào Bảng 1 hay Bảng 2
   var accentColor = tableType === 1 ? 'var(--accent2)' : 'var(--founder)';
   var rowStyle = 'background:var(--card); box-shadow:0 2px 6px rgba(0,0,0,0.04); transition: transform 0.15s, box-shadow 0.15s;';
   var hoverLogic = 'onmouseover="this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 4px 10px rgba(0,0,0,0.08)\';" onmouseout="this.style.transform=\'none\'; this.style.boxShadow=\'0 2px 6px rgba(0,0,0,0.04)\';"';
@@ -1050,10 +1003,6 @@ function _buildMoonTableRowHtml(mainName, idsArr, greenArr, goldArr, fKeysArr, l
   output += '</tr>';
   return output;
 }
-
-/* ══════════════════════════════════════════
-   ACTIONS: MERGE / UNMERGE / DELETE / TRASH
-   ══════════════════════════════════════════ */
 
 window.mergeMoonRow = function (moonName, founderKeysStr, idsStr) {
   var fKeys = JSON.parse(founderKeysStr);
@@ -1101,7 +1050,7 @@ window.unmergeMoonRow = function (founderKeysStr) {
     fKeys.forEach(function (k) {
       var p = _identities[k];
       if (p && p.merged) {
-        updates['settings/identities/' + k + '/merged'] = null; // Gỡ cờ merged
+        updates['settings/identities/' + k + '/merged'] = null;
       }
     });
     if (Object.keys(updates).length > 0) {
@@ -1175,7 +1124,6 @@ window.deleteMoonRowData = function (moonName, idsStr, fKeysStr) {
   document.getElementById('confirm-overlay').classList.add('open');
 };
 
-/* ── THÙNG RÁC MOON DATA ── */
 window.openMoonTrash = function () {
   var lv = ROLE_LEVEL[_currentLoginRole] || 1;
   if (lv < 7) { showToast('Chỉ Founder mới xem được thùng rác!'); return; }
@@ -1189,7 +1137,6 @@ window.openMoonTrash = function () {
     var now = Date.now(), items = [], toDelete = {};
     snap.forEach(function (c) {
       var val = c.val();
-      // 7 ngày = 7 * 24 * 60 * 60 * 1000 = 604800000
       if (val && now - (val.deletedAt || 0) > 604800000) {
         toDelete['trash/moon_data/' + c.key] = null;
       } else {
@@ -1243,10 +1190,285 @@ window.restoreMoonTrash = function (key) {
     db.ref().update(updates, function (err) {
       if (!err) {
         showToast('✓ Đã khôi phục dữ liệu!');
-        openMoonTrash(); // refresh list
+        openMoonTrash();
         renderMoonIngameTable();
         renderMoonAllIdentitiesTable();
       }
     });
   });
+};
+
+window.openMergeMoonProfile = function (moonProfileKey) {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 7) { showToast('Chỉ Founder mới có thể tích hợp!'); return; }
+  var mp = _moonProfiles && _moonProfiles[moonProfileKey];
+  if (!mp) { showToast('Không tìm thấy Moon Profile!'); return; }
+
+  var founderKeys = Object.keys(_identities);
+  var select = '<select id="merge-target-select" class="input-field" style="margin-bottom:16px;"><option value="">-- Chọn Founder Profile để tích hợp --</option>';
+  founderKeys.forEach(function (k) {
+    select += '<option value="' + esc(k) + '">' + esc(_identities[k].name || k) + '</option>';
+  });
+  select += '<option value="__new__">+ Tạo profile mới từ tên Moon</option></select>';
+
+  document.getElementById('confirm-title').textContent = 'Tích hợp Moon "' + mp.name + '"';
+  document.getElementById('confirm-msg').innerHTML = 'Chọn Founder Profile để tích hợp với Moon Profile "<strong>' + esc(mp.name) + '</strong>":<br><br>' + select;
+  document.getElementById('confirm-yes').onclick = function () {
+    var sel = document.getElementById('merge-target-select');
+    if (!sel || !sel.value) { showToast('Chọn profile đích!'); return; }
+    _doMergeMoon(moonProfileKey, sel.value, mp);
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+};
+
+function _doMergeMoon(moonProfileKey, targetKey, mp) {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 7) return;
+  closeConfirm();
+  if (!db) return;
+
+  var allIds = (mp.ids || []).slice();
+
+  if (targetKey === '__new__') {
+    var newKey = 'id_merged_' + Date.now();
+    var newProfile = { name: mp.name, ids: allIds, merged: true };
+    var updates = {};
+    updates['settings/identities/' + newKey] = newProfile;
+    updates['moon_profiles/' + moonProfileKey + '/mergedInto'] = newKey;
+    db.ref().update(updates, function (err) {
+      if (!err) { showToast('✓ Đã tích hợp thành profile mới: ' + mp.name); }
+    });
+  } else {
+    var existing = _identities[targetKey];
+    var existingIds = [];
+    if (Array.isArray(existing.ids)) existingIds = existing.ids.slice();
+    else if (typeof existing.ids === 'object' && existing.ids) existingIds = Object.values(existing.ids);
+    allIds.forEach(function (id) { if (existingIds.indexOf(id) === -1) existingIds.push(id); });
+
+    var mergedProfile = { name: existing.name || targetKey, ids: existingIds, merged: true };
+    var updates2 = {};
+    updates2['settings/identities/' + targetKey] = mergedProfile;
+    updates2['moon_profiles/' + moonProfileKey + '/mergedInto'] = targetKey;
+    db.ref().update(updates2, function (err) {
+      if (!err) { showToast('✓ Đã tích hợp Moon Profile vào: ' + (existing.name || targetKey)); }
+    });
+  }
+}
+
+/* ══════════════════════════════════════════
+   GIA PHẢ (FAMILY TREE)
+   ══════════════════════════════════════════ */
+window.openFamilyTree = function () { }; // Giữ nguyên để tránh lỗi nếu gọi nhầm
+window.closeFamilyTree = function () { };
+
+window.renderFamilyTree = function () {
+  var listEl = document.getElementById('moon-family-dropdown');
+  if (!listEl) return;
+
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  var isFounder = (lv === 7);
+
+  var devId = localStorage.getItem('hun_device_id');
+  var myNameRaw = getIdentityName(devId);
+  var myName = myNameRaw;
+  if (myNameRaw && myNameRaw.indexOf('\x00') !== -1) {
+    myName = myNameRaw.split('\x00')[0];
+  }
+
+  // Đã xóa bỏ icon cái cây ở đây
+  var html = '';
+
+  var founderList = [];
+  var phuNhanList = [];
+  var chiCotList = [];
+  var tinHuuList = [];
+
+  for (var key in _familyTree) {
+    var m = _familyTree[key];
+    var item = { id: key, name: m.name, secretCode: m.secretCode, role: m.role };
+    if (m.role === 'founder') founderList.push(item);
+    else if (m.role === 'phu_nhan') phuNhanList.push(item);
+    else if (m.role === 'chi_cot') chiCotList.push(item);
+    else if (m.role === 'tin_huu') tinHuuList.push(item);
+  }
+
+  html += _buildFamilySection('Chủ nhân', '🐦‍🔥', 'founder', founderList, isFounder, myName);
+  html += _buildFamilySection('Phu nhân', '🦢', 'phu_nhan', phuNhanList, isFounder, myName);
+  html += _buildFamilySection('Bằng hữu', '🦅', 'chi_cot', chiCotList, isFounder, myName);
+  html += _buildFamilySection('Tín hữu', '🕊️', 'tin_huu', tinHuuList, isFounder, myName);
+
+  listEl.innerHTML = html;
+};
+
+function _buildFamilySection(title, icon, roleKey, members, isFounder, myName) {
+  var html = '<div class="adm-section" style="margin-bottom:0;">';
+  html += '<div class="adm-section-label" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px 8px;">';
+  html += '<span style="letter-spacing:2px;">' + title.toUpperCase() + '</span>';
+
+  if (isFounder) {
+    html += '<span style="font-size:18px; cursor:pointer; font-weight:900; color:var(--ink); line-height:1; transition:transform 0.1s;" onmousedown="this.style.transform=\'scale(0.8)\'" onmouseup="this.style.transform=\'scale(1)\'" onclick="openAddFamilyMember(\'' + roleKey + '\')" title="Thêm">+</span>';
+  }
+  html += '</div>';
+
+  if (members.length === 0) {
+    html += '<div style="padding:8px 16px; font-size:11px; color:var(--muted); font-style:italic; font-family:\'Nunito\',sans-serif;">Trống</div>';
+  } else {
+    members.forEach(function (m) {
+      var canSee = isFounder || (myName && m.name === myName);
+      var displayName = canSee ? esc(m.name) : '------------';
+
+      var displayCode = '';
+      if (roleKey !== 'founder') {
+        displayCode = canSee ? esc(m.secretCode) : '••••••••••••';
+      } else {
+        // Thêm 3 icon thiên nga, đại bàng, bồ câu cho Chủ nhân
+        displayCode = '<span style="font-size:13px; letter-spacing:2px; display:inline-block; transform:translateY(1px);">🦢🦅🕊️</span>';
+      }
+
+      var nameStyle = canSee ? 'color:var(--ink);font-weight:800;font-family:\'Nunito\',sans-serif;' : 'color:var(--muted);font-weight:bold;font-family:\'Space Mono\',monospace;letter-spacing:1px;';
+      var codeStyle = canSee ? 'color:var(--ink);font-weight:normal;font-family:\'Space Mono\',monospace;' : 'color:var(--muted);font-weight:bold;font-family:\'Space Mono\',monospace;letter-spacing:1px;';
+
+      html += '<div style="display:flex; align-items:center; padding:6px 16px; font-size:13px; gap:10px;">';
+      html += '<span style="font-size:14px; flex-shrink:0;">' + icon + '</span>';
+      html += '<span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ' + nameStyle + '">' + displayName + '</span>';
+      html += '<span style="width:75px; text-align:left; ' + codeStyle + '">' + displayCode + '</span>';
+
+      if (isFounder) {
+        html += '<div style="display:flex; gap:8px; flex-shrink:0;">';
+        html += '<button style="background:rgba(44,62,122,0.1);border:1px solid rgba(44,62,122,0.2);border-radius:4px;cursor:pointer;color:var(--accent2);padding:6px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background=\'var(--accent2)\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(44,62,122,0.1)\';this.style.color=\'var(--accent2)\'" onclick="openEditFamilyMember(\'' + m.id + '\')" title="Sửa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>';
+        html += '<button style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);border-radius:4px;cursor:pointer;color:#e74c3c;padding:6px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background=\'#e74c3c\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(231,76,60,0.1)\';this.style.color=\'#e74c3c\'" onclick="deleteFamilyMember(\'' + m.id + '\', \'' + esc(m.name).replace(/'/g, "\\'") + '\')" title="Xóa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+var _editingFamilyId = null;
+var _editingFamilyRole = null;
+
+window.openAddFamilyMember = function (role) {
+  _editingFamilyId = null;
+  _editingFamilyRole = role;
+  document.getElementById('family-member-name').value = '';
+  document.getElementById('family-member-code').value = '';
+
+  // Ẩn nhóm nhập "Mã bí ẩn" nếu thêm Chủ nhân
+  document.getElementById('family-member-code-group').style.display = (role === 'founder') ? 'none' : 'block';
+
+  document.getElementById('family-member-modal-title').textContent = 'Thêm thành viên';
+  document.getElementById('family-member-modal').classList.add('open');
+};
+
+window.openEditFamilyMember = function (id) {
+  var m = _familyTree[id];
+  if (!m) return;
+  _editingFamilyId = id;
+  _editingFamilyRole = m.role;
+  document.getElementById('family-member-name').value = m.name;
+  document.getElementById('family-member-code').value = m.secretCode || '';
+
+  // Ẩn nhóm nhập "Mã bí ẩn" nếu sửa Chủ nhân
+  document.getElementById('family-member-code-group').style.display = (m.role === 'founder') ? 'none' : 'block';
+
+  document.getElementById('family-member-modal-title').textContent = 'Sửa thông tin';
+  document.getElementById('family-member-modal').classList.add('open');
+};
+
+window.closeFamilyMemberModal = function () {
+  document.getElementById('family-member-modal').classList.remove('open');
+};
+
+window.saveFamilyMember = function () {
+  var name = document.getElementById('family-member-name').value.trim();
+  var code = document.getElementById('family-member-code').value.trim();
+
+  if (!name) {
+    showToast('Vui lòng nhập Tên!');
+    return;
+  }
+  if (_editingFamilyRole !== 'founder' && !code) {
+    showToast('Vui lòng nhập Mã bí ẩn!');
+    return;
+  }
+
+  var id = _editingFamilyId || ('ft_' + Date.now());
+  var role = _editingFamilyRole;
+
+  var rankMap = { 'founder': 'founder', 'phu_nhan': 'cofounder', 'chi_cot': 'manager', 'tin_huu': 'head' };
+  var assignedRank = rankMap[role] || 'head';
+
+  var updates = {};
+
+  updates['settings/family_tree/' + id] = {
+    name: name,
+    secretCode: role === 'founder' ? '' : code,
+    role: role
+  };
+
+  var identityKey = 'id_ft_' + id;
+
+  // Lấy IDs thiết bị thực tế đang có. (Không được nhét mã bí ẩn vào mảng thiết bị)
+  var existingIdentity = _identities[identityKey] || {};
+  var existingIds = existingIdentity.ids || [];
+  if (!Array.isArray(existingIds)) {
+    if (typeof existingIds === 'object') existingIds = Object.values(existingIds);
+    else existingIds = [];
+  }
+
+  // Khởi tạo Object lưu vào Active Profiles
+  var identityData = {
+    name: name,
+    rank: assignedRank,
+    merged: true
+  };
+
+  // FIX LỖI 3 & 4: Firebase từ chối lưu mảng rỗng `[]` khiến Profile không xuất hiện.
+  // Chỉ truyền `ids` vào khi đã có thiết bị đăng nhập thật. Nếu chưa có, Firebase sẽ lưu tên và rank bình thường.
+  if (existingIds.length > 0) {
+    identityData.ids = existingIds;
+  }
+
+  updates['settings/identities/' + identityKey] = identityData;
+
+  if (db) {
+    db.ref().update(updates, function (err) {
+      if (!err) {
+        showToast('✓ Đã lưu thành viên gia phả!');
+        closeFamilyMemberModal();
+        // Cập nhật giao diện tự động
+        if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
+        if (typeof renderIdentityList === 'function') renderIdentityList();
+        if (typeof renderFamilyTree === 'function') renderFamilyTree();
+      } else {
+        showToast('⚠ Lỗi khi lưu!');
+      }
+    });
+  }
+};
+
+window.deleteFamilyMember = function (id, name) {
+  document.getElementById('confirm-title').textContent = 'Xóa thành viên?';
+  document.getElementById('confirm-msg').innerHTML = 'Bạn có chắc chắn muốn xóa <strong>' + esc(name) + '</strong> khỏi gia phả? Hành động này cũng sẽ tự động loại bỏ họ khỏi Active Profiles.';
+
+  document.getElementById('confirm-yes').onclick = function () {
+    closeConfirm();
+    var updates = {};
+    updates['settings/family_tree/' + id] = null;
+    updates['settings/identities/id_ft_' + id] = null;
+
+    if (db) {
+      db.ref().update(updates, function (err) {
+        if (!err) {
+          showToast('✓ Đã xóa thành viên!');
+          if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
+          if (typeof renderIdentityList === 'function') renderIdentityList();
+          if (typeof renderFamilyTree === 'function') renderFamilyTree();
+        }
+      });
+    }
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
 };

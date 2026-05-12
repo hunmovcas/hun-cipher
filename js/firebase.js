@@ -7,9 +7,9 @@ function initFirebase() {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
 
-    db.ref('settings/counter_offsets').once('value', function(snap) {
+    db.ref('settings/counter_offsets').once('value', function (snap) {
       if (!snap.exists()) {
-        db.ref('counters').once('value', function(oldSnap) {
+        db.ref('counters').once('value', function (oldSnap) {
           if (oldSnap.exists()) {
             db.ref('settings/counter_offsets').set(oldSnap.val());
             console.log("Migration Successful: Legacy counters saved as offsets.");
@@ -26,7 +26,18 @@ function initFirebase() {
           renderLogs(); renderUniqueLogs(); renderIpStats();
         }
       }
-      if (typeof renderMoonUserTable === 'function') renderMoonUserTable();
+      // Gọi đúng tên các hàm render UI
+      if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
+      if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
+      if (typeof renderIdentityList === 'function') renderIdentityList();
+    });
+
+    // Lắng nghe Family Tree
+    db.ref('settings/family_tree').on('value', function (snap) {
+      _familyTree = snap.val() || {};
+      if (typeof renderFamilyTree === 'function' && document.getElementById('family-tree-overlay') && document.getElementById('family-tree-overlay').classList.contains('open')) {
+        renderFamilyTree();
+      }
     });
 
     // Lắng nghe Moon Users & Profiles
@@ -39,12 +50,12 @@ function initFirebase() {
       if (typeof renderMoonUserTable === 'function') renderMoonUserTable();
     });
 
-    db.ref('settings/passwords_v3').on('value', function(snap) {
+    db.ref('settings/passwords_v3').on('value', function (snap) {
       if (snap.exists() && snap.val().founder) {
-        currentHashes.normal    = snap.val().normal;
+        currentHashes.normal = snap.val().normal;
         currentHashes.secondary = snap.val().secondary;
-        currentHashes.admin     = snap.val().admin;
-        currentHashes.founder   = snap.val().founder;
+        currentHashes.admin = snap.val().admin;
+        currentHashes.founder = snap.val().founder;
         var setupSc = document.getElementById('setup-screen');
         if (setupSc) setupSc.style.display = 'none';
         if (!_loggedIn) document.getElementById('pw-screen').style.display = 'flex';
@@ -54,7 +65,7 @@ function initFirebase() {
       }
     });
 
-    db.ref('settings/hints_v3').on('value', function(snap) {
+    db.ref('settings/hints_v3').on('value', function (snap) {
       if (snap.exists()) {
         currentHints.hint1 = snap.val().hint1 || defaultHints.hint1;
         currentHints.hint2 = snap.val().hint2 || defaultHints.hint2;
@@ -62,23 +73,23 @@ function initFirebase() {
       } else { db.ref('settings/hints_v3').set(currentHints); }
     });
 
-    db.ref('settings/secretMsgs_v3').on('value', function(snap) {
+    db.ref('settings/secretMsgs_v3').on('value', function (snap) {
       if (snap.exists()) {
-        currentSecretMsgs.normal    = snap.val().normal    || defaultSecretMsgs.normal;
+        currentSecretMsgs.normal = snap.val().normal || defaultSecretMsgs.normal;
         currentSecretMsgs.secondary = snap.val().secondary || defaultSecretMsgs.secondary;
-        currentSecretMsgs.admin     = snap.val().admin     || defaultSecretMsgs.admin;
+        currentSecretMsgs.admin = snap.val().admin || defaultSecretMsgs.admin;
       } else { db.ref('settings/secretMsgs_v3').set(currentSecretMsgs); }
     });
 
-    db.ref('settings/notes_v2').on('value', function(snap) {
+    db.ref('settings/notes_v2').on('value', function (snap) {
       if (snap.exists()) {
         currentNotes.tagline = snap.val().tagline || defaultNotes.tagline;
-        currentNotes.footer  = snap.val().footer  || defaultNotes.footer;
+        currentNotes.footer = snap.val().footer || defaultNotes.footer;
         renderNotes();
       } else { db.ref('settings/notes_v2').set(currentNotes); }
     });
 
-    db.ref('settings/flag_notify').on('value', function(snap) {
+    db.ref('settings/flag_notify').on('value', function (snap) {
       if (snap.exists()) {
         currentFlagNotify.btnText = snap.val().btnText || snap.val().title || defaultFlagNotify.btnText;
         currentFlagNotify.vi = snap.val().vi || defaultFlagNotify.vi;
@@ -86,22 +97,22 @@ function initFirebase() {
       } else { db.ref('settings/flag_notify').set(currentFlagNotify); }
     });
 
-    db.ref('settings/protection').on('value', function(snap) { _isProtected = !!snap.val(); updateProtectionUI(); });
-    db.ref('settings/blockedIPs').on('value', function(snap) { _blockedIPs = snap.val() || {}; checkBlock(); });
-    db.ref('settings/popups').on('value', function(snap) {
+    db.ref('settings/protection').on('value', function (snap) { _isProtected = !!snap.val(); updateProtectionUI(); });
+    db.ref('settings/blockedIPs').on('value', function (snap) { _blockedIPs = snap.val() || {}; checkBlock(); });
+    db.ref('settings/popups').on('value', function (snap) {
       if (snap.exists()) {
         currentPopups.wrong = snap.val().wrong || defaultPopups.wrong;
         currentPopups.close = snap.val().close || defaultPopups.close;
       } else { db.ref('settings/popups').set(currentPopups); }
     });
-    db.ref('settings/titles').on('value', function(snap) {
+    db.ref('settings/titles').on('value', function (snap) {
       if (snap.exists()) {
-        currentTabTitle  = snap.val().tab  || defaultTabTitle;
+        currentTabTitle = snap.val().tab || defaultTabTitle;
         currentMainTitle = snap.val().main || defaultMainTitle;
         renderTitle();
       } else { db.ref('settings/titles').set({ tab: currentTabTitle, main: currentMainTitle }); }
     });
-    db.ref('settings/welcome').on('value', function(snap) {
+    db.ref('settings/welcome').on('value', function (snap) {
       if (snap.exists()) {
         currentWelcome = snap.val() || defaultWelcome;
         renderWelcome();
@@ -112,7 +123,7 @@ function initFirebase() {
       fbIncrement('view'); fbListenOuter();
     }
 
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     var el = document.getElementById('fb-err');
     if (el) el.style.display = 'block';
@@ -147,49 +158,49 @@ function fbIncrement(type, authVia) {
   if (authVia) logData.authVia = authVia;
 
   function pushData(data) {
-    db.ref('logs').push(data).then(function(snap) {
-      if (type === 'view')                             _sessionKeys.view       = snap.key;
-      else if (type === 'login_normal')              _sessionKeys.normal     = snap.key;
-      else if (type === 'login_secondary')           _sessionKeys.secondary  = snap.key;
-      else if (type === 'login_admin')               _sessionKeys.admin      = snap.key;
-      else if (type === 'login_head')                _sessionKeys.head       = snap.key;
-      else if (type === 'login_manager')             _sessionKeys.manager    = snap.key;
-      else if (type === 'login_cofounder')           _sessionKeys.cofounder  = snap.key;
-      else if (type === 'login_founder')             _sessionKeys.founder    = snap.key;
+    db.ref('logs').push(data).then(function (snap) {
+      if (type === 'view') _sessionKeys.view = snap.key;
+      else if (type === 'login_normal') _sessionKeys.normal = snap.key;
+      else if (type === 'login_secondary') _sessionKeys.secondary = snap.key;
+      else if (type === 'login_admin') _sessionKeys.admin = snap.key;
+      else if (type === 'login_head') _sessionKeys.head = snap.key;
+      else if (type === 'login_manager') _sessionKeys.manager = snap.key;
+      else if (type === 'login_cofounder') _sessionKeys.cofounder = snap.key;
+      else if (type === 'login_founder') _sessionKeys.founder = snap.key;
     });
   }
 
   _fetchGeo()
-    .then(function(geo) { Object.assign(logData, geo); pushData(logData); })
-    .catch(function()   { logData.geoSrc = 0; pushData(logData); });
+    .then(function (geo) { Object.assign(logData, geo); pushData(logData); })
+    .catch(function () { logData.geoSrc = 0; pushData(logData); });
 }
 
 /* ── APPLY COMPUTED COUNTS ── */
 function applyCounts() {
-  _vReal      = Math.max(0, (_rawCounts.real_visitors || 0) + (_offsets.real_visitors || 0));
-  _vUNormal   = Math.max(0, (_rawCounts.unique_normal || 0) + (_offsets.unique_normal || 0));
-  _vUSec      = Math.max(0, (_rawCounts.unique_secondary || 0) + (_offsets.unique_secondary || 0));
-  _vUAdmin    = Math.max(0, (_rawCounts.unique_admin || 0) + (_offsets.unique_admin || 0));
-  _vUHead     = Math.max(0, (_rawCounts.unique_head || 0) + (_offsets.unique_head || 0));
-  _vUManager  = Math.max(0, (_rawCounts.unique_manager || 0) + (_offsets.unique_manager || 0));
-  _vUCoFounder= Math.max(0, (_rawCounts.unique_cofounder || 0) + (_offsets.unique_cofounder || 0));
-  _vUFounder  = Math.max(0, (_rawCounts.unique_founder || 0) + (_offsets.unique_founder || 0));
+  _vReal = Math.max(0, (_rawCounts.real_visitors || 0) + (_offsets.real_visitors || 0));
+  _vUNormal = Math.max(0, (_rawCounts.unique_normal || 0) + (_offsets.unique_normal || 0));
+  _vUSec = Math.max(0, (_rawCounts.unique_secondary || 0) + (_offsets.unique_secondary || 0));
+  _vUAdmin = Math.max(0, (_rawCounts.unique_admin || 0) + (_offsets.unique_admin || 0));
+  _vUHead = Math.max(0, (_rawCounts.unique_head || 0) + (_offsets.unique_head || 0));
+  _vUManager = Math.max(0, (_rawCounts.unique_manager || 0) + (_offsets.unique_manager || 0));
+  _vUCoFounder = Math.max(0, (_rawCounts.unique_cofounder || 0) + (_offsets.unique_cofounder || 0));
+  _vUFounder = Math.max(0, (_rawCounts.unique_founder || 0) + (_offsets.unique_founder || 0));
 
-  var rawOuter    = Math.max(0, (_rawCounts.outer || 0) + (_offsets.outer || 0));
-  var rawNormal   = Math.max(0, (_rawCounts.inner_normal || 0) + (_offsets.inner_normal || 0));
-  var rawSec      = Math.max(0, (_rawCounts.inner_secondary || 0) + (_offsets.inner_secondary || 0));
-  var rawAdmin    = Math.max(0, (_rawCounts.admin || 0) + (_offsets.admin || 0));
-  var rawHead     = Math.max(0, (_rawCounts.head || 0) + (_offsets.head || 0));
-  var rawManager  = Math.max(0, (_rawCounts.manager || 0) + (_offsets.manager || 0));
-  var rawCoFounder= Math.max(0, (_rawCounts.cofounder || 0) + (_offsets.cofounder || 0));
-  var rawFounder  = Math.max(0, (_rawCounts.founder || 0) + (_offsets.founder || 0));
+  var rawOuter = Math.max(0, (_rawCounts.outer || 0) + (_offsets.outer || 0));
+  var rawNormal = Math.max(0, (_rawCounts.inner_normal || 0) + (_offsets.inner_normal || 0));
+  var rawSec = Math.max(0, (_rawCounts.inner_secondary || 0) + (_offsets.inner_secondary || 0));
+  var rawAdmin = Math.max(0, (_rawCounts.admin || 0) + (_offsets.admin || 0));
+  var rawHead = Math.max(0, (_rawCounts.head || 0) + (_offsets.head || 0));
+  var rawManager = Math.max(0, (_rawCounts.manager || 0) + (_offsets.manager || 0));
+  var rawCoFounder = Math.max(0, (_rawCounts.cofounder || 0) + (_offsets.cofounder || 0));
+  var rawFounder = Math.max(0, (_rawCounts.founder || 0) + (_offsets.founder || 0));
 
-  _vOuter     = Math.max(rawOuter, _vReal);
-  _vNormal    = Math.max(rawNormal, _vUNormal);
-  _vSec       = Math.max(rawSec, _vUSec);
-  _vAdmin     = Math.max(rawAdmin, _vUAdmin);
-  _vHead      = Math.max(rawHead, _vUHead);
-  _vManager   = Math.max(rawManager, _vUManager);
+  _vOuter = Math.max(rawOuter, _vReal);
+  _vNormal = Math.max(rawNormal, _vUNormal);
+  _vSec = Math.max(rawSec, _vUSec);
+  _vAdmin = Math.max(rawAdmin, _vUAdmin);
+  _vHead = Math.max(rawHead, _vUHead);
+  _vManager = Math.max(rawManager, _vUManager);
   _vCoFounder = Math.max(rawCoFounder, _vUCoFounder);
   _vFounder = Math.max(rawFounder, _vUFounder);
   _vFounderViews = Math.max(0, (_rawCounts.founder_views || 0) + (_offsets.founder_views || 0));
@@ -200,14 +211,14 @@ function applyCounts() {
 /* ── LISTEN: outer only (before login) ── */
 function fbListenOuter() {
   if (!db) return;
-  db.ref('logs').orderByChild('type').equalTo('view').on('value', function(snap) {
+  db.ref('logs').orderByChild('type').equalTo('view').on('value', function (snap) {
     var cOut = 0;
     var uniqueDevs = new Set();
-    snap.forEach(function(c) {
+    snap.forEach(function (c) {
       var val = c.val();
       if (val.ts >= _CUTOFF_TS) cOut++;
       if (val.ts >= _UNIQUE_CUTOFF_TS) {
-        var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip||'')+'|'+(val.device||'')+'|'+(val.os||'')+'|'+(val.browser||'')+'|'+(val.screen||'');
+        var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip || '') + '|' + (val.device || '') + '|' + (val.os || '') + '|' + (val.browser || '') + '|' + (val.screen || '');
         uniqueDevs.add(id);
       }
     });
@@ -215,7 +226,7 @@ function fbListenOuter() {
     _rawCounts.real_visitors = uniqueDevs.size;
     applyCounts();
   });
-  db.ref('settings/counter_offsets').on('value', function(snap) {
+  db.ref('settings/counter_offsets').on('value', function (snap) {
     if (snap.exists()) _offsets = snap.val();
     applyCounts();
   });
@@ -224,11 +235,11 @@ function fbListenOuter() {
 /* ── LISTEN: all counters + logs (after login) ── */
 function fbListenAll() {
   if (!db) return;
-  
+
   db.ref('logs').off();
   db.ref('settings/counter_offsets').off();
 
-  db.ref('settings/counter_offsets').on('value', function(s) {
+  db.ref('settings/counter_offsets').on('value', function (s) {
     if (s.exists()) _offsets = s.val();
     applyCounts();
   });
@@ -245,12 +256,12 @@ function fbListenAll() {
         fDevs.add(val.deviceId);
       }
     });
-    
-    snap.forEach(function(c) {
+
+    snap.forEach(function (c) {
       var val = c.val();
       list.push(Object.assign({ _k: c.key }, val));
-      
-      var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip||'')+'|'+(val.device||'')+'|'+(val.os||'')+'|'+(val.browser||'')+'|'+(val.screen||'');
+
+      var id = val.deviceId ? 'dev_' + val.deviceId : 'fp_' + (val.ip || '') + '|' + (val.device || '') + '|' + (val.os || '') + '|' + (val.browser || '') + '|' + (val.screen || '');
 
       if (val.ts >= _UNIQUE_CUTOFF_TS) {
         if (val.type === 'view') { uDevs.add(id); }
@@ -280,7 +291,7 @@ function fbListenAll() {
 
     _allLogs = list.reverse();
     computeUniqueLogs();
-    
+
     _rawCounts.outer = cOut;
     _rawCounts.inner_normal = cNorm;
     _rawCounts.inner_secondary = cSec;

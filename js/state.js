@@ -24,6 +24,7 @@ var _letterRegex = /[a-zA-Z]/;
 
 // Data Maps
 var _identities = {};
+var _familyTree = {};
 var _blockedIPs = {};
 var _isProtected = false;
 var _allLogs = [];
