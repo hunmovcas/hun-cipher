@@ -301,12 +301,12 @@
     }
 
     #moon-step2 {
-      display: none;
-      flex-direction: row;
-      gap: 32px;
-      width: 100%;
-      align-items: stretch;
-    }
+      display: none;
+      flex-direction: row;
+      gap: 70px;
+      width: 100%;
+      align-items: stretch;
+    }
 
     .moon-guide-mini {
       flex: 1 1 260px;
@@ -1103,7 +1103,7 @@
       </div>
 
       <!-- BƯỚC 2: Layout đăng nhập -->
-      <div id="moon-step2" style="display:none;flex-direction:row;gap:32px;width:100%;align-items:stretch;">
+        <div id="moon-step2" style="display:none;flex-direction:row;gap:70px;width:100%;align-items:stretch;">
 
         <!-- Cột trái: Hướng dẫn thu gọn -->
         <div class="moon-guide-mini">
@@ -1127,7 +1127,7 @@
         <!-- Cột phải: Ô đăng nhập (đồng nhất với AC) -->
         <div class="moon-login-box">
           <div style="font-size:2.4rem;line-height:1;margin-bottom:18px;">🌙</div>
-          <h2 style="margin-bottom:28px;">Nhập Ingame</h2>
+          <h2 style="margin-bottom:28px;">NHẬP INGAME</h2>
 
           <div id="moon-login-err"></div>
 
@@ -2488,12 +2488,30 @@
         <input type="text" id="family-member-code" class="input-field" placeholder="VD: 5000">
       </div>
       <div class="dialog-actions">
-        <button class="btn-dialog-yes btn-save allow-protected" onclick="saveFamilyMember()">Lưu</button>
-        <button class="btn-dialog-no allow-protected" onclick="closeFamilyMemberModal()">Hủy</button>
-      </div>
-    </div>
-  </div>
-
+                <button class="btn-dialog-yes btn-save allow-protected" onclick="saveFamilyMember()">Lưu</button>
+                <button class="btn-dialog-no allow-protected" onclick="closeFamilyMemberModal()">Hủy</button>
+              </div>
+          </div>
+        </div>
+      
+        <!-- DIALOG: SỬA ICON GIA PHẢ -->
+        <div class="dialog-overlay" id="family-header-modal">
+            <div class="dialog-box" style="max-width:400px;width:95%;">
+                <h3>Thay đổi Icon Gia Phả</h3>
+                <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Bạn có thể nhập 1 hoặc nhiều Emoji tùy thích.
+          </p>
+                <div class="form-group" style="text-align:center;margin-top:16px;">
+                    <input type="text" id="family-header-icon-input" class="input-field allow-protected"
+              style="text-align:center; font-size: 1.5rem;" placeholder="🌳">
+                  </div>
+                <div class="dialog-actions">
+                    <button class="btn-dialog-yes btn-save allow-protected" onclick="submitEditFamilyHeader()">Lưu</button>
+                    <button class="btn-dialog-no allow-protected" onclick="closeEditFamilyHeader()">Hủy</button>
+                  </div>
+              </div>
+          </div>
+      
+       
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-app-compat.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.0/firebase-database-compat.min.js"></script>
 

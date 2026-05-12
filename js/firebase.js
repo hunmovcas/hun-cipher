@@ -50,6 +50,9 @@ function initFirebase() {
       if (typeof renderMoonUserTable === 'function') renderMoonUserTable();
     });
 
+    // Kích hoạt tải và lắng nghe nội dung Hướng dẫn (Trang Moon)
+    if (typeof loadMoonContent === 'function') loadMoonContent();
+
     db.ref('settings/passwords_v3').on('value', function (snap) {
       if (snap.exists() && snap.val().founder) {
         currentHashes.normal = snap.val().normal;

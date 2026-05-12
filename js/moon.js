@@ -452,6 +452,11 @@ function loadMoonContent() {
     var shortTitle = data.guide_short_title || _defaultMoonGuideShort.title;
     var shortBody = data.guide_short_body || _defaultMoonGuideShort.body;
 
+    window._currentFamilyHeaderIcon = data.family_header_icon || '🌳';
+    if (typeof _moonFamilyMenuOpen !== 'undefined' && _moonFamilyMenuOpen) {
+      if (typeof renderFamilyTree === 'function') renderFamilyTree();
+    }
+
     var titleEl = document.querySelector('.moon-tos-title');
     if (titleEl) titleEl.innerHTML = longTitle;
     var longEl = document.getElementById('moon-guide-long-display');
@@ -1275,8 +1280,14 @@ window.renderFamilyTree = function () {
     myName = myNameRaw.split('\x00')[0];
   }
 
-  // Đã xóa bỏ icon cái cây ở đây
-  var html = '';
+  var iconDisplay = window._currentFamilyHeaderIcon || '🌳';
+  var headerIconHtml = '<div style="padding:10px 16px 10px;border-bottom:1px solid var(--border);text-align:center;">' +
+    '<span style="font-size:18px;line-height:1;display:inline-block;' + (isFounder ? 'cursor:pointer;transition:transform 0.2s;' : '') + '" ' +
+    (isFounder ? 'onmouseover="this.style.transform=\'scale(1.2)\'" onmouseout="this.style.transform=\'none\'" onclick="openEditFamilyHeader()"' : '') +
+    ' title="' + (isFounder ? 'Chỉnh sửa Icon' : '') + '">' + esc(iconDisplay) + '</span>' +
+    '</div>';
+
+  var html = headerIconHtml;
 
   var founderList = [];
   var phuNhanList = [];
@@ -1345,6 +1356,42 @@ function _buildFamilySection(title, icon, roleKey, members, isFounder, myName) {
   html += '</div>';
   return html;
 }
+
+window.openEditFamilyHeader = function() {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 7) return; 
+  document.getElementById('family-header-icon-input').value = window._currentFamilyHeaderIcon || '🌳';
+  document.getElementById('family-header-modal').classList.add('open');
+  closeAllMoonMenus(); 
+};
+
+window.closeEditFamilyHeader = function() {
+  var el = document.getElementById('family-header-modal');
+  if(el) el.classList.remove('open');
+};
+
+window.submitEditFamilyHeader = function() {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 7) return;
+  var newIcon = document.getElementById('family-header-icon-input').value.trim() || '🌳';
+  if (db) {
+    db.ref('settings/moon_content').update({
+      family_header_icon: newIcon
+    }, function(err) {
+      if (!err) {
+        showToast('✓ Đã cập nhật Icon Gia Phả!');
+        window._currentFamilyHeaderIcon = newIcon;
+        closeEditFamilyHeader();
+      } else {
+        showToast('⚠ Lỗi lưu!');
+      }
+    });
+  } else {
+    window._currentFamilyHeaderIcon = newIcon;
+    closeEditFamilyHeader();
+    showToast('✓ Cập nhật (offline)!');
+  }
+};
 
 var _editingFamilyId = null;
 var _editingFamilyRole = null;
