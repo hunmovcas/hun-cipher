@@ -191,7 +191,8 @@ function applyCounts() {
   _vHead      = Math.max(rawHead, _vUHead);
   _vManager   = Math.max(rawManager, _vUManager);
   _vCoFounder = Math.max(rawCoFounder, _vUCoFounder);
-  _vFounder   = Math.max(rawFounder, _vUFounder);
+  _vFounder = Math.max(rawFounder, _vUFounder);
+  _vFounderViews = Math.max(0, (_rawCounts.founder_views || 0) + (_offsets.founder_views || 0));
 
   if (typeof updateStatsUI === 'function') updateStatsUI();
 }
@@ -232,10 +233,18 @@ function fbListenAll() {
     applyCounts();
   });
 
-  db.ref('logs').on('value', function(snap) {
+  db.ref('logs').on('value', function (snap) {
     var list = [];
-    var cOut=0, cNorm=0, cSec=0, cAdm=0, cHead=0, cMan=0, cCo=0, cFou=0;
-    var uDevs=new Set(), uNorm=new Set(), uSec=new Set(), uAdm=new Set(), uHead=new Set(), uMan=new Set(), uCo=new Set(), uFou=new Set();
+    var cOut = 0, cNorm = 0, cSec = 0, cAdm = 0, cHead = 0, cMan = 0, cCo = 0, cFou = 0, cFouViews = 0;
+    var uDevs = new Set(), uNorm = new Set(), uSec = new Set(), uAdm = new Set(), uHead = new Set(), uMan = new Set(), uCo = new Set(), uFou = new Set();
+
+    var fDevs = new Set();
+    snap.forEach(function (c) {
+      var val = c.val();
+      if (val && (val.type === 'login_founder' || getIdentityRankByDevId(val.deviceId) === 'founder')) {
+        fDevs.add(val.deviceId);
+      }
+    });
     
     snap.forEach(function(c) {
       var val = c.val();
@@ -255,7 +264,10 @@ function fbListenAll() {
       }
 
       if (val.ts >= _CUTOFF_TS) {
-        if (val.type === 'view') { cOut++; }
+        if (val.type === 'view') {
+          cOut++;
+          if (val.deviceId && fDevs.has(val.deviceId)) cFouViews++;
+        }
         else if (val.type === 'login_normal') { cNorm++; }
         else if (val.type === 'login_secondary') { cSec++; }
         else if (val.type === 'login_admin') { cAdm++; }
@@ -277,7 +289,8 @@ function fbListenAll() {
     _rawCounts.manager = cMan;
     _rawCounts.cofounder = cCo;
     _rawCounts.founder = cFou;
-    
+    _rawCounts.founder_views = cFouViews;
+
     _rawCounts.real_visitors = uDevs.size;
     _rawCounts.unique_normal = uNorm.size;
     _rawCounts.unique_secondary = uSec.size;

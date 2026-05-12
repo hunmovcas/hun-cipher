@@ -41,6 +41,7 @@ var _vReal = 0, _vUNormal = 0, _vUSec = 0, _vUAdmin = 0, _vUHead = 0, _vUManager
 var _vOuter = 0, _vNormal = 0, _vSec = 0, _vAdmin = 0, _vHead = 0, _vManager = 0, _vCoFounder = 0, _vFounder = 0;
 var _vGuestNormal = 0, _vGuestSec = 0, _vGuestAdmin = 0, _vGuestHead = 0, _vGuestManager = 0, _vGuestCoFounder = 0, _vGuestFounder = 0;
 var _vGuestOuter = 0;
+var _vFounderViews = 0;
 
 // Time Cutoffs for analytics (0 = all time)
 var _CUTOFF_TS = 0;

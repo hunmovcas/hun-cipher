@@ -206,7 +206,8 @@ function updateStatsUI() {
   
   setNum('drop-views',      _vOuter);
   setNum('drop-unique',     _vReal);
-  setNum('drop-views-g',    _vGuestOuter);
+  setNum('drop-views-g', _vGuestOuter);
+  setNum('drop-founder-views', _vFounderViews);
 
   var totalAuth = _vNormal + _vSec + _vAdmin + _vHead + _vManager + _vCoFounder + _vFounder;
   setNum('num-auth', totalAuth);
@@ -253,14 +254,16 @@ function admAdjustCounter(e, key) {
     head: '⚜️ Total', unique_head: '⚜️ Unique',
     manager: '🔱 Total', unique_manager: '🔱 Unique',
     cofounder: '💎 Total', unique_cofounder: '💎 Unique',
-    founder: '👑 Total', unique_founder: '👑 Unique'
+    founder: '👑 Total', unique_founder: '👑 Unique',
+    founder_views: '👑👁️ Founder Views'
   };
   document.getElementById('adjust-title').textContent = 'Adjust ' + (lbls[key]||'Counter');
   
   var val = { 
     outer: _vOuter, real_visitors: _vReal, 
     inner_normal: _vNormal, inner_secondary: _vSec, admin: _vAdmin, head: _vHead, manager: _vManager, cofounder: _vCoFounder, founder: _vFounder,
-    unique_normal: _vUNormal, unique_secondary: _vUSec, unique_admin: _vUAdmin, unique_head: _vUHead, unique_manager: _vUManager, unique_cofounder: _vUCoFounder, unique_founder: _vUFounder
+    unique_normal: _vUNormal, unique_secondary: _vUSec, unique_admin: _vUAdmin, unique_head: _vUHead, unique_manager: _vUManager, unique_cofounder: _vUCoFounder, unique_founder: _vUFounder,
+    founder_views: _vFounderViews
   }[key] || 0;
   
   var inp = document.getElementById('adjust-input');
