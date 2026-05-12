@@ -1473,10 +1473,113 @@
         </div>
       </div>
 
-    </div>
-  </div>
-</div>
-<!-- ════ END MOON ADMIN SCREEN ════ -->
+      <!-- SECTION: Dữ liệu người dùng -->
+      <div id="moon-section-userdata" style="display:none;flex-direction:column;max-width:960px;width:100%;">
+      
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;">
+          <div>
+            <div
+              style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">
+              👥 Dữ liệu</div>
+            <h2
+              style="font-family:'Nunito',sans-serif;font-size:2rem;font-weight:900;color:var(--ink);letter-spacing:-.5px;margin:0;">
+              Bảng Dữ Liệu Người Dùng</h2>
+          </div>
+          <button class="btn btn-ghost allow-protected founder-only" onclick="openMoonTrash()"
+            style="padding:8px 16px; font-size:12px; font-weight:800; color:#e74c3c; border-color:rgba(231,76,60,0.3); background:rgba(231,76,60,0.05); display:none; align-items:center; gap:6px; border-radius:6px;"
+            id="btn-moon-trash">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" width="14" height="14">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            </svg> Thùng rác (7 ngày)
+          </button>
+        </div>
+      
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <h3 style="font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:800;color:var(--accent2);margin:0;">Hồ sơ
+            Truy cập Ingame (Moon Profiles)</h3>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg, rgba(44,62,122,0.2), transparent);"></div>
+        </div>
+      
+        <div style="overflow-x:auto; padding-bottom:10px; margin-bottom:40px;">
+          <table
+            style="width:100%; border-collapse:separate; border-spacing:0 10px; font-family:'Nunito',sans-serif; font-size:13px; text-align:left;">
+            <thead>
+              <tr style="background:rgba(44,62,122,0.06);">
+                <th
+                  style="padding:10px 16px; color:var(--accent2); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px; width:150px; border-top-left-radius:6px; border-bottom-left-radius:6px;">
+                  Device IDs</th>
+                <th
+                  style="padding:10px 16px; color:var(--accent2); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px; width:180px;">
+                  Tên (Ingame)</th>
+                <th
+                  style="padding:10px 16px; color:var(--accent2); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px;"
+                  id="th-green-1">Tên (Founder)</th>
+                <th
+                  style="padding:10px 16px; color:var(--accent2); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px;"
+                  id="th-gold-1">Tên (Merged)</th>
+                <th
+                  style="padding:10px 16px; color:var(--accent2); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px; text-align:center; width:120px; border-top-right-radius:6px; border-bottom-right-radius:6px;"
+                  id="th-action-1">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="moon-ingame-tbody">
+            </tbody>
+          </table>
+        </div>
+      
+        <div style="width:100%; height:2px; background:var(--border); margin-bottom:40px; opacity:0.5;"></div>
+      
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <h3 style="font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:800;color:var(--founder);margin:0;">Tổng hợp
+            Định danh Hệ thống (All Profiles)</h3>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg, rgba(142,68,173,0.2), transparent);"></div>
+        </div>
+      
+        <div style="overflow-x:auto; padding-bottom:10px;">
+          <table
+            style="width:100%; border-collapse:separate; border-spacing:0 10px; font-family:'Nunito',sans-serif; font-size:13px; text-align:left;">
+            <thead>
+              <tr style="background:rgba(142,68,173,0.06);">
+                <th
+                  style="padding:10px 16px; color:var(--founder); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px; width:150px; border-top-left-radius:6px; border-bottom-left-radius:6px;">
+                  Device IDs</th>
+                <th
+                  style="padding:10px 16px; color:var(--founder); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px; width:180px;">
+                  Tên (Ingame)</th>
+                <th
+                  style="padding:10px 16px; color:var(--founder); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px;"
+                  id="th-green-2">Tên (Founder)</th>
+                <th
+                  style="padding:10px 16px; color:var(--founder); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px;"
+                  id="th-gold-2">Tên (Merged)</th>
+                <th
+                  style="padding:10px 16px; color:var(--founder); font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px; text-align:center; width:120px; border-top-right-radius:6px; border-bottom-right-radius:6px;"
+                  id="th-action-2">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="moon-all-identities-tbody">
+            </tbody>
+          </table>
+        </div>
+      
+      </div>
+      
+      </div>
+      </div>
+      </div>
+      <div class="dialog-overlay" id="moon-trash-overlay">
+        <div class="dialog-box" style="max-width:600px;width:95%;padding:24px;">
+          <h3>Thùng rác Dữ liệu 🗑️</h3>
+          <p style="font-size:11px;margin-bottom:16px;">Dữ liệu đã xóa được lưu trữ tại đây trong 7 ngày trước khi bị xóa vĩnh
+            viễn.</p>
+          <div id="moon-trash-list"
+            style="max-height:300px;overflow-y:auto;text-align:left;font-family:'Nunito',sans-serif;font-size:13px;border:1px solid var(--border);padding:8px;border-radius:6px;">
+            Loading...</div>
+          <div class="dialog-actions"><button class="btn-dialog-no" onclick="closeMoonTrash()">Đóng</button></div>
+        </div>
+      </div>
 
 <!-- Dialog: Sửa Bảng Hướng Dẫn Dài (moon-step1) -->
 <div class="dialog-overlay" id="moon-edit-guide-overlay">

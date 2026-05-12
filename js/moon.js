@@ -344,6 +344,14 @@ function _renderMoonAdminDropdown(role) {
     + '<span style="font-size:18px;line-height:1;">🌙</span>'
     + '</div>';
 
+  /* Bảng dữ liệu người dùng - Co-Founder(6) & Founder(7) */
+  if (lv >= 6) {
+    html += '<div class="adm-section">'
+      + '<div class="adm-section-label">Dữ liệu</div>'
+      + '<button class="adm-item success" onclick="switchMoonAdminSection(\'userdata\'); closeAllMoonMenus();">👥 Bảng dữ liệu người dùng</button>'
+      + '</div>';
+  }
+
   /* Chỉnh sửa nội dung — Admin (lv>=3) trở lên */
   if (lv >= 3) {
     html += '<div class="adm-section">'
@@ -364,7 +372,7 @@ function _renderMoonAdminDropdown(role) {
 }
 
 function switchMoonAdminSection(section) {
-  var sections = ['guide', 'news', 'suggest', 'origin', 'rename'];
+  var sections = ['guide', 'news', 'suggest', 'origin', 'rename', 'userdata'];
   sections.forEach(function (s) {
     var el = document.getElementById('moon-section-' + s);
     var btn = document.getElementById('moon-nav-' + s);
@@ -380,6 +388,23 @@ function switchMoonAdminSection(section) {
       }
     }
   });
+
+  if (section === 'userdata') {
+    renderMoonIngameTable();
+    renderMoonAllIdentitiesTable();
+    var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+    // Co-founder (lv=6) không được nhìn thấy các cột chứa tên xanh lá, vàng, nút merge
+
+    // Bảng 1
+    var thGreen1 = document.getElementById('th-green-1'); if (thGreen1) thGreen1.style.display = (lv === 7) ? '' : 'none';
+    var thGold1 = document.getElementById('th-gold-1'); if (thGold1) thGold1.style.display = (lv === 7) ? '' : 'none';
+    var thAction1 = document.getElementById('th-action-1'); if (thAction1) thAction1.style.display = (lv === 7) ? '' : 'none';
+
+    // Bảng 2
+    var thGreen2 = document.getElementById('th-green-2'); if (thGreen2) thGreen2.style.display = (lv === 7) ? '' : 'none';
+    var thGold2 = document.getElementById('th-gold-2'); if (thGold2) thGold2.style.display = (lv === 7) ? '' : 'none';
+    var thAction2 = document.getElementById('th-action-2'); if (thAction2) thAction2.style.display = (lv === 7) ? '' : 'none';
+  }
 }
 
 /* ── Quay về trang đăng nhập ingame ── */
@@ -861,3 +886,374 @@ async function submitMoonFounder() {
     setTimeout(function () { errEl.style.display = 'none'; }, 2500);
   }
 }
+
+/* ══════════════════════════════════════════
+   BẢNG 1: USER DATA (MOON INGAME)
+   ══════════════════════════════════════════ */
+function renderMoonIngameTable() {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 6) return;
+
+  var tbody = document.getElementById('moon-ingame-tbody');
+  if (!tbody) return;
+
+  var moonData = {};
+  for (var devId in _moonUsers) {
+    var mName = _moonUsers[devId].name;
+    if (!moonData[mName]) moonData[mName] = { ids: new Set(), greenNames: new Set(), goldNames: new Set(), founderKeys: new Set() };
+    moonData[mName].ids.add(devId);
+  }
+
+  for (var mName in moonData) {
+    var ids = Array.from(moonData[mName].ids);
+    ids.forEach(function (id) {
+      for (var k in _identities) {
+        var p = _identities[k];
+        var pIds = Array.isArray(p.ids) ? p.ids : (typeof p.ids === 'object' ? Object.values(p.ids) : []);
+        if (pIds.indexOf(id) !== -1) {
+          var pName = p.name || k;
+          if (p.merged) {
+            moonData[mName].goldNames.add(pName);
+            moonData[mName].founderKeys.add(k); // Thêm key để phục vụ Unmerge
+          } else {
+            moonData[mName].greenNames.add(pName);
+            moonData[mName].founderKeys.add(k);
+          }
+        }
+      }
+    });
+  }
+
+  var html = '';
+  for (var mName in moonData) {
+    var d = moonData[mName];
+    // Truyền tableType = 1 cho Bảng 1
+    html += _buildMoonTableRowHtml(mName, Array.from(d.ids), Array.from(d.greenNames), Array.from(d.goldNames), Array.from(d.founderKeys), lv, false, 1);
+  }
+  tbody.innerHTML = html;
+}
+
+/* ══════════════════════════════════════════
+   BẢNG 2: TẤT CẢ ĐỊNH DANH HỆ THỐNG
+   ══════════════════════════════════════════ */
+function renderMoonAllIdentitiesTable() {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 6) return;
+
+  var tbody = document.getElementById('moon-all-identities-tbody');
+  if (!tbody) return;
+
+  var groupedData = [];
+  var processedIds = new Set();
+
+  for (var k in _identities) {
+    var p = _identities[k];
+    var pName = p.name || k;
+    var pIds = Array.isArray(p.ids) ? p.ids : (typeof p.ids === 'object' ? Object.values(p.ids) : []);
+
+    var entry = {
+      ids: new Set(pIds),
+      blueNames: new Set(),
+      greenNames: new Set(),
+      goldNames: new Set(),
+      founderKeys: new Set([k])
+    };
+
+    if (p.merged) entry.goldNames.add(pName);
+    else entry.greenNames.add(pName);
+
+    pIds.forEach(function (id) {
+      processedIds.add(id);
+      if (_moonUsers && _moonUsers[id] && _moonUsers[id].name) {
+        entry.blueNames.add(_moonUsers[id].name);
+      }
+    });
+    groupedData.push(entry);
+  }
+
+  var orphanMoon = {};
+  for (var devId in _moonUsers) {
+    if (!processedIds.has(devId)) {
+      var mName = _moonUsers[devId].name;
+      if (!orphanMoon[mName]) orphanMoon[mName] = { ids: new Set(), blueNames: new Set([mName]), greenNames: new Set(), goldNames: new Set(), founderKeys: new Set() };
+      orphanMoon[mName].ids.add(devId);
+    }
+  }
+  for (var mName in orphanMoon) { groupedData.push(orphanMoon[mName]); }
+
+  var html = '';
+  groupedData.forEach(function (entry) {
+    var blueArr = Array.from(entry.blueNames);
+    var mainName = (blueArr.length > 0) ? blueArr[0] : (Array.from(entry.greenNames)[0] || 'Unknown');
+    // Truyền tableType = 2 cho Bảng 2
+    html += _buildMoonTableRowHtml(mainName, Array.from(entry.ids), Array.from(entry.greenNames), Array.from(entry.goldNames), Array.from(entry.founderKeys), lv, blueArr.length === 0, 2);
+  });
+  tbody.innerHTML = html;
+}
+
+/* ── HELPER: BUILD TABLE ROW (Áp dụng UI Nhận diện 2 Bảng) ── */
+function _buildMoonTableRowHtml(mainName, idsArr, greenArr, goldArr, fKeysArr, lv, isNoIngame = false, tableType = 1) {
+  var blueStr = isNoIngame
+    ? '<span style="color:var(--muted);font-style:italic;font-size:0.8rem;">(Chưa có Ingame)</span>'
+    : '<span style="color:#2980b9;font-weight:900;">' + esc(mainName) + '</span>';
+
+  var greenStr = (lv >= 7) ? greenArr.map(function (n) { return '<span style="color:#27ae60;font-weight:900;">' + esc(n) + '</span>'; }).join('<br>') : '';
+  var goldStr = (lv >= 7) ? goldArr.map(function (n) { return '<span style="color:#b8860b;font-weight:900;">' + esc(n) + '</span>'; }).join('<br>') : '';
+
+  var actionStr = '<div style="display:flex; gap:8px; justify-content:center;">';
+
+  if (lv >= 7) {
+    var fKeysStr = JSON.stringify(fKeysArr).replace(/"/g, '&quot;');
+    var idsStr = JSON.stringify(idsArr).replace(/"/g, '&quot;');
+
+    // Nút MERGE (Hiển thị khi có Xanh lá, chưa có Vàng)
+    if (greenArr.length > 0 && goldArr.length === 0) {
+      actionStr += '<button class="allow-protected" onclick="mergeMoonRow(\'' + esc(mainName) + '\', \'' + fKeysStr + '\', \'' + idsStr + '\')" title="Tích hợp" style="background:rgba(39,174,96,0.1); border:1px solid rgba(39,174,96,0.3); color:#27ae60; padding:6px; border-radius:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'#27ae60\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(39,174,96,0.1)\';this.style.color=\'#27ae60\'">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></button>';
+    }
+
+    // Nút UNMERGE (Hiển thị khi có Vàng)
+    if (goldArr.length > 0) {
+      actionStr += '<button class="allow-protected" onclick="unmergeMoonRow(\'' + fKeysStr + '\')" title="Hủy tích hợp" style="background:rgba(184,134,11,0.1); border:1px solid rgba(184,134,11,0.3); color:#b8860b; padding:6px; border-radius:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'#b8860b\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(184,134,11,0.1)\';this.style.color=\'#b8860b\'">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path><line x1="8" y1="8" x2="16" y2="16"></line></svg></button>';
+    }
+
+    // Nút DELETE (Luôn hiển thị)
+    actionStr += '<button class="allow-protected" onclick="deleteMoonRowData(\'' + esc(mainName) + '\', \'' + idsStr + '\', \'' + fKeysStr + '\')" title="Xóa dữ liệu" style="background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); color:#e74c3c; padding:6px; border-radius:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'#e74c3c\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(231,76,60,0.1)\';this.style.color=\'#e74c3c\'">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>';
+  }
+  actionStr += '</div>';
+
+  // Xác định màu vạch trái tùy thuộc vào Bảng 1 hay Bảng 2
+  var accentColor = tableType === 1 ? 'var(--accent2)' : 'var(--founder)';
+  var rowStyle = 'background:var(--card); box-shadow:0 2px 6px rgba(0,0,0,0.04); transition: transform 0.15s, box-shadow 0.15s;';
+  var hoverLogic = 'onmouseover="this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 4px 10px rgba(0,0,0,0.08)\';" onmouseout="this.style.transform=\'none\'; this.style.boxShadow=\'0 2px 6px rgba(0,0,0,0.04)\';"';
+
+  var output = '<tr style="' + rowStyle + '" ' + hoverLogic + '>' +
+    '<td style="padding:16px; border-top-left-radius:8px; border-bottom-left-radius:8px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); border-left:4px solid ' + accentColor + '; vertical-align:middle; font-family:\'Space Mono\',monospace; font-size:10px;">' +
+    idsArr.map(function (id) { return '<span class="dev-badge" style="margin-bottom:4px;display:inline-block;background:rgba(44,62,122,0.06);color:var(--accent2);border-color:rgba(44,62,122,0.2);">' + esc(id) + '</span>'; }).join(' ') +
+    '</td>' +
+    '<td style="padding:16px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); vertical-align:middle;">' + blueStr + '</td>';
+
+  if (lv === 7) {
+    output += '<td style="padding:16px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); vertical-align:middle;">' + greenStr + '</td>' +
+      '<td style="padding:16px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); vertical-align:middle;">' + goldStr + '</td>' +
+      '<td style="padding:16px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); border-right:1px solid var(--border); border-top-right-radius:8px; border-bottom-right-radius:8px; text-align:center; vertical-align:middle;">' + actionStr + '</td>';
+  } else {
+    output += '<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>';
+  }
+  output += '</tr>';
+  return output;
+}
+
+/* ══════════════════════════════════════════
+   ACTIONS: MERGE / UNMERGE / DELETE / TRASH
+   ══════════════════════════════════════════ */
+
+window.mergeMoonRow = function (moonName, founderKeysStr, idsStr) {
+  var fKeys = JSON.parse(founderKeysStr);
+  var moonIds = JSON.parse(idsStr);
+  if (fKeys.length === 0) return;
+
+  var mainKey = fKeys[0];
+  var mainProfile = _identities[mainKey];
+
+  var mergedIds = new Set(moonIds);
+  var existingIds = Array.isArray(mainProfile.ids) ? mainProfile.ids : (typeof mainProfile.ids === 'object' ? Object.values(mainProfile.ids) : []);
+  existingIds.forEach(function (id) { mergedIds.add(id); });
+
+  var updates = {};
+  updates['settings/identities/' + mainKey] = {
+    name: mainProfile.name || mainKey,
+    ids: Array.from(mergedIds),
+    merged: true
+  };
+  if (mainProfile.rank) updates['settings/identities/' + mainKey].rank = mainProfile.rank;
+
+  for (var i = 1; i < fKeys.length; i++) { updates['settings/identities/' + fKeys[i]] = null; }
+
+  if (db) {
+    db.ref().update(updates, function (err) {
+      if (!err) {
+        showToast('✓ Đã tích hợp thành công!');
+        renderMoonIngameTable();
+        renderMoonAllIdentitiesTable();
+      } else showToast('⚠ Lỗi khi tích hợp dữ liệu!');
+    });
+  }
+};
+
+window.unmergeMoonRow = function (founderKeysStr) {
+  var fKeys = JSON.parse(founderKeysStr);
+  if (fKeys.length === 0 || !db) return;
+
+  document.getElementById('confirm-title').textContent = 'Xác nhận Hủy Tích Hợp?';
+  document.getElementById('confirm-msg').innerHTML = 'Hồ sơ sẽ được gỡ cờ tích hợp và hoàn nguyên về trạng thái độc lập. Các ID thiết bị được bảo lưu nguyên vẹn.<br>Xác nhận hủy?';
+
+  document.getElementById('confirm-yes').onclick = function () {
+    closeConfirm();
+    var updates = {};
+    fKeys.forEach(function (k) {
+      var p = _identities[k];
+      if (p && p.merged) {
+        updates['settings/identities/' + k + '/merged'] = null; // Gỡ cờ merged
+      }
+    });
+    if (Object.keys(updates).length > 0) {
+      db.ref().update(updates, function (err) {
+        if (!err) {
+          showToast('✓ Đã hủy tích hợp thành công!');
+          renderMoonIngameTable();
+          renderMoonAllIdentitiesTable();
+        }
+      });
+    }
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+};
+
+var _pendingDeleteMoonData = null;
+window.deleteMoonRowData = function (moonName, idsStr, fKeysStr) {
+  var ids = JSON.parse(idsStr);
+  var fKeys = JSON.parse(fKeysStr);
+  if ((ids.length === 0 && fKeys.length === 0) || !db) return;
+
+  _pendingDeleteMoonData = { name: moonName, ids: ids, fKeys: fKeys };
+
+  document.getElementById('confirm-title').textContent = 'Xóa hồ sơ?';
+  document.getElementById('confirm-msg').innerHTML = 'Hồ sơ và liên kết định danh của <strong>' + esc(moonName) + '</strong> sẽ bị xóa.<br>Dữ liệu có thể khôi phục trong vòng 7 ngày. Lịch sử truy cập gốc được bảo lưu.';
+
+  document.getElementById('confirm-yes').onclick = function () {
+    closeConfirm();
+    if (!_pendingDeleteMoonData) return;
+
+    var dataIds = _pendingDeleteMoonData.ids;
+    var dataKeys = _pendingDeleteMoonData.fKeys;
+    var trashId = 'trash_' + Date.now();
+
+    var trashObj = {
+      deletedAt: Date.now(),
+      name: _pendingDeleteMoonData.name,
+      moonUsers: {},
+      identities: {}
+    };
+
+    var updates = {};
+
+    dataIds.forEach(function (id) {
+      if (_moonUsers[id]) {
+        trashObj.moonUsers[id] = _moonUsers[id];
+        updates['moon_users/' + id] = null;
+      }
+    });
+
+    dataKeys.forEach(function (k) {
+      if (_identities[k]) {
+        trashObj.identities[k] = _identities[k];
+        updates['settings/identities/' + k] = null;
+      }
+    });
+
+    updates['trash/moon_data/' + trashId] = trashObj;
+
+    db.ref().update(updates, function (err) {
+      if (!err) {
+        showToast('✓ Dữ liệu đã được chuyển vào Thùng rác!');
+        var trashBtn = document.getElementById('btn-moon-trash');
+        if (trashBtn) trashBtn.style.display = 'flex';
+        renderMoonIngameTable();
+        renderMoonAllIdentitiesTable();
+      }
+      _pendingDeleteMoonData = null;
+    });
+  };
+  document.getElementById('confirm-overlay').classList.add('open');
+};
+
+/* ── THÙNG RÁC MOON DATA ── */
+window.openMoonTrash = function () {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 7) { showToast('Chỉ Founder mới xem được thùng rác!'); return; }
+
+  document.getElementById('moon-trash-overlay').classList.add('open');
+  var listEl = document.getElementById('moon-trash-list');
+  listEl.innerHTML = '<div style="text-align:center;padding:20px;"><span class="spin">⟳</span> Loading...</div>';
+
+  if (!db) return;
+  db.ref('trash/moon_data').once('value', function (snap) {
+    var now = Date.now(), items = [], toDelete = {};
+    snap.forEach(function (c) {
+      var val = c.val();
+      // 7 ngày = 7 * 24 * 60 * 60 * 1000 = 604800000
+      if (val && now - (val.deletedAt || 0) > 604800000) {
+        toDelete['trash/moon_data/' + c.key] = null;
+      } else {
+        items.push(Object.assign({ _k: c.key }, val || {}));
+      }
+    });
+
+    if (Object.keys(toDelete).length > 0) db.ref().update(toDelete);
+    items.sort(function (a, b) { return (b.deletedAt || 0) - (a.deletedAt || 0); });
+
+    var trashBtn = document.getElementById('btn-moon-trash');
+    if (items.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Thùng rác trống.</div>';
+      if (trashBtn) trashBtn.style.display = 'none';
+    } else {
+      if (trashBtn) trashBtn.style.display = 'flex';
+      listEl.innerHTML = items.map(function (item) {
+        var delD = new Date(item.deletedAt);
+        var uCount = Object.keys(item.moonUsers || {}).length;
+        var iCount = Object.keys(item.identities || {}).length;
+
+        return '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:12px 8px;">' +
+          '<div><strong style="color:#2980b9;font-size:14px;">' + esc(item.name) + '</strong><br>' +
+          '<span style="color:var(--muted);font-size:11px;">Bao gồm: ' + uCount + ' Ingame, ' + iCount + ' Profile</span><br>' +
+          '<span style="color:var(--muted);font-size:10px;">Xóa lúc: ' + delD.toLocaleString() + '</span></div>' +
+          '<button style="padding:6px 12px;border:1px solid var(--secure);background:rgba(39,174,96,0.1);color:var(--secure);cursor:pointer;font-family:\'Nunito\',sans-serif;font-weight:bold;font-size:11px;border-radius:4px;transition:all 0.2s;" onmouseover="this.style.background=\'var(--secure)\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(39,174,96,0.1)\';this.style.color=\'var(--secure)\'" onclick="restoreMoonTrash(\'' + String(item._k) + '\')">Khôi phục</button>' +
+          '</div>';
+      }).join('');
+    }
+  });
+};
+
+window.closeMoonTrash = function () {
+  document.getElementById('moon-trash-overlay').classList.remove('open');
+};
+
+window.restoreMoonTrash = function (key) {
+  if (!db) return;
+  db.ref('trash/moon_data/' + key).once('value', function (snap) {
+    var data = snap.val();
+    if (!data) return;
+
+    var updates = {};
+    if (data.moonUsers) {
+      for (var id in data.moonUsers) { updates['moon_users/' + id] = data.moonUsers[id]; }
+    }
+    if (data.identities) {
+      for (var ik in data.identities) { updates['settings/identities/' + ik] = data.identities[ik]; }
+    }
+
+    updates['trash/moon_data/' + key] = null;
+
+    db.ref().update(updates, function (err) {
+      if (!err) {
+        showToast('✓ Đã khôi phục dữ liệu!');
+        openMoonTrash(); // refresh list
+        renderMoonIngameTable();
+        renderMoonAllIdentitiesTable();
+      }
+    });
+  });
+};
+
+// Gọi check khi khởi tạo trang Admin (để hiện nút Thùng rác nếu có đồ)
+setTimeout(function () {
+  if (db && ROLE_LEVEL[_currentLoginRole] === 7) {
+    db.ref('trash/moon_data').once('value', function (s) {
+      var trashBtn = document.getElementById('btn-moon-trash');
+      if (trashBtn && s.exists()) trashBtn.style.display = 'flex';
+    });
+  }
+}, 3000);

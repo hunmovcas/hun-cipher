@@ -18,7 +18,7 @@ function initFirebase() {
       }
     });
 
-    db.ref('settings/identities').on('value', function(snap) {
+    db.ref('settings/identities').on('value', function (snap) {
       _identities = snap.val() || {};
       if (document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
         if (typeof computeUniqueLogs === 'function') computeUniqueLogs();
@@ -26,14 +26,17 @@ function initFirebase() {
           renderLogs(); renderUniqueLogs(); renderIpStats();
         }
       }
+      if (typeof renderMoonUserTable === 'function') renderMoonUserTable();
     });
 
     // Lắng nghe Moon Users & Profiles
-    db.ref('moon_users').on('value', function(snap) {
+    db.ref('moon_users').on('value', function (snap) {
       _moonUsers = snap.val() || {};
+      if (typeof renderMoonUserTable === 'function') renderMoonUserTable();
     });
-    db.ref('moon_profiles').on('value', function(snap) {
+    db.ref('moon_profiles').on('value', function (snap) {
       _moonProfiles = snap.val() || {};
+      if (typeof renderMoonUserTable === 'function') renderMoonUserTable();
     });
 
     db.ref('settings/passwords_v3').on('value', function(snap) {
