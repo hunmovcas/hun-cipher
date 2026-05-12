@@ -393,6 +393,11 @@ function switchMoonAdminSection(section) {
     renderMoonIngameTable();
     renderMoonAllIdentitiesTable();
     var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+    
+    // Hiển thị nút Thùng rác cho Founder
+    var trashBtn = document.getElementById('btn-moon-trash');
+    if (trashBtn) trashBtn.style.display = (lv === 7) ? 'flex' : 'none';
+
     // Co-founder (lv=6) không được nhìn thấy các cột chứa tên xanh lá, vàng, nút merge
 
     // Bảng 1
@@ -1198,9 +1203,7 @@ window.openMoonTrash = function () {
     var trashBtn = document.getElementById('btn-moon-trash');
     if (items.length === 0) {
       listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Thùng rác trống.</div>';
-      if (trashBtn) trashBtn.style.display = 'none';
     } else {
-      if (trashBtn) trashBtn.style.display = 'flex';
       listEl.innerHTML = items.map(function (item) {
         var delD = new Date(item.deletedAt);
         var uCount = Object.keys(item.moonUsers || {}).length;
@@ -1247,13 +1250,3 @@ window.restoreMoonTrash = function (key) {
     });
   });
 };
-
-// Gọi check khi khởi tạo trang Admin (để hiện nút Thùng rác nếu có đồ)
-setTimeout(function () {
-  if (db && ROLE_LEVEL[_currentLoginRole] === 7) {
-    db.ref('trash/moon_data').once('value', function (s) {
-      var trashBtn = document.getElementById('btn-moon-trash');
-      if (trashBtn && s.exists()) trashBtn.style.display = 'flex';
-    });
-  }
-}, 3000);
