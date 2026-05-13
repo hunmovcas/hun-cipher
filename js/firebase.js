@@ -20,19 +20,18 @@ function initFirebase() {
 
     db.ref('settings/identities').on('value', function (snap) {
       _identities = snap.val() || {};
+      if (typeof checkAndAutoMergeMoonProfiles === 'function') checkAndAutoMergeMoonProfiles();
       if (document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
         if (typeof computeUniqueLogs === 'function') computeUniqueLogs();
         if (typeof renderLogs === 'function') {
           renderLogs(); renderUniqueLogs(); renderIpStats();
         }
       }
-      // Gọi đúng tên các hàm render UI
       if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
       if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
       if (typeof renderIdentityList === 'function') renderIdentityList();
     });
 
-    // Lắng nghe Family Tree
     db.ref('settings/family_tree').on('value', function (snap) {
       _familyTree = snap.val() || {};
       if (typeof renderFamilyTree === 'function' && document.getElementById('family-tree-overlay') && document.getElementById('family-tree-overlay').classList.contains('open')) {
@@ -40,17 +39,28 @@ function initFirebase() {
       }
     });
 
-    // Lắng nghe Moon Users & Profiles
     db.ref('moon_users').on('value', function (snap) {
       _moonUsers = snap.val() || {};
-      if (typeof renderMoonUserTable === 'function') renderMoonUserTable();
-    });
-    db.ref('moon_profiles').on('value', function (snap) {
-      _moonProfiles = snap.val() || {};
-      if (typeof renderMoonUserTable === 'function') renderMoonUserTable();
+      if (typeof autoMergeMoonProfiles === 'function') autoMergeMoonProfiles();
+      if (typeof checkAndAutoMergeMoonProfiles === 'function') checkAndAutoMergeMoonProfiles();
+      if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
+      if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
+      if (typeof renderLogs === 'function' && document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
+        renderLogs(); renderUniqueLogs(); renderIpStats();
+      }
+      if (typeof renderIdentityList === 'function') renderIdentityList();
     });
 
-    // Kích hoạt tải và lắng nghe nội dung Hướng dẫn (Trang Moon)
+    db.ref('moon_profiles').on('value', function (snap) {
+      _moonProfiles = snap.val() || {};
+      if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
+      if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
+      if (typeof renderLogs === 'function' && document.getElementById('log-screen') && document.getElementById('log-screen').style.display === 'block') {
+        renderLogs(); renderUniqueLogs(); renderIpStats();
+      }
+      if (typeof renderIdentityList === 'function') renderIdentityList();
+    });
+
     if (typeof loadMoonContent === 'function') loadMoonContent();
 
     db.ref('settings/passwords_v3').on('value', function (snap) {
@@ -133,7 +143,6 @@ function initFirebase() {
   }
 }
 
-/* ── INCREMENT COUNTERS & PUSH LOG ── */
 function fbIncrement(type, authVia) {
   if (!db) return;
 
@@ -178,7 +187,6 @@ function fbIncrement(type, authVia) {
     .catch(function () { logData.geoSrc = 0; pushData(logData); });
 }
 
-/* ── APPLY COMPUTED COUNTS ── */
 function applyCounts() {
   _vReal = Math.max(0, (_rawCounts.real_visitors || 0) + (_offsets.real_visitors || 0));
   _vUNormal = Math.max(0, (_rawCounts.unique_normal || 0) + (_offsets.unique_normal || 0));
@@ -211,7 +219,6 @@ function applyCounts() {
   if (typeof updateStatsUI === 'function') updateStatsUI();
 }
 
-/* ── LISTEN: outer only (before login) ── */
 function fbListenOuter() {
   if (!db) return;
   db.ref('logs').orderByChild('type').equalTo('view').on('value', function (snap) {
@@ -235,7 +242,6 @@ function fbListenOuter() {
   });
 }
 
-/* ── LISTEN: all counters + logs (after login) ── */
 function fbListenAll() {
   if (!db) return;
 

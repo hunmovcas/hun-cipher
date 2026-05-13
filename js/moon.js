@@ -34,18 +34,13 @@ function toggleMoonFounderEye() {
   }
 }
 
-// Hàm mở giao diện Moon (khi ấn nút Cầu vồng)
 function goToMoon() {
   document.getElementById('moon-screen').style.display = 'flex';
-
   const hasAccepted = localStorage.getItem('moonTosAccepted');
-
   if (hasAccepted === 'true') {
     document.getElementById('moon-step1').style.display = 'none';
     document.getElementById('moon-step2').style.display = 'flex';
-    setTimeout(() => {
-      document.getElementById('moon-name-input').focus();
-    }, 100);
+    setTimeout(() => { document.getElementById('moon-name-input').focus(); }, 100);
   } else {
     document.getElementById('moon-step1').style.display = 'flex';
     document.getElementById('moon-step2').style.display = 'none';
@@ -54,7 +49,6 @@ function goToMoon() {
   }
 }
 
-/* ── QUAY LẠI TRANG AC ── */
 function goToAC() {
   var moonScreen = document.getElementById('moon-screen');
   moonScreen.style.transition = 'opacity .3s';
@@ -79,26 +73,15 @@ function showMoonStep1() {
 function showMoonStep2() {
   const check = document.getElementById('moon-tos-check');
   const err = document.getElementById('moon-tos-err');
-
-  if (!check.checked) {
-    err.style.display = 'block';
-    return;
-  }
-
+  if (!check.checked) { err.style.display = 'block'; return; }
   err.style.display = 'none';
   localStorage.setItem('moonTosAccepted', 'true');
-
   document.getElementById('moon-step1').style.display = 'none';
   document.getElementById('moon-step2').style.display = 'flex';
-
-  setTimeout(() => {
-    document.getElementById('moon-name-input').focus();
-  }, 100);
+  setTimeout(() => { document.getElementById('moon-name-input').focus(); }, 100);
 }
 
-function normalizeMoonName(name) {
-  return name.trim();
-}
+function normalizeMoonName(name) { return name.trim(); }
 
 async function submitMoonLogin() {
   var rawName = document.getElementById('moon-name-input').value;
@@ -112,7 +95,71 @@ async function submitMoonLogin() {
     return;
   }
 
-  // --- LOGIC MỚI: KIỂM TRA NẾU NHẬP TÊN INGAME CỦA CHỦ NHÂN ---
+  var btn = document.getElementById('moon-login-btn');
+  var oldHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="spin">⟳</span> Đang xử lý...';
+  btn.disabled = true;
+
+  var deviceId = localStorage.getItem('hun_device_id');
+  if (!deviceId) {
+    deviceId = 'ID-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    localStorage.setItem('hun_device_id', deviceId);
+  }
+
+  // --- KIỂM TRA MẬT KHẨU ADMIN/FOUNDER/MAIN/SUB TRƯỚC TIÊN ---
+  var valToHash = rawName.toLowerCase();
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(valToHash));
+  var hash = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+
+  var pwRole = null;
+  if (typeof currentHashes !== 'undefined') {
+    if (hash === currentHashes.founder) pwRole = 'founder';
+    else if (hash === currentHashes.admin) pwRole = 'admin';
+    else if (hash === currentHashes.normal) pwRole = 'normal';
+    else if (hash === currentHashes.secondary) pwRole = 'secondary';
+  }
+
+  if (pwRole) {
+    btn.innerHTML = oldHtml; btn.disabled = false;
+
+    _loggedIn = true;
+    var assignedRank = typeof getIdentityRankByDevId === 'function' ? getIdentityRankByDevId(deviceId) : null;
+    var finalRole = pwRole;
+    var finalAuthVia = null;
+
+    if (assignedRank && assignedRank !== pwRole) {
+      var rankLv = ROLE_LEVEL[assignedRank] || 0;
+      var pwLv = ROLE_LEVEL[pwRole] || 0;
+      if (rankLv > pwLv) {
+        finalRole = assignedRank;
+        finalAuthVia = pwRole;
+      }
+    }
+
+    _currentLoginRole = finalRole;
+    _authVia = finalAuthVia;
+    _isAdmin = (ROLE_LEVEL[_currentLoginRole] >= 3);
+
+    if (pwRole === 'founder' || finalRole === 'founder') {
+      sessionStorage.setItem('hun_known_founder', 'true');
+    }
+
+    var maskedName = pwRole + ' password';
+    fbIncrementMoon(maskedName, deviceId, 'login_' + _currentLoginRole, _authVia);
+
+    if (_isAdmin && typeof fbListenAll === 'function') fbListenAll();
+
+    document.getElementById('moon-screen').style.display = 'none';
+    var pwScreen = document.getElementById('pw-screen');
+    if (pwScreen) pwScreen.style.display = 'none';
+
+    showMoonAdminScreen(_currentLoginRole);
+    if (typeof showToast === 'function') showToast('✓ Đăng nhập quyền ' + pwRole.toUpperCase() + '!');
+    return;
+  }
+  // --- KẾT THÚC KIỂM TRA MẬT KHẨU ---
+
+  // Kiểm tra nếu là tên Founder trong gia phả
   var isFounderName = false;
   for (var key in _familyTree) {
     if (_familyTree[key].role === 'founder' && _familyTree[key].name === name) {
@@ -125,79 +172,74 @@ async function submitMoonLogin() {
     errEl.textContent = 'Định danh thuộc cấp Chủ nhân. Yêu cầu xác thực!';
     errEl.style.display = 'block';
     setTimeout(function () { errEl.style.display = 'none'; }, 3000);
-    // Tự động bật bảng mật khẩu Founder
     openMoonFounderOverlay();
-    return; // Dừng tiến trình đăng nhập thông thường
+    return;
   }
-  // -----------------------------------------------------------
 
-  var btn = document.getElementById('moon-login-btn');
-  var oldHtml = btn.innerHTML;
-  btn.innerHTML = '<span class="spin">⟳</span> Đang xử lý...';
-  btn.disabled = true;
+  var localStoredName = localStorage.getItem('moon_name_' + deviceId);
 
-  var deviceId = localStorage.getItem('hun_device_id');
-  if (!deviceId) {
-    deviceId = 'ID-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    localStorage.setItem('hun_device_id', deviceId);
+  // Kiểm tra offline đổi tên
+  if (localStoredName && localStoredName !== name) {
+    errEl.textContent = '⚠ Tên không khớp với lần đăng nhập trước!';
+    errEl.style.display = 'block';
+    btn.innerHTML = oldHtml; btn.disabled = false;
+    setTimeout(function () { errEl.style.display = 'none'; }, 4000);
+    return;
   }
 
   if (db) {
-    var moonSnap = await db.ref('moon_users/' + deviceId).once('value');
-    var moonData = moonSnap.val();
+    try {
+      const dbPromise = db.ref('moon_users/' + deviceId).once('value');
+      const timeoutPromise = new Promise(function (_, reject) { setTimeout(function () { reject(new Error('timeout')); }, 4000); });
+      var moonSnap = await Promise.race([dbPromise, timeoutPromise]);
+      var moonData = moonSnap.val();
 
-    if (moonData && moonData.name) {
-      if (moonData.name !== name) {
-        _sendMoonNameChangeAlert(deviceId, moonData.name, name);
-        errEl.textContent = '⚠ Tên không khớp với lần đăng nhập trước! Đã gửi cảnh báo.';
-        errEl.style.display = 'block';
-        btn.innerHTML = oldHtml; btn.disabled = false;
-        setTimeout(function () { errEl.style.display = 'none'; }, 4000);
-        return;
+      if (moonData && moonData.name) {
+        if (moonData.name !== name) {
+          localStorage.setItem('moon_name_' + deviceId, moonData.name);
+          errEl.textContent = '⚠ Tên không khớp với lần đăng nhập trước!';
+          errEl.style.display = 'block';
+          btn.innerHTML = oldHtml; btn.disabled = false;
+          setTimeout(function () { errEl.style.display = 'none'; }, 4000);
+          return;
+        }
+      } else {
+        db.ref('moon_users/' + deviceId).set({
+          name: name,
+          firstSeen: Date.now(),
+          deviceId: deviceId
+        });
       }
-    } else {
-      await db.ref('moon_users/' + deviceId).set({
-        name: name,
-        firstSeen: Date.now(),
-        deviceId: deviceId
-      });
-      await _checkAndAutoMergeWithFounderProfile(deviceId, name);
-      _checkAndMergeMoonProfile(deviceId, name);
+    } catch (firebaseErr) {
+      console.warn("Firebase timeout khi kiểm tra moon_users:", firebaseErr);
     }
   }
 
   localStorage.setItem('moon_name_' + deviceId, name);
   _moonLoggedIn = true;
   _moonUserName = name;
-
   btn.innerHTML = oldHtml; btn.disabled = false;
 
-  fbIncrementMoon(name, deviceId);
-  _showMoonContent(name);
-}
-
-async function _checkAndAutoMergeWithFounderProfile(deviceId, name) {
-  if (!db) return;
-  var idSnap = await db.ref('settings/identities').once('value');
-  var identities = idSnap.val() || {};
-
-  for (var key in identities) {
-    var profile = identities[key];
-    var profileName = profile.name || key;
-    if (profileName === name) {
-      var existingIds = [];
-      if (Array.isArray(profile.ids)) existingIds = profile.ids.slice();
-      else if (typeof profile.ids === 'object' && profile.ids) existingIds = Object.values(profile.ids);
-      if (existingIds.indexOf(deviceId) === -1) existingIds.push(deviceId);
-      var mergedProfile = { name: profileName, ids: existingIds, merged: true };
-      if (profile.rank) mergedProfile.rank = profile.rank;
-      await db.ref('settings/identities/' + key).set(mergedProfile);
-      db.ref('notifications').push({
-        text: '⭐ Auto-merge: Ingame "' + name + '" (Device: ' + deviceId + ') trùng khớp với Active Profile "' + profileName + '". Đã tự động tích hợp thành màu vàng.',
-        ts: Date.now(), read: false
-      });
+  var familyRole = null;
+  var familyMemberId = null;
+  for (var fKey in _familyTree) {
+    var fm = _familyTree[fKey];
+    if (fm.role !== 'founder' && fm.name === name) {
+      familyRole = fm.role;
+      familyMemberId = fKey;
       break;
     }
+  }
+
+  if (familyRole) {
+    _pendingMoonFamilyName = name;
+    _pendingMoonFamilyRole = familyRole;
+    _pendingMoonFamilyMemberId = familyMemberId;
+    _pendingMoonFamilyDeviceId = deviceId;
+    _openMoonSecretCodeOverlay(name, familyRole);
+  } else {
+    fbIncrementMoon(name, deviceId);
+    _enterMoonAsGuest(name, deviceId);
   }
 }
 
@@ -209,53 +251,141 @@ function _sendMoonNameChangeAlert(deviceId, oldName, newName) {
   });
 }
 
-async function _checkAndMergeMoonProfile(newDeviceId, name) {
-  if (!db) return;
-  var allMoonSnap = await db.ref('moon_users').once('value');
-  var allMoon = allMoonSnap.val() || {};
-  var sameNameDevices = [];
+// Hàm tự động gom nhóm không cần level — chạy mọi lúc khi có dữ liệu moon_users
+window.autoMergeMoonProfiles = function () {
+  if (!db || !_moonUsers) return;
 
-  Object.keys(allMoon).forEach(function (devId) {
-    if (allMoon[devId] && allMoon[devId].name === name && devId !== newDeviceId) {
-      sameNameDevices.push(devId);
+  var assignedIds = new Set();
+  for (var k in _identities) {
+    var profile = _identities[k];
+    var idsArray = Array.isArray(profile.ids) ? profile.ids : (typeof profile.ids === 'object' && profile.ids ? Object.values(profile.ids) : []);
+    idsArray.forEach(function (id) { assignedIds.add(id); });
+  }
+
+  // Gom tất cả moon users chưa được assign vào identity nào
+  var moonGroups = {};
+  for (var devId in _moonUsers) {
+    var mName = _moonUsers[devId] && _moonUsers[devId].name;
+    if (!mName) continue;
+    if (!moonGroups[mName]) moonGroups[mName] = { unassigned: [], assigned: [] };
+    if (assignedIds.has(devId)) {
+      moonGroups[mName].assigned.push(devId);
+    } else {
+      moonGroups[mName].unassigned.push(devId);
     }
-  });
+  }
 
-  if (sameNameDevices.length > 0) {
-    sameNameDevices.push(newDeviceId);
-    var existingMoonProfileSnap = await db.ref('moon_profiles').orderByChild('name').equalTo(name).once('value');
+  var pendingUpdates = {};
+  var hasUpdates = false;
+
+  for (var mName in moonGroups) {
+    var group = moonGroups[mName];
+    var allIds = group.unassigned.concat(group.assigned);
+
+    // Chỉ xử lý nếu có ít nhất 1 ID chưa được assign
+    if (group.unassigned.length === 0) continue;
+
+    // Tìm auto profile đã có cho tên này
     var existingKey = null;
-    var existingProfile = null;
-    existingMoonProfileSnap.forEach(function (c) { existingKey = c.key; existingProfile = c.val(); });
+    for (var k in _identities) {
+      var p = _identities[k];
+      if (p.autoGenerated && p.name === mName) {
+        existingKey = k;
+        break;
+      }
+    }
 
     if (existingKey) {
-      var currentIds = existingProfile.ids || [];
-      sameNameDevices.forEach(function (id) { if (currentIds.indexOf(id) === -1) currentIds.push(id); });
-      db.ref('moon_profiles/' + existingKey).update({ ids: currentIds, updatedAt: Date.now() });
-    } else {
-      db.ref('moon_profiles').push({
-        name: name, ids: sameNameDevices, type: 'moon',
-        createdAt: Date.now(), updatedAt: Date.now()
+      // Cập nhật thêm ID mới vào profile đã có
+      var existingIds = Array.isArray(_identities[existingKey].ids) ? _identities[existingKey].ids.slice() : Object.values(_identities[existingKey].ids || {});
+      var changed = false;
+      group.unassigned.forEach(function (id) {
+        if (existingIds.indexOf(id) === -1) { existingIds.push(id); changed = true; }
       });
+      if (changed) {
+        pendingUpdates['settings/identities/' + existingKey + '/ids'] = existingIds;
+        hasUpdates = true;
+      }
+    } else if (allIds.length >= 2) {
+      // Tạo mới chỉ khi có từ 2 ID trở lên (tổng cộng)
+      var newKey = 'id_moon_auto_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+      pendingUpdates['settings/identities/' + newKey] = {
+        name: mName,
+        ids: group.unassigned,
+        autoGenerated: true
+      };
+      hasUpdates = true;
     }
-    db.ref('notifications').push({
-      text: '🔗 Phát hiện nhiều device cùng tên Moon "' + name + '" (' + sameNameDevices.length + ' devices). Đã tự động gom profile.',
-      ts: Date.now(), read: false
+  }
+
+  if (hasUpdates) {
+    db.ref().update(pendingUpdates);
+  }
+};
+
+// Hàm được Admin/Founder (Level >= 6) tự động kích hoạt khi có thay đổi từ DB
+window.checkAndAutoMergeMoonProfiles = function () {
+  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  if (lv < 6 || !db) return;
+
+  var assignedIds = new Set();
+  for (var k in _identities) {
+    var profile = _identities[k];
+    var idsArray = Array.isArray(profile.ids) ? profile.ids : (typeof profile.ids === 'object' && profile.ids ? Object.values(profile.ids) : []);
+    idsArray.forEach(function (id) { assignedIds.add(id); });
+  }
+
+  var moonGroups = {};
+  if (typeof _moonUsers !== 'undefined' && _moonUsers) {
+    for (var devId in _moonUsers) {
+      if (!assignedIds.has(devId)) {
+        var mName = _moonUsers[devId].name;
+        if (!moonGroups[mName]) moonGroups[mName] = [];
+        moonGroups[mName].push(devId);
+      }
+    }
+  }
+
+  var pendingUpdates = {};
+  var hasUpdates = false;
+
+  for (var mName in moonGroups) {
+    if (moonGroups[mName].length >= 2) {
+      var newKey = 'id_moon_auto_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+      pendingUpdates['settings/identities/' + newKey] = {
+        name: mName,
+        ids: moonGroups[mName],
+        autoGenerated: true
+      };
+      hasUpdates = true;
+    }
+  }
+
+  if (hasUpdates) {
+    db.ref().update(pendingUpdates, function (err) {
+      if (!err) {
+        db.ref('notifications').push({
+          text: '🔗 Hệ thống tự động gom nhóm Profile cho Ingame "' + Object.keys(moonGroups).filter(function (n) { return moonGroups[n].length >= 2; }).join(', ') + '".',
+          ts: Date.now(), read: false
+        });
+      }
     });
   }
-}
+};
 
-function fbIncrementMoon(name, deviceId) {
+function fbIncrementMoon(name, deviceId, customType, authVia) {
   if (!db) return;
   var ua = navigator.userAgent;
   var logData = {
-    type: 'login_moon', ts: Date.now(), ua: ua,
+    type: customType || 'login_moon', ts: Date.now(), ua: ua,
     browser: _detectBrowser(ua), device: _detectDevice(ua), os: _detectOS(ua),
     lang: navigator.language || '',
     tz: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
     screen: screen.width + 'x' + screen.height,
     deviceId: deviceId, moonName: name
   };
+  if (authVia) logData.authVia = authVia;
+
   _fetchGeo()
     .then(function (geo) { Object.assign(logData, geo); db.ref('logs').push(logData); })
     .catch(function () { logData.geoSrc = 0; db.ref('logs').push(logData); });
@@ -280,6 +410,13 @@ function showMoonAdminScreen(role) {
   _updateMoonRoleIconByRole(role);
 
   var lv = ROLE_LEVEL[role] || 1;
+
+  var moonCounters = document.getElementById('moon-counters');
+  if (moonCounters) {
+    // Hiển thị nguyên cụm để đảm bảo Profile icon luôn xuất hiện
+    moonCounters.style.display = 'flex';
+  }
+
   var sw = document.getElementById('moon-cnt-switch');
   var swD = document.getElementById('moon-div-switch');
   if (sw && swD) {
@@ -324,15 +461,6 @@ function _renderMoonAdminDropdown(role) {
   var lv = ROLE_LEVEL[role] || 1;
   var dd = document.getElementById('moon-admin-dropdown');
   if (!dd) return;
-
-  var roleLabels = {
-    founder: '👑 Founder', cofounder: '💎 Co-Founder',
-    manager: '🔱 Manager', head: '⚜️ Head', admin: '🌟 Admin'
-  };
-  var roleColors = {
-    founder: 'var(--founder)', cofounder: 'var(--cofounder)',
-    manager: 'var(--manager)', head: 'var(--head)', admin: 'var(--orange)'
-  };
 
   var html = '';
   html += '<div style="padding:10px 16px 10px;border-bottom:1px solid var(--border);text-align:center;">'
@@ -585,14 +713,7 @@ window.getMoonDisplayName = function (deviceId) {
     if (idsArr2.indexOf(deviceId) !== -1 && !profile2.merged)
       return { name: profile2.name || key2, type: 'founder' };
   }
-  if (_moonProfiles) {
-    for (var pk in _moonProfiles) {
-      var mp = _moonProfiles[pk];
-      if (mp.ids && mp.ids.indexOf(deviceId) !== -1)
-        return { name: mp.name, type: 'moon' };
-    }
-  }
-  if (_moonUsers && _moonUsers[deviceId])
+  if (typeof _moonUsers !== 'undefined' && _moonUsers && _moonUsers[deviceId])
     return { name: _moonUsers[deviceId].name, type: 'moon' };
   return { name: deviceId, type: 'raw' };
 };
@@ -640,6 +761,13 @@ function switchRoleMoon(newRole) {
   setTimeout(function () {
     updateMoonRoleIcon();
     updateMoonSwitchVisibility();
+
+    var moonCounters = document.getElementById('moon-counters');
+    if (moonCounters) {
+      var showToolbar = newLv >= 3 || sessionStorage.getItem('hun_known_founder') === 'true';
+      moonCounters.style.display = showToolbar ? 'flex' : 'none';
+    }
+
     _renderMoonAdminDropdown(_currentLoginRole);
 
     var noti = document.getElementById('moon-cnt-noti');
@@ -735,7 +863,7 @@ function toggleMoonAdminMenu(e) {
 function renderMoonNotiList() {
   var listEl = document.getElementById('moon-noti-list');
   if (!listEl) return;
-  if (_allNoti.length === 0) {
+  if (typeof _allNoti === 'undefined' || _allNoti.length === 0) {
     listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:10.5px;">Không có thông báo mới</div>';
     return;
   }
@@ -751,6 +879,7 @@ function renderMoonNotiList() {
 }
 
 function syncMoonNotiBadge() {
+  if (typeof _allNoti === 'undefined') return;
   var unread = _allNoti.filter(function (n) { return !n.read; }).length;
   var moonNum = document.getElementById('moon-num-noti');
   var cntNoti = document.getElementById('moon-cnt-noti');
@@ -887,7 +1016,7 @@ function renderMoonIngameTable() {
           if (p.merged) {
             moonData[mName].goldNames.add(pName);
             moonData[mName].founderKeys.add(k);
-          } else {
+          } else if (!p.autoGenerated) { // Chỉ tính là Xanh lá nếu do Founder tạo
             moonData[mName].greenNames.add(pName);
             moonData[mName].founderKeys.add(k);
           }
@@ -927,12 +1056,15 @@ function renderMoonAllIdentitiesTable() {
       founderKeys: new Set([k])
     };
 
-    if (p.merged) entry.goldNames.add(pName);
-    else entry.greenNames.add(pName);
+    if (p.merged) {
+      entry.goldNames.add(pName);
+    } else if (!p.autoGenerated) { // Không tự động tính Xanh lá cho profile tự động
+      entry.greenNames.add(pName);
+    }
 
     pIds.forEach(function (id) {
       processedIds.add(id);
-      if (_moonUsers && _moonUsers[id] && _moonUsers[id].name) {
+      if (typeof _moonUsers !== 'undefined' && _moonUsers && _moonUsers[id] && _moonUsers[id].name) {
         entry.blueNames.add(_moonUsers[id].name);
       }
     });
@@ -940,19 +1072,20 @@ function renderMoonAllIdentitiesTable() {
   }
 
   var orphanMoon = {};
-  for (var devId in _moonUsers) {
-    if (!processedIds.has(devId)) {
-      var mName = _moonUsers[devId].name;
-      if (!orphanMoon[mName]) orphanMoon[mName] = { ids: new Set(), blueNames: new Set([mName]), greenNames: new Set(), goldNames: new Set(), founderKeys: new Set() };
-      orphanMoon[mName].ids.add(devId);
+  if (typeof _moonUsers !== 'undefined' && _moonUsers) {
+    for (var devId in _moonUsers) {
+      if (!processedIds.has(devId)) {
+        var mName = _moonUsers[devId].name;
+        if (!orphanMoon[mName]) orphanMoon[mName] = { ids: new Set(), blueNames: new Set([mName]), greenNames: new Set(), goldNames: new Set(), founderKeys: new Set() };
+        orphanMoon[mName].ids.add(devId);
+      }
     }
+    for (var mName in orphanMoon) { groupedData.push(orphanMoon[mName]); }
   }
-  for (var mName in orphanMoon) { groupedData.push(orphanMoon[mName]); }
 
   var html = '';
   groupedData.forEach(function (entry) {
     var blueArr = Array.from(entry.blueNames);
-    // FIX: Bổ sung fallback lấy tên Gold (tên đã merge) nếu chưa có ai đăng nhập
     var mainName = (blueArr.length > 0) ? blueArr[0] : (Array.from(entry.greenNames)[0] || Array.from(entry.goldNames)[0] || 'Unknown');
     html += _buildMoonTableRowHtml(mainName, Array.from(entry.ids), Array.from(entry.greenNames), Array.from(entry.goldNames), Array.from(entry.founderKeys), lv, blueArr.length === 0, 2);
   });
@@ -973,7 +1106,8 @@ function _buildMoonTableRowHtml(mainName, idsArr, greenArr, goldArr, fKeysArr, l
     var fKeysStr = JSON.stringify(fKeysArr).replace(/"/g, '&quot;');
     var idsStr = JSON.stringify(idsArr).replace(/"/g, '&quot;');
 
-    if (greenArr.length > 0 && goldArr.length === 0) {
+    // Mở khóa Merge cho cả Auto Profile (Xanh dương đơn lẻ chưa có tên Vàng)
+    if (goldArr.length === 0) {
       actionStr += '<button class="allow-protected" onclick="mergeMoonRow(\'' + esc(mainName) + '\', \'' + fKeysStr + '\', \'' + idsStr + '\')" title="Tích hợp" style="background:rgba(39,174,96,0.1); border:1px solid rgba(39,174,96,0.3); color:#27ae60; padding:6px; border-radius:6px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'#27ae60\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(39,174,96,0.1)\';this.style.color=\'#27ae60\'">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></button>';
     }
@@ -1012,21 +1146,45 @@ function _buildMoonTableRowHtml(mainName, idsArr, greenArr, goldArr, fKeysArr, l
 window.mergeMoonRow = function (moonName, founderKeysStr, idsStr) {
   var fKeys = JSON.parse(founderKeysStr);
   var moonIds = JSON.parse(idsStr);
-  if (fKeys.length === 0) return;
+  if (moonIds.length === 0) return;
+
+  var mergedIds = new Set(moonIds);
+  var goldName = (moonName && moonName !== 'Unknown') ? moonName : 'Merged Profile';
+
+  if (fKeys.length === 0) {
+    var newKey = 'id_merged_' + Date.now();
+    var newProfile = {
+      name: goldName,
+      ids: Array.from(mergedIds),
+      merged: true
+    };
+    if (db) {
+      db.ref('settings/identities/' + newKey).set(newProfile, function (err) {
+        if (!err) {
+          showToast('✓ Đã tích hợp thành công!');
+          if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
+          if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
+        } else showToast('⚠ Lỗi khi tích hợp dữ liệu!');
+      });
+    }
+    return;
+  }
 
   var mainKey = fKeys[0];
   var mainProfile = _identities[mainKey];
-
-  var mergedIds = new Set(moonIds);
   var existingIds = Array.isArray(mainProfile.ids) ? mainProfile.ids : (typeof mainProfile.ids === 'object' ? Object.values(mainProfile.ids) : []);
   existingIds.forEach(function (id) { mergedIds.add(id); });
 
+  goldName = (moonName && moonName !== 'Unknown') ? moonName : (mainProfile.name || mainKey);
+
   var updates = {};
   updates['settings/identities/' + mainKey] = {
-    name: mainProfile.name || mainKey,
+    name: goldName,
     ids: Array.from(mergedIds),
     merged: true
   };
+
+  updates['settings/identities/' + mainKey].autoGenerated = null;
   if (mainProfile.rank) updates['settings/identities/' + mainKey].rank = mainProfile.rank;
 
   for (var i = 1; i < fKeys.length; i++) { updates['settings/identities/' + fKeys[i]] = null; }
@@ -1035,8 +1193,8 @@ window.mergeMoonRow = function (moonName, founderKeysStr, idsStr) {
     db.ref().update(updates, function (err) {
       if (!err) {
         showToast('✓ Đã tích hợp thành công!');
-        renderMoonIngameTable();
-        renderMoonAllIdentitiesTable();
+        if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
+        if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
       } else showToast('⚠ Lỗi khi tích hợp dữ liệu!');
     });
   }
@@ -1062,8 +1220,8 @@ window.unmergeMoonRow = function (founderKeysStr) {
       db.ref().update(updates, function (err) {
         if (!err) {
           showToast('✓ Đã hủy tích hợp thành công!');
-          renderMoonIngameTable();
-          renderMoonAllIdentitiesTable();
+          if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
+          if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
         }
       });
     }
@@ -1100,7 +1258,7 @@ window.deleteMoonRowData = function (moonName, idsStr, fKeysStr) {
     var updates = {};
 
     dataIds.forEach(function (id) {
-      if (_moonUsers[id]) {
+      if (typeof _moonUsers !== 'undefined' && _moonUsers[id]) {
         trashObj.moonUsers[id] = _moonUsers[id];
         updates['moon_users/' + id] = null;
       }
@@ -1120,8 +1278,8 @@ window.deleteMoonRowData = function (moonName, idsStr, fKeysStr) {
         showToast('✓ Dữ liệu đã được chuyển vào Thùng rác!');
         var trashBtn = document.getElementById('btn-moon-trash');
         if (trashBtn) trashBtn.style.display = 'flex';
-        renderMoonIngameTable();
-        renderMoonAllIdentitiesTable();
+        if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
+        if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
       }
       _pendingDeleteMoonData = null;
     });
@@ -1196,81 +1354,175 @@ window.restoreMoonTrash = function (key) {
       if (!err) {
         showToast('✓ Đã khôi phục dữ liệu!');
         openMoonTrash();
-        renderMoonIngameTable();
-        renderMoonAllIdentitiesTable();
+        if (typeof renderMoonIngameTable === 'function') renderMoonIngameTable();
+        if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
       }
     });
   });
 };
 
-window.openMergeMoonProfile = function (moonProfileKey) {
-  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  if (lv < 7) { showToast('Chỉ Founder mới có thể tích hợp!'); return; }
-  var mp = _moonProfiles && _moonProfiles[moonProfileKey];
-  if (!mp) { showToast('Không tìm thấy Moon Profile!'); return; }
+/* ── MOON FAMILY SECRET CODE OVERLAY ── */
+var _pendingMoonFamilyName = '';
+var _pendingMoonFamilyRole = '';
+var _pendingMoonFamilyMemberId = '';
+var _pendingMoonFamilyDeviceId = '';
 
-  var founderKeys = Object.keys(_identities);
-  var select = '<select id="merge-target-select" class="input-field" style="margin-bottom:16px;"><option value="">-- Chọn Founder Profile để tích hợp --</option>';
-  founderKeys.forEach(function (k) {
-    select += '<option value="' + esc(k) + '">' + esc(_identities[k].name || k) + '</option>';
-  });
-  select += '<option value="__new__">+ Tạo profile mới từ tên Moon</option></select>';
-
-  document.getElementById('confirm-title').textContent = 'Tích hợp Moon "' + mp.name + '"';
-  document.getElementById('confirm-msg').innerHTML = 'Chọn Founder Profile để tích hợp với Moon Profile "<strong>' + esc(mp.name) + '</strong>":<br><br>' + select;
-  document.getElementById('confirm-yes').onclick = function () {
-    var sel = document.getElementById('merge-target-select');
-    if (!sel || !sel.value) { showToast('Chọn profile đích!'); return; }
-    _doMergeMoon(moonProfileKey, sel.value, mp);
-  };
-  document.getElementById('confirm-overlay').classList.add('open');
+var _moonFamilyRoleMap = {
+  'phu_nhan': 'cofounder',
+  'chi_cot': 'manager',
+  'tin_huu': 'head'
 };
 
-function _doMergeMoon(moonProfileKey, targetKey, mp) {
-  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  if (lv < 7) return;
-  closeConfirm();
-  if (!db) return;
+function _openMoonSecretCodeOverlay(name, familyRole) {
+  var overlay = document.getElementById('moon-secret-code-overlay');
+  if (!overlay) {
+    var div = document.createElement('div');
+    div.id = 'moon-secret-code-overlay';
+    div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    div.innerHTML =
+      '<div style="background:var(--card);border-radius:12px;padding:32px 28px;max-width:360px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.18);">' +
+      '<div style="font-size:22px;font-weight:900;color:var(--ink);margin-bottom:8px;font-family:\'Nunito\',sans-serif;" id="moon-sc-title">Xác thực danh tính</div>' +
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;font-family:\'Nunito\',sans-serif;" id="moon-sc-desc">Nhập mã bí ẩn của bạn để xác nhận.</div>' +
+      '<input id="moon-sc-input" type="password" placeholder="Mã bí ẩn..." style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:\'Nunito\',sans-serif;background:var(--bg);color:var(--ink);margin-bottom:10px;" />' +
+      '<div id="moon-sc-err" style="color:var(--accent);font-size:12px;font-family:\'Nunito\',sans-serif;margin-bottom:10px;display:none;">Mã không đúng!</div>' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end;">' +
+      '<button onclick="closeMoonSecretCodeOverlay()" style="padding:9px 18px;border:1.5px solid var(--border);background:transparent;color:var(--muted);border-radius:7px;cursor:pointer;font-family:\'Nunito\',sans-serif;font-weight:700;font-size:13px;">Huỷ</button>' +
+      '<button onclick="submitMoonSecretCode()" style="padding:9px 18px;border:none;background:var(--accent2);color:#fff;border-radius:7px;cursor:pointer;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:13px;">Xác nhận</button>' +
+      '</div></div>';
+    document.body.appendChild(div);
+    overlay = div;
+  }
+  var roleLabels = { 'phu_nhan': 'Phu nhân 🦢', 'chi_cot': 'Bằng hữu 🦅', 'tin_huu': 'Tín hữu 🕊️' };
+  var titleEl = document.getElementById('moon-sc-title');
+  var descEl = document.getElementById('moon-sc-desc');
+  if (titleEl) titleEl.textContent = 'Xác thực: ' + (roleLabels[familyRole] || familyRole);
+  if (descEl) descEl.textContent = 'Xin chào ' + name + '! Nhập mã bí ẩn để vào.';
+  var inp = document.getElementById('moon-sc-input');
+  if (inp) { inp.value = ''; inp.type = 'password'; }
+  var err = document.getElementById('moon-sc-err');
+  if (err) err.style.display = 'none';
+  overlay.style.display = 'flex';
+  setTimeout(function () { if (inp) inp.focus(); }, 80);
+}
 
-  var allIds = (mp.ids || []).slice();
+function closeMoonSecretCodeOverlay() {
+  var overlay = document.getElementById('moon-secret-code-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
 
-  if (targetKey === '__new__') {
-    var newKey = 'id_merged_' + Date.now();
-    var newProfile = { name: mp.name, ids: allIds, merged: true };
-    var updates = {};
-    updates['settings/identities/' + newKey] = newProfile;
-    updates['moon_profiles/' + moonProfileKey + '/mergedInto'] = newKey;
-    db.ref().update(updates, function (err) {
-      if (!err) { showToast('✓ Đã tích hợp thành profile mới: ' + mp.name); }
-    });
+function submitMoonSecretCode() {
+  var inp = document.getElementById('moon-sc-input');
+  var err = document.getElementById('moon-sc-err');
+  if (!inp) return;
+  var code = inp.value.trim();
+  if (!code) { if (err) { err.textContent = 'Vui lòng nhập mã bí ẩn!'; err.style.display = 'block'; } return; }
+
+  var correctCode = '';
+  for (var fKey in _familyTree) {
+    var fm = _familyTree[fKey];
+    if (fm.name === _pendingMoonFamilyName && fm.role === _pendingMoonFamilyRole) {
+      correctCode = fm.secretCode || '';
+      break;
+    }
+  }
+
+  if (!correctCode || code !== correctCode) {
+    if (err) { err.textContent = 'Mã bí ẩn không đúng! Thử lại.'; err.style.display = 'block'; }
+    inp.value = '';
+    setTimeout(function () { if (err) err.style.display = 'none'; }, 2500);
+    return;
+  }
+
+  closeMoonSecretCodeOverlay();
+  var sysRole = _moonFamilyRoleMap[_pendingMoonFamilyRole] || 'head';
+  _enterMoonAsFamilyMember(_pendingMoonFamilyName, _pendingMoonFamilyDeviceId, sysRole, _pendingMoonFamilyMemberId);
+}
+
+function _enterMoonAsGuest(name, deviceId) {
+  document.getElementById('moon-screen').style.display = 'none';
+  var pwScreen = document.getElementById('pw-screen');
+  if (pwScreen) pwScreen.style.display = 'none';
+
+  _loggedIn = true;
+
+  var currentLv = typeof ROLE_LEVEL !== 'undefined' ? (ROLE_LEVEL[_currentLoginRole] || 1) : 1;
+  if (currentLv < 3) {
+    _currentLoginRole = 'normal';
+    _isAdmin = false;
   } else {
-    var existing = _identities[targetKey];
-    var existingIds = [];
-    if (Array.isArray(existing.ids)) existingIds = existing.ids.slice();
-    else if (typeof existing.ids === 'object' && existing.ids) existingIds = Object.values(existing.ids);
-    allIds.forEach(function (id) { if (existingIds.indexOf(id) === -1) existingIds.push(id); });
+    _isAdmin = true;
+  }
 
-    var mergedProfile = { name: existing.name || targetKey, ids: existingIds, merged: true };
-    var updates2 = {};
-    updates2['settings/identities/' + targetKey] = mergedProfile;
-    updates2['moon_profiles/' + moonProfileKey + '/mergedInto'] = targetKey;
-    db.ref().update(updates2, function (err) {
-      if (!err) { showToast('✓ Đã tích hợp Moon Profile vào: ' + (existing.name || targetKey)); }
+  showMoonAdminScreen(_currentLoginRole);
+}
+
+function _enterMoonAsFamilyMember(name, deviceId, sysRole, memberId) {
+  var identityKey = 'id_ft_' + memberId;
+  if (db) {
+    db.ref('settings/identities/' + identityKey).once('value', function (snap) {
+      var existing = snap.val() || {};
+      var existingIds = [];
+      if (Array.isArray(existing.ids)) existingIds = existing.ids.slice();
+      else if (typeof existing.ids === 'object' && existing.ids) existingIds = Object.values(existing.ids);
+      if (existingIds.indexOf(deviceId) === -1) existingIds.push(deviceId);
+      var updated = { name: existing.name || name, rank: sysRole, merged: true, ids: existingIds };
+      db.ref('settings/identities/' + identityKey).set(updated);
+    });
+
+    var loginType = 'login_' + sysRole;
+    fbIncrementMoonFamily(name, deviceId, loginType);
+
+    db.ref('moon_users/' + deviceId).once('value', function (snap) {
+      var mu = snap.val();
+      var isFirstTime = !mu || !mu.familyNotified;
+      if (isFirstTime) {
+        db.ref('notifications').push({
+          text: '🎉 Thành viên gia phả "' + name + '" (rank: ' + sysRole + ') đã đăng nhập lần đầu! Device: ' + deviceId,
+          ts: Date.now(), read: false
+        });
+        db.ref('moon_users/' + deviceId).update({ familyNotified: true });
+      }
     });
   }
+
+  document.getElementById('moon-screen').style.display = 'none';
+  var pwScreen = document.getElementById('pw-screen');
+  if (pwScreen) pwScreen.style.display = 'none';
+
+  _loggedIn = true;
+  _currentLoginRole = sysRole;
+  _isAdmin = (typeof ROLE_LEVEL !== 'undefined' && ROLE_LEVEL[sysRole] >= 3);
+  if (_isAdmin) fbListenAll();
+  showMoonAdminScreen(sysRole);
+}
+
+function fbIncrementMoonFamily(name, deviceId, loginType) {
+  if (!db) return;
+  var ua = navigator.userAgent;
+  var logData = {
+    type: loginType, ts: Date.now(), ua: ua,
+    browser: _detectBrowser(ua), device: _detectDevice(ua), os: _detectOS(ua),
+    lang: navigator.language || '',
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+    screen: screen.width + 'x' + screen.height,
+    deviceId: deviceId, moonName: name
+  };
+  _fetchGeo()
+    .then(function (geo) { Object.assign(logData, geo); db.ref('logs').push(logData); })
+    .catch(function () { logData.geoSrc = 0; db.ref('logs').push(logData); });
 }
 
 /* ══════════════════════════════════════════
    GIA PHẢ (FAMILY TREE)
    ══════════════════════════════════════════ */
-window.openFamilyTree = function () { }; // Giữ nguyên để tránh lỗi nếu gọi nhầm
+window.openFamilyTree = function () { };
 window.closeFamilyTree = function () { };
 
 window.renderFamilyTree = function () {
   var listEl = document.getElementById('moon-family-dropdown');
   if (!listEl) return;
 
-  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
+  var lv = typeof ROLE_LEVEL !== 'undefined' ? (ROLE_LEVEL[_currentLoginRole] || 1) : 1;
   var isFounder = (lv === 7);
 
   var devId = localStorage.getItem('hun_device_id');
@@ -1332,7 +1584,6 @@ function _buildFamilySection(title, icon, roleKey, members, isFounder, myName) {
       if (roleKey !== 'founder') {
         displayCode = canSee ? esc(m.secretCode) : '••••••••••••';
       } else {
-        // Thêm 3 icon thiên nga, đại bàng, bồ câu cho Chủ nhân
         displayCode = '<span style="font-size:13px; letter-spacing:2px; display:inline-block; transform:translateY(1px);">🦢🦅🕊️</span>';
       }
 
@@ -1357,40 +1608,40 @@ function _buildFamilySection(title, icon, roleKey, members, isFounder, myName) {
   return html;
 }
 
-window.openEditFamilyHeader = function() {
-  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  if (lv < 7) return; 
-  document.getElementById('family-header-icon-input').value = window._currentFamilyHeaderIcon || '🌳';
-  document.getElementById('family-header-modal').classList.add('open');
-  closeAllMoonMenus(); 
+window.openEditFamilyHeader = function () {
+  var lv = typeof ROLE_LEVEL !== 'undefined' ? (ROLE_LEVEL[_currentLoginRole] || 1) : 1;
+  if (lv < 7) return;
+  document.getElementById('family-header-icon-input').value = window._currentFamilyHeaderIcon || '🌳';
+  document.getElementById('family-header-modal').classList.add('open');
+  closeAllMoonMenus();
 };
 
-window.closeEditFamilyHeader = function() {
-  var el = document.getElementById('family-header-modal');
-  if(el) el.classList.remove('open');
+window.closeEditFamilyHeader = function () {
+  var el = document.getElementById('family-header-modal');
+  if (el) el.classList.remove('open');
 };
 
-window.submitEditFamilyHeader = function() {
-  var lv = ROLE_LEVEL[_currentLoginRole] || 1;
-  if (lv < 7) return;
-  var newIcon = document.getElementById('family-header-icon-input').value.trim() || '🌳';
-  if (db) {
-    db.ref('settings/moon_content').update({
-      family_header_icon: newIcon
-    }, function(err) {
-      if (!err) {
-        showToast('✓ Đã cập nhật Icon Gia Phả!');
-        window._currentFamilyHeaderIcon = newIcon;
-        closeEditFamilyHeader();
-      } else {
-        showToast('⚠ Lỗi lưu!');
-      }
-    });
-  } else {
-    window._currentFamilyHeaderIcon = newIcon;
-    closeEditFamilyHeader();
-    showToast('✓ Cập nhật (offline)!');
-  }
+window.submitEditFamilyHeader = function () {
+  var lv = typeof ROLE_LEVEL !== 'undefined' ? (ROLE_LEVEL[_currentLoginRole] || 1) : 1;
+  if (lv < 7) return;
+  var newIcon = document.getElementById('family-header-icon-input').value.trim() || '🌳';
+  if (db) {
+    db.ref('settings/moon_content').update({
+      family_header_icon: newIcon
+    }, function (err) {
+      if (!err) {
+        showToast('✓ Đã cập nhật Icon Gia Phả!');
+        window._currentFamilyHeaderIcon = newIcon;
+        closeEditFamilyHeader();
+      } else {
+        showToast('⚠ Lỗi lưu!');
+      }
+    });
+  } else {
+    window._currentFamilyHeaderIcon = newIcon;
+    closeEditFamilyHeader();
+    showToast('✓ Cập nhật (offline)!');
+  }
 };
 
 var _editingFamilyId = null;
@@ -1402,7 +1653,6 @@ window.openAddFamilyMember = function (role) {
   document.getElementById('family-member-name').value = '';
   document.getElementById('family-member-code').value = '';
 
-  // Ẩn nhóm nhập "Mã bí ẩn" nếu thêm Chủ nhân
   document.getElementById('family-member-code-group').style.display = (role === 'founder') ? 'none' : 'block';
 
   document.getElementById('family-member-modal-title').textContent = 'Thêm thành viên';
@@ -1417,7 +1667,6 @@ window.openEditFamilyMember = function (id) {
   document.getElementById('family-member-name').value = m.name;
   document.getElementById('family-member-code').value = m.secretCode || '';
 
-  // Ẩn nhóm nhập "Mã bí ẩn" nếu sửa Chủ nhân
   document.getElementById('family-member-code-group').style.display = (m.role === 'founder') ? 'none' : 'block';
 
   document.getElementById('family-member-modal-title').textContent = 'Sửa thông tin';
@@ -1457,7 +1706,6 @@ window.saveFamilyMember = function () {
 
   var identityKey = 'id_ft_' + id;
 
-  // Lấy IDs thiết bị thực tế đang có. (Không được nhét mã bí ẩn vào mảng thiết bị)
   var existingIdentity = _identities[identityKey] || {};
   var existingIds = existingIdentity.ids || [];
   if (!Array.isArray(existingIds)) {
@@ -1465,15 +1713,12 @@ window.saveFamilyMember = function () {
     else existingIds = [];
   }
 
-  // Khởi tạo Object lưu vào Active Profiles
   var identityData = {
     name: name,
     rank: assignedRank,
     merged: true
   };
 
-  // FIX LỖI 3 & 4: Firebase từ chối lưu mảng rỗng `[]` khiến Profile không xuất hiện.
-  // Chỉ truyền `ids` vào khi đã có thiết bị đăng nhập thật. Nếu chưa có, Firebase sẽ lưu tên và rank bình thường.
   if (existingIds.length > 0) {
     identityData.ids = existingIds;
   }
@@ -1485,7 +1730,6 @@ window.saveFamilyMember = function () {
       if (!err) {
         showToast('✓ Đã lưu thành viên gia phả!');
         closeFamilyMemberModal();
-        // Cập nhật giao diện tự động
         if (typeof renderMoonAllIdentitiesTable === 'function') renderMoonAllIdentitiesTable();
         if (typeof renderIdentityList === 'function') renderIdentityList();
         if (typeof renderFamilyTree === 'function') renderFamilyTree();
